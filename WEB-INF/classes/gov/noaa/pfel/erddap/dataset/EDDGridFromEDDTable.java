@@ -296,7 +296,7 @@ public class EDDGridFromEDDTable extends EDDGrid {
         setGraphsAccessibleTo(tGraphsAccessibleTo);
         if (!tAccessibleViaWMS) 
             accessibleViaWMS = String2.canonical(
-                MessageFormat.format(EDStatic.noXxx, "WMS"));
+                MessageFormat.format(EDStatic.noXxx_s[0], "WMS"));
         accessibleViaFiles = EDStatic.filesActive && tAccessibleViaFiles && tEDDTable.accessibleViaFiles;
         onChange = tOnChange;
         fgdcFile = tFgdcFile;
@@ -323,7 +323,7 @@ public class EDDGridFromEDDTable extends EDDGrid {
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
         if (combinedGlobalAttributes.getString("cdm_data_type") == null)
             combinedGlobalAttributes.add("cdm_data_type", "Grid");

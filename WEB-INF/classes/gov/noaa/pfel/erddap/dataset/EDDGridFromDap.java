@@ -306,7 +306,7 @@ public class EDDGridFromDap extends EDDGrid {
         setGraphsAccessibleTo(tGraphsAccessibleTo);
         if (!tAccessibleViaWMS) 
             accessibleViaWMS = String2.canonical(
-                MessageFormat.format(EDStatic.noXxx, "WMS"));
+                MessageFormat.format(EDStatic.noXxx_s[0], "WMS"));
         onChange = tOnChange;
         fgdcFile = tFgdcFile;
         iso19115File = tIso19115File;
@@ -375,7 +375,7 @@ public class EDDGridFromDap extends EDDGrid {
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
         if (combinedGlobalAttributes.getString("cdm_data_type") == null)
             combinedGlobalAttributes.add("cdm_data_type", "Grid");
@@ -1451,7 +1451,7 @@ public class EDDGridFromDap extends EDDGrid {
             Math2.almostEqual(4, latSpacing, lonSpacing)) { //MHchlamday has lat=0.04167631 lon=0.04167149
             String ts = "" + (float)latSpacing;
             if (tTitle.indexOf(ts) < 0) { //not ideal. This will fail (in a safe way) if version# (or ...) in title and spacing both equal 1.0.
-                tTitle += ", " + ts + "°";            
+                tTitle += ", " + ts + "ï¿½";            
                 axisAddTable.globalAttributes().set("title", tTitle); 
             }
         }
@@ -3248,9 +3248,9 @@ expected = "http://localhost:8080/cwexperimental/griddap/erdMHchla8day.ncoJson?t
         //String2.log(results);
         //SSR.displayInBrowser("file://" + EDStatic.fullTestCacheDirectory + tName);
         expected = 
-EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null), "EDDGridFromDap_LatAxis") + "\n" +
+EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null, 0), "EDDGridFromDap_LatAxis", 0) + "\n" +
 "</head>\n" +
-EDStatic.startBodyHtml(null) + "&nbsp;<br>\n" +
+EDStatic.startBodyHtml(null, 0) + "&nbsp;<br>\n" +
 "&nbsp;\n" +
 "<table class=\"erd commonBGColor nowrap\">\n" +
 "<tr>\n" +
@@ -3282,7 +3282,7 @@ EDStatic.startBodyHtml(null) + "&nbsp;<br>\n" +
 "<td>\n" +
 "</tr>\n" +
 "</table>\n" +
-EDStatic.endBodyHtml(EDStatic.erddapUrl((String)null)) + "\n" +
+EDStatic.endBodyHtml(EDStatic.erddapUrl((String)null, 0), 0) + "\n" +
 "</html>\n";
         Test.ensureEqual(results, expected, "RESULTS=\n" + results);
 
@@ -5089,7 +5089,7 @@ String expected1 =
         EDD edd = oneFromXmlFragment(null, results);   //only returns the first dataset defined in results
         Test.ensureEqual(edd.datasetID(), tDatasetID, "");
         Test.ensureEqual(edd.title(), 
-            "SODA v2.2.4 monthly means (soda pop2.2.4) [time][lev][lat][lon], 0.5°, 1871-2010", "");
+            "SODA v2.2.4 monthly means (soda pop2.2.4) [time][lev][lat][lon], 0.5ï¿½, 1871-2010", "");
         Test.ensureEqual(String2.toCSSVString(edd.dataVariableDestinationNames()), 
             "temp, salt, u, v, w", "");    
     }
@@ -6666,9 +6666,9 @@ today + " " + EDStatic.erddapUrl + //in tests, always non-https url
         String results = String2.directReadFromUtf8File(
             EDStatic.fullTestCacheDirectory + tName);
         String expected = 
-EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null), "EDDGridFromDap_soda224") + "\n" +
+EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null, 0), "EDDGridFromDap_soda224", 0) + "\n" +
 "</head>\n" +
-EDStatic.startBodyHtml(null) + "&nbsp;<br>\n" +
+EDStatic.startBodyHtml(null, 0) + "&nbsp;<br>\n" +
 //HtmlWidgets.BACK_BUTTON +
 "&nbsp;\n" +
 "<table class=\"erd commonBGColor nowrap\">\n" +
@@ -10602,7 +10602,7 @@ expected =
 //"    String testOutOfDate \"now-[N_DAYS]days\";\n" +  //2020-10-21 comes and goes
 "    String time_coverage_end \"2021-04-23T00:00:00Z\";\n" +  //2020-10-02 varies      2022-02-18 was wrong: I reported to podaac@... Subject="Incorrect time values and _FillValue"
 "    String time_coverage_start \"2002-07-04T00:00:00Z\";\n" +
-"    String title \"MODISA L3 SMI, MODIS AQUA L3 SST MID IR 8DAY 4KM NIGHTTIME v2019.0 [time][lat][lon], 0.041666668°, 2002-present\";\n" + //2021-05-03 was -present
+"    String title \"MODISA L3 SMI, MODIS AQUA L3 SST MID IR 8DAY 4KM NIGHTTIME v2019.0 [time][lat][lon], 0.041666668ï¿½, 2002-present\";\n" + //2021-05-03 was -present
 "    Float64 Westernmost_Easting -179.979166667;\n" +
 "  }\n" +
 "}\n";
@@ -11162,7 +11162,7 @@ expected =
 "    String temporal_range \"8-day\";\n" +
 "    String time_coverage_end \"[TCE]\";\n" +
 "    String time_coverage_start \"2002-07-04T00:00:00Z\";\n" +
-"    String title \"MODISA L3 SMI, MODIS AQUA L3 SST MID IR 8DAY 4KM NIGHTTIME v2019.0 [time][lat][lon], 0.041666668°, 2002-present\";\n" +
+"    String title \"MODISA L3 SMI, MODIS AQUA L3 SST MID IR 8DAY 4KM NIGHTTIME v2019.0 [time][lat][lon], 0.041666668ï¿½, 2002-present\";\n" +
 "    Float64 Westernmost_Easting -179.979166667;\n" +
 "  }\n" +
 "}\n";
@@ -12606,7 +12606,7 @@ String expected =
 "    String coordsys \"geographic\";\n" +
 "    String ioos_category \"CO2\";\n" +
 "    String long_name \"NOAA Coral Reef Watch Experimental Ocean Acidification Product Suite - Total Alkalinity (TA) 25km\";\n" +
-"    String units \"µmole/kg\";\n" +
+"    String units \"ï¿½mole/kg\";\n" +
 "    String variable_info \"The values in this variable array and in the valid_range attribute are in the units of x10umol/kg . The data values should be multiplied by the value (=0.1) contained in thescale_factor attribute to obtain the actual values in the units of .umol/kg .  The values are modeled according to Gledhill et al., 2008 and depend on the tropical/subtropical algorthim offered by Lee et al. 2006\";\n" +
 "  }\n" +
 "  TC {\n" +
@@ -12616,7 +12616,7 @@ String expected =
 "    String coordsys \"geographic\";\n" +
 "    String ioos_category \"Ocean Color\";\n" +
 "    String long_name \"NOAA Coral Reef Watch Experimental Ocean Acidification Product Suite - Total Inorganic Carbon (TC) 25km\";\n" +
-"    String units \"µmole/kg\";\n" +
+"    String units \"ï¿½mole/kg\";\n" +
 "    String variable_info \"The values in this variable array and in the valid_range attribute are in the units of x10umol/kg . The data values should be multiplied by the value (=0.1) contained in thescale_factor attribute to obtain the actual values in the units of .umol/kg .  The values are modeled according to Gledhill et al., 2008.  Fields of TA & fCO2sw were  were coupled to solve for the carbonic acid system using the CO2SYS program (Lewis & Wallace, 1998).  Constants: K1,K2 from Mehrbach et al, 1973 refit by Dickson & Millero, 1987;  fCO2 (versus pCO2); KSO4 from Dickson; pH = total scale\";\n" +
 "  }\n" +
 "  pH {\n" +
@@ -12647,7 +12647,7 @@ String expected =
 "    String coordsys \"geographic\";\n" +
 "    String ioos_category \"CO2\";\n" +
 "    String long_name \"NOAA Coral Reef Watch Experimental Ocean Acidification Product Suite - Bicarbonate Ion Concentration (HCO3-) 25km\";\n" +
-"    String units \"µmole/kg\";\n" +
+"    String units \"ï¿½mole/kg\";\n" +
 "    String variable_info \"The values in this variable array and in the valid_range attribute are in the units of x10umol/kg . The data values should be multiplied by the value (=0.1) contained in thescale_factor attribute to obtain the actual values in the units of .umol/kg .  The values are modeled according to Gledhill et al., 2008.  Fields of TA & fCO2sw were  were coupled to solve for the carbonic acid system using the CO2SYS program (Lewis & Wallace, 1998).  Constants: K1,K2 from Mehrbach et al, 1973 refit by Dickson & Millero, 1987;  fCO2 (versus pCO2); KSO4 from Dickson; pH = total scale\";\n" +
 "  }\n" +
 "  CO3 {\n" +
@@ -12657,7 +12657,7 @@ String expected =
 "    String coordsys \"geographic\";\n" +
 "    String ioos_category \"CO2\";\n" +
 "    String long_name \"NOAA Coral Reef Watch Experimental Ocean Acidification Product Suite - Carbonate Ion Concentration (CO3--) 25km\";\n" +
-"    String units \"µmole/kg\";\n" +
+"    String units \"ï¿½mole/kg\";\n" +
 "    String variable_info \"The values in this variable array and in the valid_range attribute are in the units of x10umol/kg . The data values should be multiplied by the value (=0.1) contained in thescale_factor attribute to obtain the actual values in the units of .umol/kg .  The values are modeled according to Gledhill et al., 2008.  Fields of TA & fCO2sw were  were coupled to solve for the carbonic acid system using the CO2SYS program (Lewis & Wallace, 1998).  Constants: K1,K2 from Mehrbach et al, 1973 refit by Dickson & Millero, 1987;  fCO2 (versus pCO2); KSO4 from Dickson; pH = total scale\";\n" +
 "  }\n" +
 "  surface_flag {\n" +

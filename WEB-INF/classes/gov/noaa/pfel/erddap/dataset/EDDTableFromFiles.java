@@ -746,6 +746,161 @@ public abstract class EDDTableFromFiles extends EDDTable{
         }
     }
 
+        /**
+     * The constructor.
+     * If currLang is not specified, default to 0
+     *
+     * @param tClassName e.g., EDDTableFromNcFiles
+     * @param tDatasetID is a very short string identifier 
+     *  (recommended: [A-Za-z][A-Za-z0-9_]* )
+     *   for this dataset. See EDD.datasetID().
+     * @param tAccessibleTo is a comma separated list of 0 or more
+     *    roles which will have access to this dataset.
+     *    <br>If null, everyone will have access to this dataset (even if not logged in).
+     *    <br>If "", no one will have access to this dataset.
+     * @param tOnChange 0 or more actions (starting with http://, https://, or mailto: )
+     *    to be done whenever the dataset changes significantly
+     * @param tFgdcFile This should be the fullname of a file with the FGDC
+     *    that should be used for this dataset, or "" (to cause ERDDAP not
+     *    to try to generate FGDC metadata for this dataset), or null (to allow
+     *    ERDDAP to try to generate FGDC metadata for this dataset).
+     * @param tIso19115 This is like tFgdcFile, but for the ISO 19119-2/19139 metadata.
+     * @param tAddGlobalAttributes are global attributes which will
+     *   be added to (and take precedence over) the data source's global attributes.
+     *   This may be null if you have nothing to add.
+     *   The combined global attributes must include:
+     *   <ul>
+     *   <li> "title" - the short (&lt; 80 characters) description of the dataset 
+     *   <li> "summary" - the longer description of the dataset.
+     *      It may have newline characters (usually at &lt;= 72 chars per line). 
+     *   <li> "institution" - the source of the data 
+     *      (best if &lt; 50 characters so it fits in a graph's legend).
+     *   <li> "infoUrl" - the url with information about this data set 
+     *   <li> "cdm_data_type" - one of the EDD.CDM_xxx options
+     *   </ul>
+     *   Special case: value="null" causes that item to be removed from combinedGlobalAttributes.
+     *   Special case: if combinedGlobalAttributes name="license", any instance of value="[standard]"
+     *     will be converted to the EDStatic.standardLicense.
+     * @param tDataVariables is an Object[nDataVariables][3 or 4]: 
+     *    <br>[0]=String sourceName (the name of the data variable in the dataset source, 
+     *         without the outer or inner sequence name),
+     *    <br>[1]=String destinationName (the name to be presented to the ERDDAP user, 
+     *        or null to use the sourceName),
+     *    <br>[2]=Attributes addAttributes (at ERD, this must have "ioos_category" - 
+     *        a category from EDV.ioosCategories). 
+     *        Special case: value="null" causes that item to be removed from combinedAttributes.
+     *    <br>[3]=String source dataType (e.g., "int", "float", "String"). 
+     *        Some data sources have ambiguous data types, so it needs to be specified here.
+     *    <br>The order of variables you define doesn't have to match the
+     *       order in the source.
+     *    <p>If there is a time variable,  
+     *      either tAddAttributes (read first) or tSourceAttributes must have "units"
+     *      which is either <ul>
+     *      <li> a UDUunits string (containing " since ")
+     *        describing how to interpret source time values 
+     *        (which should always be numeric since they are a dimension of a grid)
+     *        (e.g., "seconds since 1970-01-01T00:00:00").
+     *      <li> a java.time.format.DateTimeFormatter string
+     *        (which is compatible with java.text.SimpleDateFormat) describing how to interpret 
+     *        string times  (e.g., the ISO8601TZ_FORMAT "yyyy-MM-dd'T'HH:mm:ssZ", see 
+     *        https://docs.oracle.com/javase/8/docs/api/index.html?java/time/format/DateTimeFomatter.html or 
+     *        https://docs.oracle.com/javase/8/docs/api/index.html?java/text/SimpleDateFormat.html)).
+     *      </ul>
+     * @param tReloadEveryNMinutes indicates how often the source should
+     *    be checked for new data.
+     * @param tFileDir the base directory where the files are located.
+     *    For EDDTableFromHyraxFiles, this is the url of the main .html page,
+     *    e.g., http://biloxi-bay.ssc.hpc.msstate.edu/dods-bin/nph-dods/WCOS/nmsp/wcos/
+     * @param tFileNameRegex the regex which determines which files in 
+     *    the directories are to be read (use .* for all)
+     *    <br>You can use .* for all, but it is better to be more specific.
+     *        For example, .*\.nc will get all files with the extension .nc.
+     * @param tRecursive if true, this class will look for files in the
+     *    fileDir and all subdirectories
+     * @param tMetadataFrom this indicates the file to be used
+     *    to extract source metadata (first/last based on sorted file lastModifiedTime).
+     *    Valid values are "first", "penultimate", "last".
+     * @param tCharset the charset; relevant for ASCII files only
+     * @param tColumnNamesRow the number of the row with column names (1..; usually 1, may be 0 (none)); relevant for ASCII files only.
+     * @param tDataRow the number of the row with column names (1..; usually 2); relevant for ASCII files only.
+     * @param tColumnSeparator the character that separates the columns. 
+     *   Use "" or null to have this method guess. Otherwise,
+     *   the first character of this string will be used.
+     * @param tPreExtractRegex may be "" or null if not needed.
+     *    If present, this usually begins with "^" to match the beginning of the file name.
+     *    If present, this is used to remove text from the start of the file name.
+     *    The removal only occurs if the regex is matched.
+     * @param tPostExtractRegex may be "" or null if not needed.
+     *    If present, this usually ends with "$" to match the beginning of the file name.
+     *    If present, this is used to remove text from the end of the file name.
+     *    The removal only occurs if the regex is matched.
+     * @param tExtractRegex may be "" or null if not needed. 
+     *    Use ".*" to match the entire file name.
+     *    If present, this is used after preExtractRegex and postExtractRegex
+     *    to extract a string from the file name (e.g., stationID).
+     *    If the regex isn't matched, the entire file name is used (minus preExtract and postExtract).
+     * @param tColumnNameForExtract the data column name for the extracted Strings.
+     *    This column name must be in the tDataVariables list as a source column name 
+     *    (with any data type).
+     * @param tSortedColumnSourceName the source name of a timeStamp column or 
+     *    the numeric column that the data files are usually already sorted by 
+     *    within each file (use null or "" for none), e.g., "time".
+     *    It is ok if not all files are sorted by this column.
+     *    If present, this can greatly speed up some data requests.
+     * @param tSortFilesBySourceNames is a comma(or space)-separated list of source variable names
+     *    specifying how the internal list of files should be sorted (in ascending order).
+     *    <br>It is the minimum value of the specified columns in each file that is used for sorting.
+     *    <br>When a data request is filled, data is obtained from the files in this order.
+     *    <br>Thus it largely determines the overall order of the data in the response.
+     *    <br>If you specify more than one column name, 
+     *    <br>the second name is used if there is a tie for the first column;
+     *    <br>the third is used if there is a tie for the first and second columns; ...
+     *    <br>It is optional (the default is fileDir+fileName order).
+     * @param tSourceNeedsExpandedFP_EQ
+     * @param tRemoveMVRows
+     * @param tStandardizeWhat Use -1 or MAX_VALUE to indicate that you want the
+     *   subclasses default value.
+     * @param tNThreads Use -1 or MAX_VALUE to indicate that you want the
+     *   default ERDDAP value from datasets.xml.
+     * @throws Throwable if trouble
+     */
+    public EDDTableFromFiles(String tClassName, String tDatasetID, 
+        String tAccessibleTo, String tGraphsAccessibleTo, 
+        StringArray tOnChange, String tFgdcFile, String tIso19115File, 
+        String tSosOfferingPrefix,
+        String tDefaultDataQuery, String tDefaultGraphQuery, 
+        Attributes tAddGlobalAttributes,
+        Object[][] tDataVariables,
+        int tReloadEveryNMinutes, int tUpdateEveryNMillis,
+        String tFileDir, String tFileNameRegex, boolean tRecursive, String tPathRegex, 
+        String tMetadataFrom, String tCharset, 
+        String tSkipHeaderToRegex, String tSkipLinesRegex,
+        int tColumnNamesRow, int tFirstDataRow, String tColumnSeparator,
+        String tPreExtractRegex, String tPostExtractRegex, String tExtractRegex, 
+        String tColumnNameForExtract,
+        String tSortedColumnSourceName, String tSortFilesBySourceNames,
+        boolean tSourceNeedsExpandedFP_EQ, boolean tFileTableInMemory, 
+        boolean tAccessibleViaFiles, boolean tRemoveMVRows, 
+        int tStandardizeWhat, int tNThreads, 
+        String tCacheFromUrl, int tCacheSizeGB, String tCachePartialPathRegex,
+        String tAddVariablesWhere) 
+        throws Throwable {
+            this(tClassName, tDatasetID, tAccessibleTo, tGraphsAccessibleTo, tOnChange, tFgdcFile,
+            tIso19115File, tSosOfferingPrefix, tDefaultDataQuery, tDefaultGraphQuery, tAddGlobalAttributes,
+            tDataVariables, tReloadEveryNMinutes, tUpdateEveryNMillis,
+            tFileDir, tFileNameRegex, tRecursive, tPathRegex, 
+            tMetadataFrom, tCharset, 
+            tSkipHeaderToRegex, tSkipLinesRegex,
+            tColumnNamesRow, tFirstDataRow, tColumnSeparator,
+            tPreExtractRegex, tPostExtractRegex, tExtractRegex, 
+            tColumnNameForExtract,
+            tSortedColumnSourceName, tSortFilesBySourceNames,
+            tSourceNeedsExpandedFP_EQ, tFileTableInMemory, 
+            tAccessibleViaFiles, tRemoveMVRows, 
+            tStandardizeWhat, tNThreads, 
+            tCacheFromUrl, tCacheSizeGB, tCachePartialPathRegex,
+            tAddVariablesWhere, 0);
+        }
     /**
      * The constructor.
      *
@@ -882,7 +1037,7 @@ public abstract class EDDTableFromFiles extends EDDTable{
         boolean tAccessibleViaFiles, boolean tRemoveMVRows, 
         int tStandardizeWhat, int tNThreads, 
         String tCacheFromUrl, int tCacheSizeGB, String tCachePartialPathRegex,
-        String tAddVariablesWhere) 
+        String tAddVariablesWhere, int currLang) 
         throws Throwable {
 
         if (verbose) String2.log(
@@ -1251,7 +1406,7 @@ public abstract class EDDTableFromFiles extends EDDTable{
                 String subject = String2.ERROR + " in " + datasetID + " constructor (inotify)";
                 msg = MustBe.throwableToString(t);
                 if (msg.indexOf("inotify instances") >= 0)
-                    msg += EDStatic.inotifyFix;
+                    msg += EDStatic.inotifyFix_s[currLang];
                 EDStatic.email(EDStatic.adminEmail, subject, msg);
                 msg = "";
             }
@@ -1432,7 +1587,7 @@ public abstract class EDDTableFromFiles extends EDDTable{
             while (tFileListPo < tFileNamePA.size()) {
                 if (Thread.currentThread().isInterrupted())
                     throw new SimpleException("EDDTableFromFiles.init" +
-                        EDStatic.caughtInterrupted);
+                        EDStatic.caughtInterrupted_s[currLang]);
 
                 int    tDirI   = tFileDirIndexPA.get(tFileListPo);
                 String tFileS  = tFileNamePA.get(tFileListPo);
@@ -1702,7 +1857,7 @@ public abstract class EDDTableFromFiles extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
         //if (debugMode) String2.log(">> EDDTableFromFiles " + Calendar2.getCurrentISODateTimeStringLocalTZ() + " finished making combineGlobalAtts");
 
@@ -2422,6 +2577,7 @@ public abstract class EDDTableFromFiles extends EDDTable{
     /**
      * This does the actual incremental update of this dataset 
      * (i.e., for real time datasets).
+     * if currLang is not specied, default to 0
      * 
      * <p>Concurrency issue: The changes here are first prepared and 
      * then applied as quickly as possible (but not atomically!).
@@ -2441,6 +2597,30 @@ public abstract class EDDTableFromFiles extends EDDTable{
      *     this calls EDD.requestReloadASAP(tDatasetID) and returns without doing anything.
      */
     public boolean lowUpdate(String msg, long startUpdateMillis) throws Throwable {
+        return lowUpdate(msg, startUpdateMillis, 0);
+    }
+    /**
+     * This does the actual incremental update of this dataset 
+     * (i.e., for real time datasets).
+     * 
+     * <p>Concurrency issue: The changes here are first prepared and 
+     * then applied as quickly as possible (but not atomically!).
+     * There is a chance that another thread will get inconsistent information
+     * (from some things updated and some things not yet updated).
+     * But I don't want to synchronize all activities of this class.
+     *
+     * @param msg the start of a log message, e.g., "update(thisDatasetID): ".
+     * @param startUpdateMillis the currentTimeMillis at the start of this update.
+     * @return true if a change was made
+     * @throws Throwable if serious trouble. 
+     *   For simple failures, this writes info to log.txt but doesn't throw an exception.
+     *   If the dataset has changed in a serious / incompatible way and needs a full
+     *     reload, this throws WaitThenTryAgainException 
+     *     (usually, catcher calls LoadDatasets.tryToUnload(...) and EDD.requestReloadASAP(tDatasetID))..
+     *   If the changes needed are probably fine but are too extensive to deal with here, 
+     *     this calls EDD.requestReloadASAP(tDatasetID) and returns without doing anything.
+     */
+    public boolean lowUpdate(String msg, long startUpdateMillis, int currLang) throws Throwable {
 
         //Most of this lowUpdate code is identical in EDDGridFromFiles and EDDTableFromFiles
         if (watchDirectory == null)
@@ -2524,7 +2704,7 @@ public abstract class EDDTableFromFiles extends EDDTable{
         for (int evi = 0; evi < nEvents; evi++) {
             if (Thread.currentThread().isInterrupted())
                 throw new SimpleException("EDDTableFromFiles.lowUpdate" +
-                        EDStatic.caughtInterrupted);
+                        EDStatic.caughtInterrupted_s[currLang]);
 
             String fullName = contexts.get(evi);
             String dirName = File2.getDirectory(fullName);

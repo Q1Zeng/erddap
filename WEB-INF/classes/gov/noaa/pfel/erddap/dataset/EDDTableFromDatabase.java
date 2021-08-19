@@ -506,7 +506,7 @@ public class EDDTableFromDatabase extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
 
         //create dataVariables[]
@@ -647,6 +647,7 @@ public class EDDTableFromDatabase extends EDDTable{
      * This gets the data (chunk by chunk) from this EDDTable for the 
      * OPeNDAP DAP-style query and writes it to the TableWriter. 
      * See the EDDTable method documentation.
+     * currLang not specified, default as 0
      *
      * <p>The method avoids SQL Injection Vulnerability
      * (see https://en.wikipedia.org/wiki/SQL_injection) by using
@@ -661,6 +662,26 @@ public class EDDTableFromDatabase extends EDDTable{
      */
     public void getDataForDapQuery(String loggedInAs, String requestUrl, 
         String userDapQuery, TableWriter tableWriter) throws Throwable {
+            getDataForDapQuery(loggedInAs, requestUrl, userDapQuery,tableWriter, 0);
+        }
+    /** 
+     * This gets the data (chunk by chunk) from this EDDTable for the 
+     * OPeNDAP DAP-style query and writes it to the TableWriter. 
+     * See the EDDTable method documentation.
+     *
+     * <p>The method avoids SQL Injection Vulnerability
+     * (see https://en.wikipedia.org/wiki/SQL_injection) by using
+     * preparedStatements (so String values are properly escaped and
+     * numbers are assured to be numbers).
+     *
+     * @param loggedInAs the user's login name if logged in (or null if not logged in).
+     * @param requestUrl the part of the user's request, after EDStatic.baseUrl, before '?'.
+     * @param userDapQuery the part of the user's request after the '?', still percentEncoded, may be null.
+     * @param tableWriter
+     * @throws Throwable if trouble (notably, WaitThenTryAgainException)
+     */
+    public void getDataForDapQuery(String loggedInAs, String requestUrl, 
+        String userDapQuery, TableWriter tableWriter, int currLang) throws Throwable {
 
         //good summary of using statements, queries, resultSets, ...
         //  https://docs.oracle.com/javase/7/docs/api/java/sql/ResultSet.html
@@ -742,7 +763,7 @@ public class EDDTableFromDatabase extends EDDTable{
                         int v = String2.indexOf(dataVariableDestinationNames(), tQueryOrderBy.get(oi));
                         if (v < 0)
                             throw new SimpleException(EDStatic.queryError +
-                                MessageFormat.format(EDStatic.queryErrorUnknownVariable, queryOrderBy.get(oi))); 
+                                MessageFormat.format(EDStatic.queryErrorUnknownVariable_s[0], queryOrderBy.get(oi))); 
                         String tSourceName = dataVariableSourceNames()[v];
                         tQueryOrderBy.set(oi, tSourceName);
                         HashSet<String> tNeedsColumns = scriptNeedsColumns.get(tSourceName);
@@ -823,7 +844,7 @@ public class EDDTableFromDatabase extends EDDTable{
                 String2.log(msg + "2=\n" +
                     MustBe.throwableToString(t2));
                 throw new WaitThenTryAgainException(EDStatic.waitThenTryAgain + 
-                    "\n(" + EDStatic.databaseUnableToConnect + ": " + t.toString() + ")");
+                    "\n(" + EDStatic.databaseUnableToConnect_s[currLang] + ": " + t.toString() + ")");
             }
         }
 
@@ -1019,7 +1040,7 @@ public class EDDTableFromDatabase extends EDDTable{
                     paArray[0].size() >= triggerNRows) {
                     if (Thread.currentThread().isInterrupted())
                         throw new SimpleException("EDDTableFromDatabase.getDataForDapQuery" + 
-                            EDStatic.caughtInterrupted);
+                            EDStatic.caughtInterrupted_s[currLang]);
 
                     //convert script columns into data columns
                     if (scriptNames != null)             
@@ -1062,7 +1083,7 @@ public class EDDTableFromDatabase extends EDDTable{
             //String2.log("EDDTableFromDatabase caught:\n" + msg);
 
             if (msg.indexOf(MustBe.THERE_IS_NO_DATA) >= 0 ||
-                msg.indexOf(EDStatic.caughtInterrupted) >= 0) { 
+                msg.indexOf(EDStatic.caughtInterrupted_s[currLang]) >= 0) {
                 throw t;
             } else {
                 //all other errors probably from database

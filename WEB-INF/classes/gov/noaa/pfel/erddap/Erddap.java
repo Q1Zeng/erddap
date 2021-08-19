@@ -438,6 +438,26 @@ public class Erddap extends HttpServlet {
             return "/" + EDStatic.warName + "/" + requestUrl.substring(protocolStart);
         }
     }
+
+    /**
+     * returns the index of the language code in the request's url. 0 (English) if not specified.
+     */
+    public int getUrlLangIndex(HttpServletRequest request) {
+        String requestUrl = request.getRequestURI();
+        int protocolStart = EDStatic.warName.length() + 2;
+        int langCodeEnd = requestUrl.indexOf("/", protocolStart);
+        if (langCodeEnd < 0) {
+            return 0;
+        } else {
+            String currLangCode = requestUrl.substring(protocolStart, langCodeEnd);
+            int temp = Arrays.asList(EDStatic.fullLanguageCodeList).indexOf(currLangCode);
+            if (temp < 0) {
+                return 0;
+            } else {
+                return temp;
+            }
+        }
+    }
     /** 
      * This responds to a "get" request from the user by extending HttpServlet's doGet.
      * Mostly, this just identifies the protocol (e.g., "tabledap") in the requestUrl
@@ -467,7 +487,8 @@ public class Erddap extends HttpServlet {
                 EDStatic.tally.add("Requester Is Logged In (since last daily report)", tLoggedInAs);
             }
 
-            String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+            int currLang = getUrlLangIndex(request);
+            String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
             String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl(), pre "?"
             //String2.log("requestURL=" + requestUrl); 
 
@@ -518,7 +539,7 @@ public class Erddap extends HttpServlet {
                         EDStatic.tally.add("Requester's IP Address (Too Many Requests) (since last daily report)", ipAddress);
                         EDStatic.tally.add("Requester's IP Address (Too Many Requests) (since startup)", ipAddress);
                         EDStatic.lowSendError(requestNumber, response, 429, //429=Too Many Requests
-                            EDStatic.oneRequestAtATime);
+                            EDStatic.oneRequestAtATime_s[currLang]);
                         //FUTURE? email yesterday's list to erddap admin when generating daily report
                         // so they can consider blacklisting them?
                         return;
@@ -557,8 +578,8 @@ public class Erddap extends HttpServlet {
                         // 1000ms/200ms *2maxRequestsActive = 10/second = 9000/15minutes which is a lot for 1 user
                         Thread.sleep(200); //millis. Not Math2.sleep() because we want to allow InterruptedException
                         if (System.currentTimeMillis() - start > 120000)  //120s * 1000 millis/s
-                            throw new TimeoutException(EDStatic.timeoutOtherRequests + " " +
-                                EDStatic.oneRequestAtATime);
+                            throw new TimeoutException(EDStatic.timeoutOtherRequests_s[currLang] + " " +
+                                EDStatic.oneRequestAtATime_s[currLang]);
                     }
                 }
             }
@@ -582,21 +603,18 @@ public class Erddap extends HttpServlet {
                 // there is nothing after hostURL/erddap
                 //set language to default, proceed to get protocols
                 langCodeEnd = protocolStart;
-                EDStatic.updateLangChoice(0);
             } else {
                 String currLangCode = requestUrl.substring(protocolStart, langCodeEnd);
                 System.out.println("currLangCode: " + currLangCode);
                 int temp = Arrays.asList(EDStatic.fullLanguageCodeList).indexOf(currLangCode);
                 if (temp == -1) {
                     //langCode not found in our list, use default(0)
-                    EDStatic.updateLangChoice(0);
                     langCodeEnd = protocolStart;
                 } else {
                     protocolStart = langCodeEnd + 1;
-                    EDStatic.updateLangChoice(temp);
                 }
-                //System.out.println("curr Lang: " + EDStatic.currLang);   
             }
+
             //get protocol (e.g., "griddap" or "tabledap")
             int protocolEnd = requestUrl.indexOf("/", protocolStart);
             if (protocolEnd < 0)
@@ -609,94 +627,94 @@ public class Erddap extends HttpServlet {
             //Be as restrictive as possible (so resourceNotFound can be caught below, if possible).
             if (protocol.equals("griddap") ||
                 protocol.equals("tabledap")) {
-                doDap(requestNumber, request, response, ipAddress, loggedInAs, protocol, protocolEnd + 1, userQuery);
+                doDap(requestNumber, request, response, ipAddress, loggedInAs, protocol, protocolEnd + 1, userQuery, currLang);
             } else if (protocol.equals("files")) {
-                doFiles(requestNumber, request, response, loggedInAs, protocolEnd + 1, userQuery);
+                doFiles(requestNumber, request, response, loggedInAs, protocolEnd + 1, userQuery, currLang);
             } else if (protocol.equals("sos")) {
-                doSos(requestNumber, request, response, ipAddress, loggedInAs, protocolEnd + 1, userQuery); 
+                doSos(requestNumber, request, response, ipAddress, loggedInAs, protocolEnd + 1, userQuery, currLang); 
             //} else if (protocol.equals("wcs")) {
             //    doWcs(request, response, ipAddress, loggedInAs, protocolEnd + 1, userQuery); 
             } else if (protocol.equals("wms")) {
-                doWms(requestNumber, request, response, loggedInAs, protocolEnd + 1, userQuery);
+                doWms(requestNumber, request, response, loggedInAs, protocolEnd + 1, userQuery, currLang);
             } else if (endOfRequest.equals("") || endOfRequest.equals("index.htm")) {
                 sendRedirect(response, tErddapUrl + "/index.html");
             } else if (protocol.startsWith("index.")) {
-                doIndex(requestNumber, request, response, loggedInAs);
+                doIndex(requestNumber, request, response, loggedInAs, currLang);
 
             } else if (protocol.equals("download") ||
                        protocol.equals("images") ||
                        protocol.equals("public")) {
                 doTransfer(requestNumber, request, response, protocol, protocolEnd + 1);
             } else if (protocol.equals("metadata")) {
-                doMetadata(requestNumber, request, response, loggedInAs, endOfRequest, userQuery);
+                doMetadata(requestNumber, request, response, loggedInAs, endOfRequest, userQuery, currLang);
             } else if (protocol.equals("rss")) {
-                doRss(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1);
+                doRss(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1, currLang);
             } else if (endOfRequest.startsWith("search/advanced.")) {  //before test for "search"
-                doAdvancedSearch(requestNumber, request, response, loggedInAs, protocolEnd + 1, userQuery);
+                doAdvancedSearch(requestNumber, request, response, loggedInAs, protocolEnd + 1, userQuery, currLang);
             } else if (endOfRequest.startsWith("search/index.")) {
-                doSearch(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1, userQuery);            
+                doSearch(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1, userQuery, currLang);            
             } else if (endOfRequest.equals("search/") ||
                        endOfRequest.equals("search")) {
                 sendRedirect(response, tErddapUrl + "/search/index.html?" + EDStatic.defaultPIppQuery);
             } else if (protocol.equals("opensearch1.1")) {
-                doOpenSearch(request, response, loggedInAs, protocol, protocolEnd + 1, userQuery);
+                doOpenSearch(request, response, loggedInAs, protocol, protocolEnd + 1, userQuery, currLang);
             } else if (protocol.equals("categorize")) {
-                doCategorize(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1, userQuery);
+                doCategorize(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1, userQuery, currLang);
             } else if (protocol.equals("info")) {
-                doInfo(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1);
+                doInfo(requestNumber, request, response, loggedInAs, protocol, protocolEnd + 1, currLang);
             } else if (endOfRequest.equals("information.html")) {
-                doInformationHtml(request, response, loggedInAs);
+                doInformationHtml(request, response, loggedInAs, currLang);
             } else if (endOfRequest.equals("legal.html")) {
-                doLegalHtml(request, response, loggedInAs);
+                doLegalHtml(request, response, loggedInAs, currLang);
             } else if (endOfRequest.equals("login.html") && EDStatic.authentication.length() > 0) {
-                doLogin(request, response, loggedInAs);
+                doLogin(request, response, loggedInAs, currLang);
             } else if (endOfRequest.equals("loginGoogle.html") &&  
                 (EDStatic.authentication.equals("google") || EDStatic.authentication.equals("oauth2"))) {
-                doLoginGoogle(request, response, loggedInAs);
+                doLoginGoogle(request, response, loggedInAs, currLang);
             } else if (endOfRequest.equals("loginOrcid.html") &&  
                 (EDStatic.authentication.equals("orcid") || EDStatic.authentication.equals("oauth2"))) {
-                doLoginOrcid(request, response, loggedInAs);
+                doLoginOrcid(request, response, loggedInAs, currLang);
             } else if (endOfRequest.equals("logout.html") && EDStatic.authentication.length() > 0) {
-                doLogout(request, response, loggedInAs);
+                doLogout(request, response, loggedInAs, currLang);
             } else if (endOfRequest.equals("rest.html")) {
-                doRestHtml(request, response, loggedInAs);
+                doRestHtml(request, response, loggedInAs, currLang);
             } else if (protocol.equals("rest")) {  
-                doGeoServicesRest(requestNumber, request, response, loggedInAs, endOfRequest, userQuery);
+                doGeoServicesRest(requestNumber, request, response, loggedInAs, endOfRequest, userQuery, currLang);
             } else if (endOfRequest.equals("setDatasetFlag.txt")) {
                 doSetDatasetFlag(ipAddress, request, response, userQuery);
             } else if (endOfRequest.equals("sitemap.xml")) {
                 doSitemap(request, response);
             } else if (endOfRequest.equals("slidesorter.html")) {
-                doSlideSorter(requestNumber, request, response, loggedInAs, userQuery);
+                doSlideSorter(requestNumber, request, response, loggedInAs, userQuery, currLang);
             } else if (endOfRequest.equals("status.html")) {
-                doStatus(request, response, loggedInAs);
+                doStatus(request, response, loggedInAs, currLang);
             } else if (endOfRequest.startsWith("dataProviderForm")) {
                 if (!EDStatic.dataProviderFormActive) 
                     sendResourceNotFoundError(requestNumber, request, response, 
-                        MessageFormat.format(EDStatic.disabled, "Data Provider Form"));
+                        MessageFormat.format(EDStatic.disabled_s[currLang], "Data Provider Form"));
                 else if (endOfRequest.equals("dataProviderForm.html")) 
-                    doDataProviderForm(request, response, loggedInAs);
+                    doDataProviderForm(request, response, loggedInAs, currLang);
                 else if (endOfRequest.equals("dataProviderForm1.html")) 
-                    doDataProviderForm1(request, response, loggedInAs, ipAddress);
+                    doDataProviderForm1(request, response, loggedInAs, ipAddress, currLang);
                 else if (endOfRequest.equals("dataProviderForm2.html")) 
-                    doDataProviderForm2(request, response, loggedInAs, ipAddress);
+                    doDataProviderForm2(request, response, loggedInAs, ipAddress, currLang);
                 else if (endOfRequest.equals("dataProviderForm3.html")) 
-                    doDataProviderForm3(request, response, loggedInAs, ipAddress);
+                    doDataProviderForm3(request, response, loggedInAs, ipAddress, currLang);
                 else if (endOfRequest.equals("dataProviderForm4.html")) 
-                    doDataProviderForm4(request, response, loggedInAs, ipAddress);
+                    doDataProviderForm4(request, response, loggedInAs, ipAddress, currLang);
                 else if (endOfRequest.equals("dataProviderFormDone.html")) 
-                    doDataProviderFormDone(request, response, loggedInAs);
+                    doDataProviderFormDone(request, response, loggedInAs, currLang);
                 else sendResourceNotFoundError(requestNumber, request, response, 
                     "The first subdirectory or file in the request URL doesn't exist.");
 
             } else if (protocol.equals("subscriptions")) {
                 doSubscriptions(requestNumber, request, response, loggedInAs, ipAddress, endOfRequest, 
-                    protocol, protocolEnd + 1, userQuery);
+                    protocol, protocolEnd + 1, userQuery, currLang);
             } else if (protocol.equals("convert")) {
                 doConvert(requestNumber, request, response, loggedInAs, endOfRequest, 
-                    protocolEnd + 1, userQuery);
+                    protocolEnd + 1, userQuery, currLang);
             } else if (endOfRequest.startsWith("outOfDateDatasets.")) {
-                doOutOfDateDatasets(requestNumber, request, response, loggedInAs, endOfRequest, userQuery);
+                doOutOfDateDatasets(requestNumber, request, response, loggedInAs, endOfRequest, userQuery, currLang);
             } else if (endOfRequest.equals("version")) {
                 doVersion(request, response);
             } else if (endOfRequest.equals("version_string")) {
@@ -780,9 +798,9 @@ public class Erddap extends HttpServlet {
      * @throws ServletException, IOException
      */
     public void doIndex(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = getUrlWithoutLang(request);  //post EDD.baseUrl, pre "?"
         //plain file types  
         for (int pft = 0; pft < plainFileTypes.length; pft++) { 
@@ -824,7 +842,7 @@ public class Erddap extends HttpServlet {
         EDStatic.tally.add("Home Page (since startup)", ".html");
         EDStatic.tally.add("Home Page (since last daily report)", ".html");
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Home Page", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Home Page", out, currLang); 
         try {
             //set up the table
             writer.write(
@@ -835,7 +853,7 @@ public class Erddap extends HttpServlet {
                 "<td style=\"width:60%;\" class=\"T\">\n");
 
             //*** left column: theShortDescription
-            writer.write(EDStatic.theShortDescriptionHtml(tErddapUrl));
+            writer.write(EDStatic.theShortDescriptionHtml(tErddapUrl, currLang));
 
             //thin vertical line between text columns
             writer.write(
@@ -846,19 +864,19 @@ public class Erddap extends HttpServlet {
 
             //*** the right column: Get Started with ERDDAP
             writer.write(
-                "<h2>" + EDStatic.getStartedHtml + "</h2>\n" +
+                "<h2>" + EDStatic.getStartedHtml_s[currLang] + "</h2>\n" +
                 "<ul>");
 
             //display a search form
             writer.write("\n<li>");
-            writer.write(getSearchFormHtml(request, loggedInAs, "<h3>", "</h3>", ""));
+            writer.write(getSearchFormHtml(request, loggedInAs, "<h3>", "</h3>", "", currLang));
 
             //display /info link with list of all datasets
             writer.write(
                 //here, just use rel=contents for the list of all datasets
                 "\n<li><h3><a rel=\"contents\" href=\"" + tErddapUrl + "/info/index.html?" +
                     EDStatic.encodedDefaultPIppQuery + "\">" +
-                MessageFormat.format(EDStatic.indexViewAll,  
+                MessageFormat.format(EDStatic.indexViewAll_s[currLang],  
                     //below is one of few places where number isn't converted to string 
                     //(so 1000's separator is used to format the number):
                     gridDatasetHashMap.size() + tableDatasetHashMap.size()) + //no: "" + 
@@ -866,34 +884,34 @@ public class Erddap extends HttpServlet {
 
             //display categorize options
             writer.write("\n<li>");
-            writeCategorizeOptionsHtml1(request, loggedInAs, writer, null, true);
+            writeCategorizeOptionsHtml1(request, loggedInAs, writer, null, true, currLang);
 
             //display Advanced Search option
             writer.write("\n<li><h3>" +
-                MessageFormat.format(EDStatic.indexSearchWith, 
-                    getAdvancedSearchLink(loggedInAs, EDStatic.defaultPIppQuery)) + 
+                MessageFormat.format(EDStatic.indexSearchWith_s[currLang], 
+                    getAdvancedSearchLink(loggedInAs, EDStatic.defaultPIppQuery, currLang)) + 
                 "</h3>\n");
 
             //display protocol links
             writer.write(
                 "\n<li>" +
-                "<h3>" + EDStatic.protocolSearchHtml + "</h3>\n" +
-                EDStatic.protocolSearch2Html +
+                "<h3>" + EDStatic.protocolSearchHtml_s[currLang] + "</h3>\n" +
+                EDStatic.protocolSearch2Html_s[currLang] +
                 //"<br>Click on a protocol to see a list of datasets which are available via that protocol in ERDDAP." +
                 "<br>&nbsp;\n" +
                 "<table class=\"erd commonBGColor\">\n" +
-                "  <tr><th>" + EDStatic.indexProtocol    + "</th>" + 
-                      "<th>" + EDStatic.indexDescription + "</th></tr>\n" +
+                "  <tr><th>" + EDStatic.indexProtocol_s[currLang]    + "</th>" + 
+                      "<th>" + EDStatic.indexDescription_s[currLang] + "</th></tr>\n" +
                 "  <tr>\n" +
                 "    <td><a rel=\"bookmark\" " + 
                     "href=\"" + tErddapUrl + "/griddap/index.html?" + 
                     EDStatic.encodedDefaultPIppQuery + "\"" + 
                     " title=\"" + 
-                    MessageFormat.format(EDStatic.protocolClick, "griddap") + "\">" +
-                    MessageFormat.format(EDStatic.indexDatasets, "griddap") + "</a> </td>\n" +
-                "    <td>" + EDStatic.EDDGridDapDescription + "\n" +
+                    MessageFormat.format(EDStatic.protocolClick_s[currLang], "griddap") + "\">" +
+                    MessageFormat.format(EDStatic.indexDatasets_s[currLang], "griddap") + "</a> </td>\n" +
+                "    <td>" + EDStatic.EDDGridDapDescription_s[currLang] + "\n" +
                 "      <a rel=\"help\" href=\"" + tErddapUrl + "/griddap/documentation.html\">" +
-                    MessageFormat.format(EDStatic.indexDocumentation, "griddap") + 
+                    MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "griddap") + 
                     "</a>\n" +
                 "    </td>\n" +
                 "  </tr>\n" +
@@ -902,11 +920,11 @@ public class Erddap extends HttpServlet {
                     "href=\"" + tErddapUrl + "/tabledap/index.html?" + 
                     EDStatic.encodedDefaultPIppQuery + "\"" + 
                     " title=\"" + 
-                    MessageFormat.format(EDStatic.protocolClick, "tabledap") + "\">" +
-                    MessageFormat.format(EDStatic.indexDatasets, "tabledap") + "</a></td>\n" +
-                "    <td>" + EDStatic.EDDTableDapDescription + "\n" +
+                    MessageFormat.format(EDStatic.protocolClick_s[currLang], "tabledap") + "\">" +
+                    MessageFormat.format(EDStatic.indexDatasets_s[currLang], "tabledap") + "</a></td>\n" +
+                "    <td>" + EDStatic.EDDTableDapDescription_s[currLang] + "\n" +
                 "      <a rel=\"help\" href=\"" + tErddapUrl + "/tabledap/documentation.html\">" +
-                    MessageFormat.format(EDStatic.indexDocumentation, "tabledap") + 
+                    MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "tabledap") + 
                     "</a>\n" +
                 "    </td>\n" +
                 "  </tr>\n" +
@@ -914,12 +932,12 @@ public class Erddap extends HttpServlet {
                 "    <td><a rel=\"bookmark\" " + 
                     "href=\"" + tErddapUrl + "/files/\"" + 
                     " title=\"" + 
-                    MessageFormat.format(EDStatic.protocolClick, "files") + "\">" +
-                    MessageFormat.format(EDStatic.indexDatasets, "\"files\"") + "</a></td>\n" +
-                "    <td>" + EDStatic.filesDescription + " " + 
-                    EDStatic.warning + " " + EDStatic.filesWarning + "\n" +
+                    MessageFormat.format(EDStatic.protocolClick_s[currLang], "files") + "\">" +
+                    MessageFormat.format(EDStatic.indexDatasets_s[currLang], "\"files\"") + "</a></td>\n" +
+                "    <td>" + EDStatic.filesDescription_s[currLang] + " " + 
+                    EDStatic.warning_s[currLang] + " " + EDStatic.filesWarning_s[currLang] + "\n" +
                 "      <a rel=\"help\" href=\"" + tErddapUrl + "/files/documentation.html\">" +
-                    MessageFormat.format(EDStatic.indexDocumentation, "\"files\"") + 
+                    MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "\"files\"") + 
                     "</a>\n" +
                 "    </td>\n" +
                 "  </tr>\n");
@@ -929,11 +947,11 @@ public class Erddap extends HttpServlet {
                     "href=\"" + tErddapUrl + "/sos/index.html?" + 
                     EDStatic.encodedDefaultPIppQuery + "\"" + 
                     " title=\"" +
-                    MessageFormat.format(EDStatic.protocolClick, "SOS") + "\">" +
-                    MessageFormat.format(EDStatic.indexDatasets, "SOS") + "</a></td>\n" +
-                "    <td>" + EDStatic.sosDescriptionHtml + "\n" +
+                    MessageFormat.format(EDStatic.protocolClick_s[currLang], "SOS") + "\">" +
+                    MessageFormat.format(EDStatic.indexDatasets_s[currLang], "SOS") + "</a></td>\n" +
+                "    <td>" + EDStatic.sosDescriptionHtml_s[currLang] + "\n" +
                 "      <a rel=\"help\" href=\"" + tErddapUrl + "/sos/documentation.html\">" +
-                    MessageFormat.format(EDStatic.indexDocumentation, "SOS") + 
+                    MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "SOS") + 
                     "</a>\n" +
                 "    </td>\n" +
                 "  </tr>\n");
@@ -943,11 +961,11 @@ public class Erddap extends HttpServlet {
                     "href=\"" + tErddapUrl + "/wcs/index.html?" + 
                     EDStatic.encodedDefaultPIppQuery + "\"" + 
                     " title=\"" + 
-                    MessageFormat.format(EDStatic.protocolClick, "WCS") + "\">" +
-                    MessageFormat.format(EDStatic.indexDatasets, "WCS") + "</a></td>\n" +
-                "    <td>" + EDStatic.wcsDescriptionHtml + "\n" +
+                    MessageFormat.format(EDStatic.protocolClick_s[currLang], "WCS") + "\">" +
+                    MessageFormat.format(EDStatic.indexDatasets_s[currLang], "WCS") + "</a></td>\n" +
+                "    <td>" + EDStatic.wcsDescriptionHtml_s[currLang] + "\n" +
                 "      <a rel=\"help\" href=\"" + tErddapUrl + "/wcs/documentation.html\">" +
-                    MessageFormat.format(EDStatic.indexDocumentation, "WCS") + 
+                    MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "WCS") + 
                     "</a>\n" +
                 "    </td>\n" +
                 "  </tr>\n");
@@ -957,11 +975,11 @@ public class Erddap extends HttpServlet {
                     "href=\"" + tErddapUrl + "/wms/index.html?" +
                     EDStatic.encodedDefaultPIppQuery + "\"" + 
                     " title=\"" + 
-                    MessageFormat.format(EDStatic.protocolClick, "WMS") + "\">" +
-                    MessageFormat.format(EDStatic.indexDatasets, "WMS") + "</a></td>\n" +
-                "    <td>" + EDStatic.wmsDescriptionHtml + "\n" +
+                    MessageFormat.format(EDStatic.protocolClick_s[currLang], "WMS") + "\">" +
+                    MessageFormat.format(EDStatic.indexDatasets_s[currLang], "WMS") + "</a></td>\n" +
+                "    <td>" + EDStatic.wmsDescriptionHtml_s[currLang] + "\n" +
                 "      <a rel=\"help\" href=\"" + tErddapUrl + "/wms/documentation.html\">" +
-                    MessageFormat.format(EDStatic.indexDocumentation, "WMS") + 
+                    MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "WMS") + 
                     "</a>\n" +
                 "    </td>\n" +
                 "  </tr>\n");
@@ -972,22 +990,22 @@ public class Erddap extends HttpServlet {
 
             //connections to OpenSearch and SRU
             writer.write(
-                "<li><h3>" + EDStatic.indexDevelopersSearch + "</h3>\n" +
+                "<li><h3>" + EDStatic.indexDevelopersSearch_s[currLang] + "</h3>\n" +
                 "  <ul>\n" +
                 "  <li><a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                    EDStatic.indexRESTfulSearch + "</a>\n" +
+                    EDStatic.indexRESTfulSearch_s[currLang] + "</a>\n" +
                 "  <li><a rel=\"help\" href=\"" + tErddapUrl + "/tabledap/allDatasets.html\">" + 
-                    EDStatic.indexAllDatasetsSearch + "</a>\n" +
+                    EDStatic.indexAllDatasetsSearch_s[currLang] + "</a>\n" +
                 "  <li><a rel=\"bookmark\" href=\"" + 
                     tErddapUrl + "/opensearch1.1/index.html\">" +
-                    EDStatic.indexOpenSearch + "</a>\n" +
+                    EDStatic.indexOpenSearch_s[currLang] + "</a>\n" +
                 "  </ul>\n" +
                 "\n");
 
             //Search Multiple ERDDAPs
             writer.write(
-                "<li><h3>" + EDStatic.searchMultipleERDDAPs + "</h3>\n" +
-                String2.replaceAll(EDStatic.searchMultipleERDDAPsDescription, "&erddapUrl;", tErddapUrl) + 
+                "<li><h3>" + EDStatic.searchMultipleERDDAPs_s[currLang] + "</h3>\n" +
+                String2.replaceAll(EDStatic.searchMultipleERDDAPsDescription_s[currLang], "&erddapUrl;", tErddapUrl) + 
                 "\n");
 
             //end of search/protocol options list
@@ -999,32 +1017,32 @@ public class Erddap extends HttpServlet {
             if (EDStatic.convertersActive)
                 writer.write(
                 "<p><strong><a class=\"selfLink\" id=\"converters\" href=\"#converters\" rel=\"bookmark\">" + 
-                    EDStatic.indexConverters + "</a></strong>\n" +
-                "<br>" + EDStatic.indexDescribeConverters + "\n" +
+                    EDStatic.indexConverters_s[currLang] + "</a></strong>\n" +
+                "<br>" + EDStatic.indexDescribeConverters_s[currLang] + "\n" +
                 "<table class=\"erd commonBGColor\">\n" +
-                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericAcronyms.html\">" + EDStatic.acronyms + "</a></td>\n" + 
-                "    <td>" + EDStatic.convertOceanicAtmosphericAcronyms + "</td></tr>\n" +
-                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/fipscounty.html\">"+ EDStatic.FIPSCountryCode + "</a></td>\n" + 
-                "    <td>" + EDStatic.convertFipsCounty + "</td></tr>\n" +
-                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/interpolate.html\">" + EDStatic.interpolate + "</a></td>\n" + 
-                "    <td>" + EDStatic.convertInterpolate + "</td></tr>\n" +
-                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/keywords.html\">"+ EDStatic.keywords_word +"</a></td>\n" + 
-                "    <td>" + EDStatic.convertKeywords + "</td></tr>\n" +
-                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/time.html\">" + EDStatic.time + "</a></td>\n" + 
-                "    <td>" + EDStatic.convertTime + "</td></tr>\n" +
-                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/units.html\">" + EDStatic.units + "</a></td>\n" + 
-                "    <td>" + EDStatic.convertUnits + "</td></tr>\n" +
+                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericAcronyms.html\">" + EDStatic.acronyms_s[currLang] + "</a></td>\n" + 
+                "    <td>" + EDStatic.convertOceanicAtmosphericAcronyms_s[currLang] + "</td></tr>\n" +
+                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/fipscounty.html\">"+ EDStatic.FIPSCountryCode_s[currLang] + "</a></td>\n" + 
+                "    <td>" + EDStatic.convertFipsCounty_s[currLang] + "</td></tr>\n" +
+                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/interpolate.html\">" + EDStatic.interpolate_s[currLang] + "</a></td>\n" + 
+                "    <td>" + EDStatic.convertInterpolate_s[currLang] + "</td></tr>\n" +
+                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/keywords.html\">"+ EDStatic.keywords_word_s[currLang] +"</a></td>\n" + 
+                "    <td>" + EDStatic.convertKeywords_s[currLang] + "</td></tr>\n" +
+                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/time.html\">" + EDStatic.time_s[currLang] + "</a></td>\n" + 
+                "    <td>" + EDStatic.convertTime_s[currLang] + "</td></tr>\n" +
+                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/units.html\">" + EDStatic.units_s[currLang] + "</a></td>\n" + 
+                "    <td>" + EDStatic.convertUnits_s[currLang] + "</td></tr>\n" +
                 "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/urls.html\">URLs</a></td>\n" + 
-                "    <td>" + EDStatic.convertURLs + "</td></tr>\n" +
-                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericVariableNames.html\">" + EDStatic.variableNames + "</a></td>\n" + 
-                "    <td>" + EDStatic.convertOceanicAtmosphericVariableNames + "</td></tr>\n" +
+                "    <td>" + EDStatic.convertURLs_s[currLang] + "</td></tr>\n" +
+                "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericVariableNames.html\">" + EDStatic.variableNames_s[currLang] + "</a></td>\n" + 
+                "    <td>" + EDStatic.convertOceanicAtmosphericVariableNames_s[currLang] + "</td></tr>\n" +
                 "</table>\n" + 
                 "\n");
 
             //metadata
             if (EDStatic.fgdcActive || EDStatic.iso19115Active) {
                 writer.write(
-                    "<p><strong><a class=\"selfLink\" id=\"metadata\" href=\"#metadata\" rel=\"bookmark\">" + EDStatic.indexMetadata + "</a></strong>\n" +
+                    "<p><strong><a class=\"selfLink\" id=\"metadata\" href=\"#metadata\" rel=\"bookmark\">" + EDStatic.indexMetadata_s[currLang] + "</a></strong>\n" +
                     "<br>");
                 String fgdcLink1 = 
                     "<br><a rel=\"bookmark\" " + 
@@ -1033,7 +1051,7 @@ public class Erddap extends HttpServlet {
                 String fgdcLink2 = //&#8209; is a non-breaking hyphen
                     "<a rel=\"help\" href=\"https://www.fgdc.gov/standards/projects/FGDC-standards-projects/metadata/base-metadata/index_html\"\n" +
                     ">FGDC&#8209;STD&#8209;001&#8209;1998" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>";
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>";
                 String isoLink1  =
                     "<br><a rel=\"bookmark\" " + 
                     "href=\"" + tErddapUrl + "/" + EDStatic.iso19115XmlDirectory +
@@ -1041,20 +1059,20 @@ public class Erddap extends HttpServlet {
                 String isoLink2  = //&#8209; is a non-breaking hyphen
                     "<a rel=\"help\" href=\"https://en.wikipedia.org/wiki/Geospatial_metadata\"\n" +
                     ">ISO&nbsp;19115&#8209;2/19139" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>";
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>";
                 if (EDStatic.fgdcActive && EDStatic.iso19115Active)
-                    writer.write(MessageFormat.format(EDStatic.indexWAF2, 
+                    writer.write(MessageFormat.format(EDStatic.indexWAF2_s[currLang], 
                         fgdcLink1, fgdcLink2, isoLink1, isoLink2));
                 else if (EDStatic.fgdcActive)
-                     writer.write(MessageFormat.format(EDStatic.indexWAF1, fgdcLink1, fgdcLink2));
-                else writer.write(MessageFormat.format(EDStatic.indexWAF1, isoLink1,  isoLink2));
+                     writer.write(MessageFormat.format(EDStatic.indexWAF1_s[currLang], fgdcLink1, fgdcLink2));
+                else writer.write(MessageFormat.format(EDStatic.indexWAF1_s[currLang], isoLink1,  isoLink2));
                  writer.write("\n\n");
             }
 
             //REST services
             writer.write(
-                "<p><strong><a class=\"selfLink\" id=\"services\" href=\"#services\" rel=\"bookmark\">" + EDStatic.indexServices + "</a></strong>\n" +
-                "<br>" + MessageFormat.format(EDStatic.indexDescribeServices, tErddapUrl) + 
+                "<p><strong><a class=\"selfLink\" id=\"services\" href=\"#services\" rel=\"bookmark\">" + EDStatic.indexServices_s[currLang] + "</a></strong>\n" +
+                "<br>" + MessageFormat.format(EDStatic.indexDescribeServices_s[currLang], tErddapUrl) + 
                 "\n\n");
 
             //And
@@ -1062,19 +1080,19 @@ public class Erddap extends HttpServlet {
                 "<p><strong><a class=\"selfLink\" id=\"and\" href=\"#and\" rel=\"bookmark\">And</a></strong>\n" +
                 "<table class=\"erd commonBGColor\">\n" +
                 "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/status.html\">Status</a></td>\n" + 
-                "    <td>" + EDStatic.statusHtml + "</td></tr>\n" +
+                "    <td>" + EDStatic.statusHtml_s[currLang] + "</td></tr>\n" +
                 (EDStatic.outOfDateDatasetsActive?
                 "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/outOfDateDatasets.html\">Out-Of-Date Datasets</a></td>\n" + 
-                "    <td>" + EDStatic.outOfDateHtml + "</td></tr>\n" : "") +
+                "    <td>" + EDStatic.outOfDateHtml_s[currLang] + "</td></tr>\n" : "") +
                 (EDStatic.subscriptionSystemActive?
                 "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/subscriptions/index.html\">Subscription System</a></td>\n" + 
-                "    <td>" + String2.replaceAll(EDStatic.subscription0Html, "<br>", " ") + "</td></tr>\n" : "") +
+                "    <td>" + String2.replaceAll(EDStatic.subscription0Html_s[currLang], "<br>", " ") + "</td></tr>\n" : "") +
                 (EDStatic.slideSorterActive?
                 "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/slidesorter.html\">Slide Sorter</a></td>\n" + 
-                "    <td>" + EDStatic.ssUsePlain + "</td></tr>\n" : "") +
+                "    <td>" + EDStatic.ssUsePlain_s[currLang] + "</td></tr>\n" : "") +
                 (EDStatic.dataProviderFormActive?
                 "<tr><td><a rel=\"bookmark\" href=\"" + tErddapUrl + "/dataProviderForm.html\">Data Provider Form</a></td>\n" + 
-                "    <td>" + EDStatic.dataProviderFormShortDescription + "</td></tr>\n" : "") +
+                "    <td>" + EDStatic.dataProviderFormShortDescription_s[currLang] + "</td></tr>\n" : "") +
                 "</table>\n\n");
 
             //end of table
@@ -1082,13 +1100,13 @@ public class Erddap extends HttpServlet {
                 "</td>\n</tr>\n</table>\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);   //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
 
             //end of home page
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -1098,23 +1116,23 @@ public class Erddap extends HttpServlet {
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doInformationHtml(HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs) throws Throwable {        
+        String loggedInAs, int currLang) throws Throwable {        
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);        
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);        
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Information", out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Information", out, currLang);
         try {
             writer.write("<div class=\"standard_width\">\n");
-            writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.hpn_information));
+            writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.hpn_information_s[currLang], currLang));
             //writer.write(EDStatic.youAreHere(loggedInAs, "Information"));
-            writer.write(EDStatic.theLongDescriptionHtml(tErddapUrl));
+            writer.write(EDStatic.theLongDescriptionHtml(tErddapUrl, currLang));
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -1123,17 +1141,17 @@ public class Erddap extends HttpServlet {
      *
      */
     public void doLegalHtml(HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs) throws Throwable {        
+        String loggedInAs, int currLang) throws Throwable {        
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);        
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);        
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Legal Notices", out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Legal Notices", out, currLang);
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_legalNotices) +
+                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_legalNotices_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, "Legal Notices") +
-                EDStatic.legalNotices + "\n" +
+                EDStatic.legalNotices_s[currLang] + "\n" +
                 // "<a rel=\"bookmark\" href=\"#disclaimers\">MODIFIED Disclaimers</a> | " +
                 // "<a rel=\"bookmark\" href=\"#privacyPolicy\">Privacy Policy</a> | " +
                 // "<a rel=\"bookmark\" href=\"#dataLicenses\">Data Licenses</a> | " +
@@ -1141,16 +1159,16 @@ public class Erddap extends HttpServlet {
                 // "\n" +
                 // "<h2><a class=\"selfLink\" id=\"disclaimers\" href=\"#disclaimers\" rel=\"bookmark\">Disclaimers</a></h2>\n" +
                 // "\n" +
-                EDStatic.standardGeneralDisclaimer + "\n\n" +
-                EDStatic.legal(tErddapUrl));
+                EDStatic.standardGeneralDisclaimer_s[currLang] + "\n\n" +
+                EDStatic.legal(tErddapUrl, currLang));
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -1230,7 +1248,7 @@ public class Erddap extends HttpServlet {
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doLoginGoogle(HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
         String loginUrl = EDStatic.erddapHttpsUrl + "/login.html";
 
@@ -1315,7 +1333,7 @@ public class Erddap extends HttpServlet {
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doLoginOrcid(HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
         String loginUrl = EDStatic.erddapHttpsUrl + "/login.html";
 
@@ -1398,7 +1416,7 @@ public class Erddap extends HttpServlet {
             Math2.sleep(500); //give session changes time to take effect
             loginSucceeded(orcid);
             sendRedirect(response, loginUrl + "?message=" + 
-                SSR.minimalPercentEncode(EDStatic.loginSucceeded));
+                SSR.minimalPercentEncode(EDStatic.loginSucceeded_s[currLang]));
             return;
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
@@ -1409,7 +1427,7 @@ public class Erddap extends HttpServlet {
                 String2.log("Caught t2: " + MustBe.throwableToString(t2));
             }
             sendRedirect(response, loginUrl + "?message=" + 
-                SSR.minimalPercentEncode(EDStatic.loginFailed + ": " + 
+                SSR.minimalPercentEncode(EDStatic.loginFailed_s[currLang] + ": " + 
                     MustBe.getShortErrorMessage(t)));
             return;
         }
@@ -1423,7 +1441,7 @@ public class Erddap extends HttpServlet {
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doLogin(HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
         //Special case: "loggedInAsHttps" is for using https without being logged in
         //so that https is used for erddapUrl substitutions, 
@@ -1461,7 +1479,7 @@ public class Erddap extends HttpServlet {
                 if (minutesUntilLoginAttempt > 0) {
                     sendRedirect(response, loginUrl + "?message=" + 
                         SSR.minimalPercentEncode(MessageFormat.format(
-                            EDStatic.loginAttemptBlocked, user, "" + minutesUntilLoginAttempt)));
+                            EDStatic.loginAttemptBlocked_s[currLang], user, "" + minutesUntilLoginAttempt)));
                     return;
                 }
                 try {
@@ -1474,7 +1492,7 @@ public class Erddap extends HttpServlet {
                         Math2.sleep(500); //give session changes time to take effect
                         loginSucceeded(user);
                         sendRedirect(response, loginUrl + "?message=" + 
-                            SSR.minimalPercentEncode(EDStatic.loginSucceeded));
+                            SSR.minimalPercentEncode(EDStatic.loginSucceeded_s[currLang]));
                         return;
                     } else {
                         //invalid login;  if currently logged in, logout
@@ -1487,14 +1505,14 @@ public class Erddap extends HttpServlet {
                         loginFailed(user);
                         sendRedirect(response, loginUrl + "?message=" + 
                             SSR.minimalPercentEncode(
-                            EDStatic.loginFailed + ": " + EDStatic.loginInvalid));
+                            EDStatic.loginFailed_s[currLang] + ": " + EDStatic.loginInvalid_s[currLang]));
                         return;
                     }
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
                     sendRedirect(response, loginUrl +
                         "?message=" + 
-                        SSR.minimalPercentEncode(EDStatic.loginFailed + ": " + 
+                        SSR.minimalPercentEncode(EDStatic.loginFailed_s[currLang] + ": " + 
                             MustBe.getShortErrorMessage(t)));
                     return;
                 }
@@ -1502,41 +1520,41 @@ public class Erddap extends HttpServlet {
 
             //custom login.html
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn, out);
+            Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn_s[currLang], out, currLang);
             try {
                 writer.write("<div class=\"standard_width\">\n");
-                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.LogIn));
+                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.LogIn_s[currLang], currLang));
 
                 //show message from EDStatic.redirectToLogin (which redirects to here) or logout.html
                 writer.write(standoutMessage);           
 
-                writer.write(EDStatic.loginDescribeCustom);
+                writer.write(EDStatic.loginDescribeCustom_s[currLang]);
 
                 if (loggedInAs.equals(EDStatic.loggedInAsHttps)) {
 
-                    String tProblems = String2.replaceAll(EDStatic.loginProblems, 
+                    String tProblems = String2.replaceAll(EDStatic.loginProblems_s[currLang], 
                         "&initialHelp;", 
-                        EDStatic.loginProblemExact +
-                        EDStatic.loginProblem3Times);
-                    tProblems = String2.replaceAll(tProblems, "&info;", EDStatic.loginUserNameAndPassword); //it's in loginProblemExact
+                        EDStatic.loginProblemExact_s[currLang] +
+                        EDStatic.loginProblem3Times_s[currLang]);
+                    tProblems = String2.replaceAll(tProblems, "&info;", EDStatic.loginUserNameAndPassword_s[currLang]); //it's in loginProblemExact
                     tProblems = String2.replaceAll(tProblems, "&erddapUrl;", tErddapUrl); //it's in cookies
 
                     //show the login form
                     writer.write(
-                    "<p><strong>" + EDStatic.loginNot + "</strong>\n" +
-                    EDStatic.loginPublicAccess +
+                    "<p><strong>" + EDStatic.loginNot_s[currLang] + "</strong>\n" +
+                    EDStatic.loginPublicAccess_s[currLang] +
                     //use POST, not GET, so that form params (password!) aren't in url (and so browser history, etc.)
                     "<form action=\"login.html\" method=\"post\" id=\"login_form\">\n" +  
-                    "<p><strong>" + EDStatic.loginToLogIn + ":</strong>\n" +
+                    "<p><strong>" + EDStatic.loginToLogIn_s[currLang] + ":</strong>\n" +
                     "<table class=\"compact\">\n" +
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.loginUserName + ":&nbsp;</td>\n" +
+                    "    <td>" + EDStatic.loginUserName_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td><input type=\"text\" size=\"30\" value=\"\" name=\"user\" id=\"user\"/></td>\n" +
                     "  </tr>\n" +
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.loginPassword + ":&nbsp;</td>\n" + 
+                    "    <td>" + EDStatic.loginPassword_s[currLang] + ":&nbsp;</td>\n" + 
                     "    <td><input type=\"password\" size=\"20\" value=\"\" name=\"password\" id=\"password\" autocomplete=\"off\"/>\n" +
-                    "      <input type=\"submit\" value=\"" + EDStatic.LogIn + "\"/></td>\n" +
+                    "      <input type=\"submit\" value=\"" + EDStatic.LogIn_s[currLang] + "\"/></td>\n" +
                     "  </tr>\n" +
                     "</table>\n" +
                     "</form>\n" +
@@ -1545,20 +1563,20 @@ public class Erddap extends HttpServlet {
 
                 } else {
                     //tell user he is logged in
-                    writer.write("<p><span class=\"successColor\">" + EDStatic.loginAs + 
+                    writer.write("<p><span class=\"successColor\">" + EDStatic.loginAs_s[currLang] + 
                         " <strong>" + loggedInAs + "</strong>.</span>\n" +
                         "(<a href=\"" + EDStatic.erddapHttpsUrl + "/logout.html\">" +
-                        EDStatic.logout + "</a>)\n" +
-                        "<p>" + EDStatic.loginBack + "\n" +
-                        String2.replaceAll(EDStatic.loginProblemsAfter, "&second;", ""));
+                        EDStatic.logout_s[currLang] + "</a>)\n" +
+                        "<p>" + EDStatic.loginBack_s[currLang] + "\n" +
+                        String2.replaceAll(EDStatic.loginProblemsAfter_s[currLang], "&second;", ""));
                 }
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t;
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -1611,7 +1629,7 @@ public class Erddap extends HttpServlet {
                 if (minutesUntilLoginAttempt > 0) {
                     sendRedirect(response, loginUrl + "?message=" + 
                         SSR.minimalPercentEncode(MessageFormat.format(
-                            EDStatic.loginAttemptBlocked, email, "" + minutesUntilLoginAttempt)));
+                            EDStatic.loginAttemptBlocked_s[currLang], email, "" + minutesUntilLoginAttempt)));
                     return;
                 }
 
@@ -1672,7 +1690,7 @@ public class Erddap extends HttpServlet {
                     }
                     loginFailed(email);
                     sendRedirect(response, loginUrl + "?message=" +  
-                        SSR.minimalPercentEncode(EDStatic.loginFailed));
+                        SSR.minimalPercentEncode(EDStatic.loginFailed_s[currLang]));
                     return;
 
                 } else {
@@ -1682,46 +1700,46 @@ public class Erddap extends HttpServlet {
                     Math2.sleep(500); //give session changes time to take effect
                     loginSucceeded(email);
                     sendRedirect(response, loginUrl + "?message=" + 
-                        SSR.minimalPercentEncode(EDStatic.loginSucceeded));
+                        SSR.minimalPercentEncode(EDStatic.loginSucceeded_s[currLang]));
                     return;
                 }
             }
 
             //email login.html
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn, out);
+            Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn_s[currLang], out, currLang);
             try {
                 writer.write("<div class=\"standard_width\">\n");
-                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.LogIn));
+                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.LogIn_s[currLang], currLang));
 
                 //show message from EDStatic.redirectToLogin (which redirects to here) or logout.html
                 writer.write(standoutMessage);           
 
-                writer.write(EDStatic.loginDescribeEmail);
+                writer.write(EDStatic.loginDescribeEmail_s[currLang]);
 
                 if (loggedInAs.equals(EDStatic.loggedInAsHttps)) {
 
                     //show the login form
-                    String tProblems = String2.replaceAll(EDStatic.loginProblems, 
+                    String tProblems = String2.replaceAll(EDStatic.loginProblems_s[currLang], 
                         "&initialHelp;", 
-                        EDStatic.loginProblemSameBrowser + 
-                        EDStatic.loginProblemExpire +
-                        EDStatic.loginProblem3Times);
+                        EDStatic.loginProblemSameBrowser_s[currLang] + 
+                        EDStatic.loginProblemExpire_s[currLang] +
+                        EDStatic.loginProblem3Times_s[currLang]);
                     tProblems = String2.replaceAll(tProblems, "&offerValidMinutes;", "" + offerValidMinutes); //it's in expire
                     tProblems = String2.replaceAll(tProblems, "&erddapUrl;", tErddapUrl); //it's in cookies
 
                     writer.write(
-                    "<p><strong>" + EDStatic.loginNot + "</strong>\n" +
-                    EDStatic.loginPublicAccess +
+                    "<p><strong>" + EDStatic.loginNot_s[currLang] + "</strong>\n" +
+                    EDStatic.loginPublicAccess_s[currLang] +
                     //use POST, not GET, so that form params (password!) aren't in url (and so browser history, etc.)
                     "\n" +  
-                    "<p><strong>" + EDStatic.loginToLogIn + ":</strong>\n" +
+                    "<p><strong>" + EDStatic.loginToLogIn_s[currLang] + ":</strong>\n" +
                     "<form action=\"login.html\" method=\"post\" id=\"login_form\">" +
                     "<table class=\"compact\">\n" +
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.loginYourEmailAddress + ":&nbsp;</td>\n" +
+                    "    <td>" + EDStatic.loginYourEmailAddress_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td><input type=\"text\" size=\"60\" value=\"\" name=\"email\" id=\"email\"/>\n" +
-                    "      <input type=\"submit\" value=\"" + EDStatic.LogIn + "\"/></td>\n" +
+                    "      <input type=\"submit\" value=\"" + EDStatic.LogIn_s[currLang] + "\"/></td>\n" +
                     "  </tr>\n" +
                     "</table></form>\n" +
                     "\n" +
@@ -1729,20 +1747,20 @@ public class Erddap extends HttpServlet {
 
                 } else {
                     //tell user he is logged in
-                    writer.write("<p><span class=\"successColor\">" + EDStatic.loginAs + 
+                    writer.write("<p><span class=\"successColor\">" + EDStatic.loginAs_s[currLang] + 
                         " <strong>" + loggedInAs + "</strong>.</span>\n" +
                         "(<a href=\"" + EDStatic.erddapHttpsUrl + "/logout.html\">" +
-                        EDStatic.logout + "</a>)\n" +
-                        "<p>" + EDStatic.loginBack + "\n" +
-                        String2.replaceAll(EDStatic.loginProblemsAfter, "&second;", ""));
+                        EDStatic.logout_s[currLang] + "</a>)\n" +
+                        "<p>" + EDStatic.loginBack_s[currLang] + "\n" +
+                        String2.replaceAll(EDStatic.loginProblemsAfter_s[currLang], "&second;", ""));
                 }
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t;
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -1761,33 +1779,33 @@ public class Erddap extends HttpServlet {
             //  https://members.orcid.org/api/oauth/presenting-oauth
             //  https://members.orcid.org/sites/default/files/connect-button.txt
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn, 
+            Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn_s[currLang], 
                 (isGoogle || isOauth2? 
                     "<meta name=\"google-signin-client_id\" " + 
                     "content=\"" + EDStatic.googleClientID + "\">\n" + 
                     "<script src=\"https://apis.google.com/js/platform.js\" async defer></script>\n" : ""), 
-                out);
+                out, currLang);
 
             try {
                 writer.write("<div class=\"standard_width\">\n");
-                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.LogIn));
+                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.LogIn_s[currLang], currLang));
 
                 //show message from EDStatic.redirectToLogin (which redirects to here) or logout.html
                 writer.write(standoutMessage);           
 
                 writer.write(
-                    isGoogle? EDStatic.loginDescribeGoogle :
-                    isOrcid?  EDStatic.loginDescribeOrcid  :
-                              EDStatic.loginDescribeOauth2);
+                    isGoogle? EDStatic.loginDescribeGoogle_s[currLang] :
+                    isOrcid?  EDStatic.loginDescribeOrcid_s[currLang]  :
+                              EDStatic.loginDescribeOauth2_s[currLang]);
 
                 if (loggedInAs.equals(EDStatic.loggedInAsHttps)) {
 
                     //login page for google/orcid/oauth2
-                    String tProblems = String2.replaceAll(EDStatic.loginProblems, 
+                    String tProblems = String2.replaceAll(EDStatic.loginProblems_s[currLang], 
                         "&initialHelp;", 
-                        isGoogle? EDStatic.loginProblemGoogleAgain :
-                        isOrcid?  EDStatic.loginProblemOrcidAgain  :
-                                  EDStatic.loginProblemOauth2Again);
+                        isGoogle? EDStatic.loginProblemGoogleAgain_s[currLang] :
+                        isOrcid?  EDStatic.loginProblemOrcidAgain_s[currLang]  :
+                                  EDStatic.loginProblemOauth2Again_s[currLang]);
                     tProblems = String2.replaceAll(tProblems, "&erddapUrl;", tErddapUrl); //it's in cookies
 
                     //show the login button
@@ -1810,30 +1828,30 @@ public class Erddap extends HttpServlet {
                         "  }\n" +
                         "</script>\n" : "") +
                     "\n" +
-                    "<p><strong>" + EDStatic.loginNot + "</strong>\n" +
-                    EDStatic.loginPublicAccess +
-                    "<p>" + EDStatic.loginToLogIn + ":\n" +
+                    "<p><strong>" + EDStatic.loginNot_s[currLang] + "</strong>\n" +
+                    EDStatic.loginPublicAccess_s[currLang] +
+                    "<p>" + EDStatic.loginToLogIn_s[currLang] + ":\n" +
                     "<ul>\n" +
                     (isGoogle || isOauth2?
-                        "<li>" + EDStatic.loginGoogleSignIn + "\n" +
+                        "<li>" + EDStatic.loginGoogleSignIn_s[currLang] + "\n" +
                         "  <div id=\"gSignInButton\" class=\"g-signin2\" data-onsuccess=\"onSignIn\"></div>\n" +
-                        "  <br>" + EDStatic.loginGoogleSignIn2 + "\n" +
+                        "  <br>" + EDStatic.loginGoogleSignIn2_s[currLang] + "\n" +
                             widgets.htmlButton("button", "loginToERDDAP", "", "", 
-                                EDStatic.loginErddap, 
+                                EDStatic.loginErddap_s[currLang], 
                                 "onclick='window.location.assign(\"" + 
                                 loginUrl + "\")'") +
                             "\n<br>&nbsp;\n" : "") + //don't say succeeded. It only succeeds if user successfully signed into Google.
                     (isOrcid || isOauth2?
                         //link to orcid web page to enter user's orcid and request authorization
                         //Orcid web page then redirects user to redirect_uri (loginOrcid.html) with one-time-use 6-digit code
-                        "<li>" + (isOauth2? EDStatic.orComma + " " : "") +
+                        "<li>" + (isOauth2? EDStatic.orComma_s[currLang] + " " : "") +
                             "<a rel=\"help\" href=\"https://orcid.org/oauth/authorize?" +
                             "client_id=" + EDStatic.orcidClientID +      //and add & to start of next line
                             "&response_type=code" +
                             "&scope=/authenticate" +
                             "&redirect_uri=" + SSR.minimalPercentEncode(EDStatic.erddapHttpsUrl + "/loginOrcid.html") + "\" \n" +
                         "  ><img style=\"vertical-align:middle;\" src=\"images/orcid_24x24.png\" alt=\"ORCID iD icon\"/>&nbsp;" +
-                            EDStatic.loginOrcidSignIn + "</a>\n" +
+                            EDStatic.loginOrcidSignIn_s[currLang] + "</a>\n" +
                         "  <br>&nbsp;\n" : "") +                    
                     "</ul>\n" +
                     tProblems + "\n" +
@@ -1844,21 +1862,21 @@ public class Erddap extends HttpServlet {
 
                 } else {
                     //tell user he is logged in
-                    writer.write("<p><span class=\"successColor\">" + EDStatic.loginAs + 
+                    writer.write("<p><span class=\"successColor\">" + EDStatic.loginAs_s[currLang] + 
                         " <strong>" + loggedInAs + "</strong>.</span>\n" +
                         "(<a href=\"" + EDStatic.erddapHttpsUrl + "/logout.html\">" +
-                        EDStatic.logout + "</a>)\n" +
-                        "<p>" + EDStatic.loginBack + "\n" +
-                        String2.replaceAll(EDStatic.loginProblemsAfter, "&second;", 
-                            isOrcid || isOauth2? EDStatic.loginProblemOrcidAgain : ""));
+                        EDStatic.logout_s[currLang] + "</a>)\n" +
+                        "<p>" + EDStatic.loginBack_s[currLang] + "\n" +
+                        String2.replaceAll(EDStatic.loginProblemsAfter_s[currLang], "&second;", 
+                            isOrcid || isOauth2? EDStatic.loginProblemOrcidAgain_s[currLang] : ""));
                 }
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t;
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         } 
@@ -1867,20 +1885,20 @@ public class Erddap extends HttpServlet {
         //alternative: lowSendError(requestNumber, response, HttpServletResponse.SC_UNAUTHORIZED, 
         //    EDStatic.loginCanNot);
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn, out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogIn_s[currLang], out, currLang);
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, EDStatic.LogIn) +
+                EDStatic.youAreHere(loggedInAs, EDStatic.LogIn_s[currLang], currLang) +
                 standoutMessage +
-                "<p><span class=\"highlightColor\">" + EDStatic.loginCanNot + "</span>\n");       
+                "<p><span class=\"highlightColor\">" + EDStatic.loginCanNot_s[currLang] + "</span>\n");       
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
 
         //[this is called because we aren't using lowSendError which normally does this]
@@ -1902,14 +1920,14 @@ public class Erddap extends HttpServlet {
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doLogout(HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
         String tErddapUrl = EDStatic.erddapHttpsUrl;
         String loginUrl = tErddapUrl + "/login.html";
 
         //user wasn't logged in?
         String encodedYouWerentLoggedIn = "?message=" + 
-            SSR.minimalPercentEncode(EDStatic.loginAreNot);
+            SSR.minimalPercentEncode(EDStatic.loginAreNot_s[currLang]);
         if (loggedInAs == null || loggedInAs.equals(EDStatic.loggedInAsHttps)) {
             //user wasn't logged in
             sendRedirect(response, loginUrl + encodedYouWerentLoggedIn);
@@ -1928,7 +1946,7 @@ public class Erddap extends HttpServlet {
                 EDStatic.tally.add("Log out (since last daily report)", "success");
             }
             String encodedSuccessMessage = "?message=" + SSR.minimalPercentEncode(
-                EDStatic.logoutSuccess);
+                EDStatic.logoutSuccess_s[currLang]);
 
             //*** CUSTOM, EMAIL, ORCID logout
             if (EDStatic.authentication.equals("custom") ||
@@ -1945,16 +1963,16 @@ public class Erddap extends HttpServlet {
                 //send user to web page that signs out then redirects to login.html
                 //see https://developers.google.com/identity/sign-in/web/
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
-                Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogOut, 
+                Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.LogOut_s[currLang], 
                     "<meta name=\"google-signin-client_id\" content=\"" + EDStatic.googleClientID + "\">\n",
-                    out);
+                    out, currLang);
 
                 try {
                     HtmlWidgets widgets = new HtmlWidgets(false, //tHtmlTooltips, 
                         EDStatic.imageDir);
                     writer.write(
                         "<div class=\"standard_width\">\n" +
-                        EDStatic.youAreHere(loggedInAs, EDStatic.LogOut) +
+                        EDStatic.youAreHere(loggedInAs, EDStatic.LogOut_s[currLang], currLang) +
                         //"Logging out and redirecting back to login.html.\n" +
                         //Sequence of events here was very difficult to set up.
                         //Javascript scripts are executed in order of appearance.
@@ -1985,17 +2003,17 @@ public class Erddap extends HttpServlet {
                         //"<script>\n" +
                         //"  onload = mySignOff;\n" +
                         "</script>\n" +
-                        EDStatic.loginPartwayAs + " <strong>" + loggedInAs + "</strong>.\n" +
+                        EDStatic.loginPartwayAs_s[currLang] + " <strong>" + loggedInAs + "</strong>.\n" +
                         widgets.htmlButton("button", "logout", "", 
-                            EDStatic.LogOut, EDStatic.LogOut, 
+                            EDStatic.LogOut_s[currLang], EDStatic.LogOut_s[currLang], 
                             "onclick=\"signOut();\""));
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(t));
+                    writer.write(EDStatic.htmlForException(t, currLang));
                     throw t;
                 } finally {
                     writer.write("</div>\n");
-                    endHtmlWriter(out, writer, tErddapUrl, false);
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang);
                 }
                 return;
             }
@@ -2020,19 +2038,19 @@ public class Erddap extends HttpServlet {
      *
      */
     public void doDataProviderForm(HttpServletRequest request, HttpServletResponse response,
-        String tLoggedInAs) throws Throwable {
+        String tLoggedInAs, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs, currLang);
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form", out);
-        String dataProviderFormLongDescriptionHTML = EDStatic.dataProviderFormLongDescriptionHTML
+        Writer writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form", out, currLang);
+        String dataProviderFormLongDescriptionHTML = EDStatic.dataProviderFormLongDescriptionHTML_s[currLang]
             .replaceAll("&safeEmail;", XML.encodeAsHTML(SSR.getSafeEmailAddress(EDStatic.adminEmail)))
-            .replaceAll("&htmlTooltipImage;", EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dataProviderFormSuccess))
+            .replaceAll("&htmlTooltipImage;", EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dataProviderFormSuccess_s[currLang]))
             .replaceAll("&tErddapUrl;", tErddapUrl);
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderForm));
+                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderForm_s[currLang], currLang));
                 // EDStatic.youAreHere(tLoggedInAs, "Data Provider Form"));
 
 //begin text
@@ -2105,11 +2123,11 @@ writer.write(dataProviderFormLongDescriptionHTML
         
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
         return;
     }
@@ -2118,9 +2136,9 @@ writer.write(dataProviderFormLongDescriptionHTML
      * This is part 1 of the Data Provider Form -- The Data.
      */
     public void doDataProviderForm1(HttpServletRequest request, HttpServletResponse response,
-        String tLoggedInAs, String ipAddress) throws Throwable {
+        String tLoggedInAs, String ipAddress, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs, currLang);
         OutputStream out = null;
         Writer writer = null;
 
@@ -2177,7 +2195,7 @@ writer.write(dataProviderFormLongDescriptionHTML
             frequencyOption = HtmlWidgets.validate0ToMax(
                 "Frequency", 0, frequencyOption, frequencyOptions.length - 1, errorMsgSB);
             if (errorMsgSB.length() > 0)
-                errorMsgSB.insert(0, EDStatic.dpf_fixProblem
+                errorMsgSB.insert(0, EDStatic.dpf_fixProblem_s[currLang]
                     //"<br>Please fix these problems, then 'Submit' this part of the form again.\n"
                     );
 
@@ -2221,11 +2239,11 @@ writer.write(dataProviderFormLongDescriptionHTML
 
             //write the HTML
             out = getHtmlOutputStreamUtf8(request, response);
-            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 1", out);
+            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 1", out, currLang);
             writer.write(
                 "<div class=\"standard_width\">\n" +
                 // EDStatic.youAreHere(tLoggedInAs, "Data Provider Form - Part 1"));
-                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP1));
+                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP1_s[currLang], currLang));
 
             //begin form
             String formName = "f1";
@@ -2243,7 +2261,7 @@ writer.write(dataProviderFormLongDescriptionHTML
                 "\n");
 
 //begin text
-String dataProviderFormPart1 = EDStatic.dataProviderFormPart1
+String dataProviderFormPart1 = EDStatic.dataProviderFormPart1_s[currLang]
     .replaceAll("&safeEmail;", XML.encodeAsHTML(SSR.getSafeEmailAddress(EDStatic.adminEmail)));
 writer.write(dataProviderFormPart1
 /*
@@ -2260,7 +2278,7 @@ writer.write("<span class=\"warningColor\">" + errorMsgSB.toString() + "</span> 
     "<br>&nbsp;\n");
 
 //Contact Info
-String dataProviderContactInfo = EDStatic.dataProviderContactInfo
+String dataProviderContactInfo = EDStatic.dataProviderContactInfo_s[currLang]
             .replace("&widgetYourName;", widgets.textField("yourName", "", //tooltip
             30, 50, tYourName, ""))
             .replace("&widgetEmail;", widgets.textField("emailAddress", "", //tooltip
@@ -2280,7 +2298,7 @@ widgets.textField("emailAddress", "", //tooltip
 "  <br>This dataset submission's timestamp is " + tTimestamp + ".\n" + 
 "\n"
 */);
-String dataProviderData = EDStatic.dataProviderData
+String dataProviderData = EDStatic.dataProviderData_s[currLang]
             .replaceAll("&safeEmail;", XML.encodeAsHTML(SSR.getSafeEmailAddress(EDStatic.adminEmail)))
             .replace("&widgetGriddedOptions;", widgets.select("griddedOption", "", 1, griddedOptions, griddedOption, ""))
             .replace("&widgetTabularOption;" ,widgets.select("tabularOption", "", 1, tabularOptions, tabularOption, ""))
@@ -2353,7 +2371,7 @@ widgets.select("frequencyOption", "", 1, frequencyOptions, frequencyOption, "") 
 */);
 
 //Submit
-writer.write(EDStatic.dpf_submit
+writer.write(EDStatic.dpf_submit_s[currLang]
         .replace("&widgetsSubmitButton;", widgets.button("submit", "Submit", "", "Submit", ""))
         .replace("&partNumber;", "1")
         .replace("&partNumber;", "2")
@@ -2371,12 +2389,12 @@ writer.write(widgets.endForm());
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
             if (writer != null)
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             if (writer != null) {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
         }
         return;
@@ -2386,9 +2404,9 @@ writer.write(widgets.endForm());
      * This is Data Provider Form 2
      */
     public void doDataProviderForm2(HttpServletRequest request, HttpServletResponse response,
-        String tLoggedInAs, String ipAddress) throws Throwable {
+        String tLoggedInAs, String ipAddress, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs, currLang);
         OutputStream out = null;
         Writer writer = null;
 
@@ -2408,7 +2426,7 @@ writer.write(widgets.endForm());
             int defaultCdmDataType = String2.indexOf(cdmDataTypes, "Other");
             int tCdmDataType = String2.indexOf(cdmDataTypes, 
                 request.getParameter("cdm_data_type"));
-            String cdmDataTypeHelp = EDStatic.cdmDataTypeHelp;
+            String cdmDataTypeHelp = EDStatic.cdmDataTypeHelp_s[currLang];
             /*      
 "CDM is Unidata's Common Data Model, a way of categorizing datasets" +
 "<br>based on the geometry of the dataset. Pick the cdm_data_type which" +
@@ -2495,7 +2513,7 @@ writer.write(widgets.endForm());
             if (errorMsgSB.length() > 0)
                 errorMsgSB.insert(0, 
                 //"<br>Please fix these problems, then 'Submit' this part of the form again.\n");
-                    EDStatic.dpf_fixProblem);
+                    EDStatic.dpf_fixProblem_s[currLang]);
 
             String fromInfo = tYourName  + " <" + tEmailAddress + "> at " + tTimestamp;
 
@@ -2571,11 +2589,11 @@ writer.write(widgets.endForm());
 
             //write the HTML
             out = getHtmlOutputStreamUtf8(request, response);
-            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 2", out);
+            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 2", out, currLang);
             writer.write(
                 "<div class=\"standard_width\">\n" +
                 // EDStatic.youAreHere(tLoggedInAs, "Data Provider Form - Part 2"));
-                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP2));
+                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP2_s[currLang], currLang));
 
             //begin form
             String formName = "f1";
@@ -2595,7 +2613,7 @@ writer.write(widgets.endForm());
                 "\n");
 
 //begin text
-String dataProviderFormPart2Header = EDStatic.dataProviderFormPart2Header
+String dataProviderFormPart2Header = EDStatic.dataProviderFormPart2Header_s[currLang]
             .replace("&fromInfo;",  XML.encodeAsHTML(fromInfo))
             .replace("&safeEmail;", XML.encodeAsHTML(SSR.getSafeEmailAddress(EDStatic.adminEmail)));
 writer.write(dataProviderFormPart2Header
@@ -2614,7 +2632,7 @@ writer.write("<span class=\"warningColor\">" + errorMsgSB.toString() + "</span> 
     "<br>&nbsp;\n");
 
 //Global Metadata
-writer.write(EDStatic.dataProviderFormPart2GlobalMetadata
+writer.write(EDStatic.dataProviderFormPart2GlobalMetadata_s[currLang]
 /*
 "<h2>Global Metadata</h2>\n" +
 "Global metadata is information about the entire dataset. It is a set of\n" +
@@ -2630,11 +2648,11 @@ writer.write(
 "<br>" + widgets.beginTable("class=\"compact\"") +
 //Required
 "<tr>\n" +
-"  <td colspan=\"3\"><strong>" + EDStatic.dpf_required + "</strong>\n" + 
+"  <td colspan=\"3\"><strong>" + EDStatic.dpf_required_s[currLang] + "</strong>\n" + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_title + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_titleTooltip
+"  <td>" + EDStatic.dpf_title_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_titleTooltip_s[currLang]
 //      "This is a short (&lt;=80 characters) description of the dataset. For example," + 
 // "    <br><kbd>Spray Gliders, Scripps Institution of Oceanography</kbd>"
 ) + "&nbsp;\n" +
@@ -2642,8 +2660,8 @@ writer.write(
 widgets.textField("title", "", dpfTFWidth, 140, tTitle, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_summary + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_summaryTooltip
+"  <td>" + EDStatic.dpf_summary_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_summaryTooltip_s[currLang]
     // "This is a paragraph describing the dataset.  (&lt;=500 characters)" + 
     // "<br>The summary should answer these questions:" +
     // "<br>&bull; Who created the dataset?" +
@@ -2658,8 +2676,8 @@ XML.encodeAsHTML(tSummary) + //encoding is important for security
 "</textarea>\n" +
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_creatorName + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_creatorNameTooltip
+"  <td>" + EDStatic.dpf_creatorName_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_creatorNameTooltip_s[currLang]
     // "This is the name of the primary person, group, institution," +
     // "<br>or position that created the data. For example," + 
     // "<br><kbd>John Smith</kbd>"
@@ -2668,8 +2686,8 @@ XML.encodeAsHTML(tSummary) + //encoding is important for security
 widgets.textField("creator_name", "", 40, 80, tCreatorName, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_creatorType + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_creatorTypeTooltip
+"  <td>" + EDStatic.dpf_creatorType_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_creatorTypeTooltip_s[currLang]
     // "This identifies the creator_name (above) as a person," +
     // "<br>group, institution, or position."
     ) + "&nbsp;" + 
@@ -2677,8 +2695,8 @@ widgets.textField("creator_name", "", 40, 80, tCreatorName, "") +
 widgets.select("creator_type", "", 1, creatorTypes, tCreatorType, "") +
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_creatorEmail + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_creatorEmailTooltip
+"  <td>" + EDStatic.dpf_creatorEmail_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_creatorEmailTooltip_s[currLang]
     // "This is the best contact email address for the creator of this data." +
     // "<br>Use your judgment &mdash; the creator_email might be for a" +
     // "<br>different entity than the creator_name." + 
@@ -2688,8 +2706,8 @@ widgets.select("creator_type", "", 1, creatorTypes, tCreatorType, "") +
 widgets.textField("creator_email", "", 40, 60, tCreatorEmail, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_institution + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_institutionTooltip
+"  <td>" + EDStatic.dpf_institution_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_institutionTooltip_s[currLang]
     // "This is the short/abbreviated form of the name of the primary" +
     // "<br>organization that created the data. For example," + 
     // "<br><kbd>NOAA NMFS SWFSC</kbd>"
@@ -2698,8 +2716,8 @@ widgets.textField("creator_email", "", 40, 60, tCreatorEmail, "") +
 widgets.textField("institution", "", 40, 120, tInstitution, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_infoUrl + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_infoUrlTooltip
+"  <td>" + EDStatic.dpf_infoUrl_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_infoUrlTooltip_s[currLang]
     // "This is a URL with information about this dataset." +
     // "<br>For example, <kbd>http://spray.ucsd.edu</kbd>" + 
     // "<br>If there is no URL related to the dataset, provide" +
@@ -2709,10 +2727,10 @@ widgets.textField("institution", "", 40, 120, tInstitution, "") +
 widgets.textField("infoUrl", "", dpfTFWidth, 200, tInfoUrl, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_license + "\n" + 
+"  <td>" + EDStatic.dpf_license_s[currLang] + "\n" + 
 "  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, 
-    EDStatic.dpf_licenseTooltip
-        .replace("&standardLicense;", String2.replaceAll(EDStatic.standardLicense, "\n", "<br>"))
+    EDStatic.dpf_licenseTooltip_s[currLang]
+        .replace("&standardLicense;", String2.replaceAll(EDStatic.standardLicense_s[currLang], "\n", "<br>"))
         .replace("&kstandard;", "<kbd>[standard]</kbd>")
     // "This is the license and disclaimer for use of this data." +
     // "<br>ERDDAP has a standard license, which you can use via <kbd>[standard]</kbd>" +
@@ -2738,13 +2756,13 @@ widgets.select("cdm_data_type", "", 1, cdmDataTypes, tCdmDataType, "") +
 "</tr>\n" +
 //Optional
 "<tr>\n" +
-"  <td><strong>" + EDStatic.dpf_optional + "</strong>\n" +
+"  <td><strong>" + EDStatic.dpf_optional_s[currLang] + "</strong>\n" +
 "  <td>&nbsp;\n" +
-"  <td>(" + EDStatic.dpf_provideIfAvaliable + ")\n" + 
+"  <td>(" + EDStatic.dpf_provideIfAvaliable_s[currLang] + ")\n" + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_acknowledgement + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_acknowledgementTooltip
+"  <td>" + EDStatic.dpf_acknowledgement_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_acknowledgementTooltip_s[currLang]
     // "Optional: This is the place to acknowledge various types of support for" +
     // "<br>the project that produced this data. (&lt;=350 characters) For example," +
     // "<br><kbd>This project received additional funding from the NOAA" +
@@ -2755,8 +2773,8 @@ XML.encodeAsHTML(tAcknowledgement) +  //encoding is important for security
 "</textarea>\n" +
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_history + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_historyTooltip
+"  <td>" + EDStatic.dpf_history_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_historyTooltip_s[currLang]
     // "Optional: This is a list of the actions (one per line) which led to the creation of this data." +
     // "<br>Ideally, each line includes a timestamp and a description of the action. (&lt;=500 characters) For example," + 
     // "<br><kbd>Datafiles are downloaded ASAP from https://oceandata.sci.gsfc.nasa.gov/MODISA/L3SMI/ to NOAA NMFS SWFSC ERD." +
@@ -2768,7 +2786,7 @@ XML.encodeAsHTML(tHistory) +  //encoding is important for security
 "</tr>\n" +
 "<tr>\n" +
 "  <td>id\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_idTooltip
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_idTooltip_s[currLang]
     // "Optional: This is an identifier for the dataset, as provided by" +
     // "<br>its naming authority. The combination of \"naming authority\"" +
     // "<br>and the \"id\" should be globally unique, but the id can be" +
@@ -2782,8 +2800,8 @@ XML.encodeAsHTML(tHistory) +  //encoding is important for security
 widgets.textField("id", "", 40, 80, tID, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_namingAuthority + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_namingAuthorityTooltip
+"  <td>" + EDStatic.dpf_namingAuthority_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_namingAuthorityTooltip_s[currLang]
     // "Optional: This is the organization that provided the id (above) for the dataset." +
     // "<br>The naming authority should be uniquely specified by this attribute." +
     // "<br>We recommend using reverse-DNS naming for the naming authority;" +
@@ -2794,8 +2812,8 @@ widgets.textField("id", "", 40, 80, tID, "") +
 widgets.textField("naming_authority", "", dpfTFWidth, 160, tNamingAuthority, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_productVersion + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_productVersionTooltip
+"  <td>" + EDStatic.dpf_productVersion_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_productVersionTooltip_s[currLang]
     // "Optional: This is the version identifier of this data. For example, if you" +
     // "<br>plan to add new data yearly, you might use the year as the version identifier." +
     // "<br>For example, <kbd>2014</kbd>"
@@ -2804,8 +2822,8 @@ widgets.textField("naming_authority", "", dpfTFWidth, 160, tNamingAuthority, "")
 widgets.textField("product_version", "", 20, 80, tProductVersion, "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_references + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_referencesTooltip
+"  <td>" + EDStatic.dpf_references_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_referencesTooltip_s[currLang]
     // "Optional: This is one or more published or web-based references" +
     // "<br>that describe the data or methods used to produce it. URL's and" +
     // "<br>DOI's are recommend. (&lt;=500 characters) For example,\n" +
@@ -2819,8 +2837,8 @@ XML.encodeAsHTML(tReferences) +  //encoding is important for security
 "</textarea>\n" +
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_comment + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_commentTooltip
+"  <td>" + EDStatic.dpf_comment_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_commentTooltip_s[currLang]
     // "Optional: This is miscellaneous information about the data, not" +
     // "<br>captured elsewhere. (&lt;=350 characters) For example," +
     // "<br><kbd>No animals were harmed during the collection of this data.</kbd>"
@@ -2839,7 +2857,7 @@ XML.encodeAsHTML(tComment) +  //encoding is important for security
 
 //Submit
 writer.write(
-    EDStatic.dpf_submit
+    EDStatic.dpf_submit_s[currLang]
         .replace("&widgetsSubmitButton;", widgets.button("submit", "Submit", "", "Submit", ""))
         .replace("&partNumber;", "2")
         .replace("&partNumber;", "3")
@@ -2856,12 +2874,12 @@ writer.write(widgets.endForm());
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
             if (writer != null)
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             if (writer != null) {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
         }
         return;
@@ -2875,9 +2893,9 @@ writer.write(widgets.endForm());
      *
      */
     public void doDataProviderForm3(HttpServletRequest request, HttpServletResponse response,
-        String tLoggedInAs, String ipAddress) throws Throwable {
+        String tLoggedInAs, String ipAddress, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs, currLang);
         OutputStream out = null;
         Writer writer = null;
 
@@ -2892,7 +2910,7 @@ writer.write(widgets.endForm());
             
             String dataTypeOptions[] = {"(unknown)", 
                 "String", "boolean", "byte",  "short", "int", "long", "float", "double"};
-            String dataTypeHelp = EDStatic.dpf_dataTypeHelp
+            String dataTypeHelp = EDStatic.dpf_dataTypeHelp_s[currLang]
                 .replace("&kUnknown", "<kbd>(unknown)</kbd>")
                 .replace("&kString;", "<kbd>String</kbd>")
                 .replace("&kboolean;", "<kbd>boolean</kbd>")
@@ -2920,7 +2938,7 @@ writer.write(widgets.endForm());
                 // "<br>&bull; <kbd>double</kbd> is a 64 bit floating point number (up to 17 significant digits)"
 
             int ioosUnknown = String2.indexOf(EDV.IOOS_CATEGORIES, "Unknown");
-            String ioosCategoryHelp = EDStatic.dpf_ioosCategoryHelp
+            String ioosCategoryHelp = EDStatic.dpf_ioosCategoryHelp_s[currLang]
                 .replace("&Location;", "<kbd>Location</kbd>")
                 .replace("&Time;", "<kbd>Time</kbd>")
                 .replace("&Taxonomy;", "<kbd>Taxonomy</kbd>")
@@ -3015,7 +3033,7 @@ writer.write(widgets.endForm());
                     "comment #" + var, "", tComment[var], 160, errorMsgSB);
             }
             if (errorMsgSB.length() > 0)
-                errorMsgSB.insert(0, EDStatic.dpf_fixProblem
+                errorMsgSB.insert(0, EDStatic.dpf_fixProblem_s[currLang]
                     // "<br>Please fix these problems, then 'Submit' this part of the form again.\n"
                     );
 
@@ -3082,10 +3100,10 @@ dataTypeOptions[tDataType[var]] + "\">"   + XML.encodeAsXML(tFillValue[var])   +
 
             //write the HTML
             out = getHtmlOutputStreamUtf8(request, response);
-            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 3", out);
+            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 3", out, currLang);
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP3));
+                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP3_s[currLang], currLang));
                 // EDStatic.youAreHere(tLoggedInAs, "Data Provider Form - Part 3"));
 
             //begin form
@@ -3106,7 +3124,8 @@ dataTypeOptions[tDataType[var]] + "\">"   + XML.encodeAsXML(tFillValue[var])   +
                 "\n");
 
 //begin text
-writer.write(EDStatic.dpf_part3Header.replace("&fromInfo;",  XML.encodeAsHTML(fromInfo))
+writer.write(EDStatic.dpf_part3Header_s[currLang]
+                .replace("&fromInfo;",  XML.encodeAsHTML(fromInfo))
                 .replace("&safeEmail;", XML.encodeAsHTML(SSR.getSafeEmailAddress(EDStatic.adminEmail)))
 // "This is part 3 (of 4) of the Data Provider Form\n" +
 // "<br>from " + XML.encodeAsHTML(fromInfo) + ".\n" +
@@ -3122,7 +3141,8 @@ writer.write("<span class=\"warningColor\">" + errorMsgSB.toString() + "</span> 
     "<br>&nbsp;\n");
 
 //Variable Metadata
-writer.write(EDStatic.dpf_variableMetadata.replace("&widget;", widgets.select("group", "", 1, groupOptions, tGroup, ""))
+writer.write(EDStatic.dpf_variableMetadata_s[currLang]
+        .replace("&widget;", widgets.select("group", "", 1, groupOptions, tGroup, ""))
 // "<h2>Variable Metadata</h2>\n" +
 // "Variable metadata is information that is specific to a given variable within\n" +
 // "the dataset. It is a set of <kbd>attribute=value</kbd> pairs, for example,\n" +
@@ -3158,8 +3178,8 @@ widgets.beginTable("class=\"compact\"") +
 "  <td colspan=3>&nbsp;<br><strong>Variable #" + var + "</strong></td>\n" +
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_sourceName + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_sourceNameTooltip
+"  <td>" + EDStatic.dpf_sourceName_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_sourceNameTooltip_s[currLang]
     // "This is the name of this variable currently used by the data source." +
     // "<br>For example, <kbd>wt</kbd>" +
     // "<br>This is case-sensitive."
@@ -3168,9 +3188,9 @@ widgets.beginTable("class=\"compact\"") +
 widgets.textField("sourceName" + var, "", 20, 60, tSourceName[var], "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_destinationName + "\n" + 
+"  <td>" + EDStatic.dpf_destinationName_s[currLang] + "\n" + 
 "  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, 
-        EDStatic.dpf_destinationNameTooltip
+        EDStatic.dpf_destinationNameTooltip_s[currLang]
             .replace("&klatitude;", "<kbd>latitude</kbd>")
             .replace("&klongitude;", "<kbd>longitude</kbd>")
             .replace("&kaltitude;", "<kbd>altitude</kbd>")
@@ -3194,8 +3214,8 @@ widgets.textField("sourceName" + var, "", 20, 60, tSourceName[var], "") +
 widgets.textField("destinationName" + var, "", 20, 60, tDestinationName[var], "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_longName + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_longNameTooltip
+"  <td>" + EDStatic.dpf_longName_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_longNameTooltip_s[currLang]
     // "This is a longer, written-out version of the destinationName." +
     // "<br>For example, <kbd>Water Temperature</kbd>" +
     // "<br>Among other uses, it will be used as an axis title on graphs." +
@@ -3207,8 +3227,8 @@ widgets.textField("destinationName" + var, "", 20, 60, tDestinationName[var], ""
 widgets.textField("long_name" + var, "", 40, 100, tLongName[var], "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_standardName + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_standardNameTooltip
+"  <td>" + EDStatic.dpf_standardName_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_standardNameTooltip_s[currLang]
     // "Optional: This is the name from the CF Standard Name Table" +
     // "<br>&nbsp;&nbsp;which is most appropriate for this variable.\n" + 
     // "<br>For example, <kbd>sea_water_temperature</kbd>." +
@@ -3221,15 +3241,15 @@ widgets.comboBox(formName, "standard_name" + var, "", 40, 120, tStandardName[var
     EDStatic.commonStandardNames, "", null) + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_dataType + "\n" + 
+"  <td>" + EDStatic.dpf_dataType_s[currLang] + "\n" + 
 "  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, dataTypeHelp) + "&nbsp;\n" + 
 "  <td>\n" +
 widgets.select("dataType" + var, "", 1, 
     dataTypeOptions, tDataType[var], "") +
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_fillValue + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_fillValueTooltip
+"  <td>" + EDStatic.dpf_fillValue_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_fillValueTooltip_s[currLang]
     // "For numeric variables, this is the value that is used in the" +
     // "<br>data file to indicate a missing value for this variable.\n" +
     // "<br>For example, <kbd>-999</kbd> ." +
@@ -3241,8 +3261,8 @@ widgets.textField("FillValue" + var, //note that field name lacks leading '_'
     "", 10, 30, tFillValue[var], "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_units + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_unitsTooltip.replace("&kcount;", "<kbd>count</kbd>")
+"  <td>" + EDStatic.dpf_units_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_unitsTooltip_s[currLang].replace("&kcount;", "<kbd>count</kbd>")
     // "These are the units of this variable. For example, <kbd>degree_C</kbd>" + 
     // "<br>This is <strong>required</strong> for numeric variables, but not used for most String variables." +
     // "<br>&bull; For temperature, use <kbd>degree_C</kbd> or <kbd>degree_F</kbd> ." +
@@ -3260,8 +3280,8 @@ widgets.textField("FillValue" + var, //note that field name lacks leading '_'
 widgets.textField("units" + var, "", 20, 80, tUnits[var], "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_range + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_rangeTooltip
+"  <td>" + EDStatic.dpf_range_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_rangeTooltip_s[currLang]
     // "For numeric variables, this specifies the typical range of values." +
     // "<br>For example, <kbd>minimum=32.0</kbd> and <kbd>maximum=37.0</kbd> ." + 
     // "<br>The range should include about 98% of the values." +
@@ -3276,15 +3296,15 @@ widgets.textField("rangeMin" + var, "", 10, 30, tRangeMin[var], "") +
 widgets.textField("rangeMax" + var, "", 10, 30, tRangeMax[var], "") + 
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_ioosCategory + "\n" + 
+"  <td>" + EDStatic.dpf_ioosCategory_s[currLang] + "\n" + 
 "  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, ioosCategoryHelp) + "&nbsp;\n" + 
 "  <td>\n" + 
 widgets.select("ioos_category" + var, "", 1, 
     EDV.IOOS_CATEGORIES, tIoosCategory[var], "") +
 "</tr>\n" +
 "<tr>\n" +
-"  <td>" + EDStatic.dpf_comment + "\n" + 
-"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_commentTooltip
+"  <td>" + EDStatic.dpf_comment_s[currLang] + "\n" + 
+"  <td>&nbsp;" + EDStatic.htmlTooltipImage(tLoggedInAs, EDStatic.dpf_commentTooltip_s[currLang]
     // "Optional: This is miscellaneous information about this variable, not captured" +
     // "<br>elsewhere. For example," +
     // "<br><kbd>This is the difference between today's SST and the previous day's SST.</kbd>"
@@ -3302,7 +3322,7 @@ widgets.textField("comment" + var, "", dpfTFWidth, 250, tComment[var], "") +
 
 //Submit
 writer.write(
-    EDStatic.dpf_submit
+    EDStatic.dpf_submit_s[currLang]
     .replace("&widgetsSubmitButton;", widgets.button("submit", "Submit", "", "Submit", ""))
     .replace("&partNumber;", "3")
     .replace("&partNumber;", "4")
@@ -3320,12 +3340,12 @@ writer.write(widgets.endForm());
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
             if (writer != null)
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             if (writer != null) {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
         }
         return;
@@ -3336,9 +3356,9 @@ writer.write(widgets.endForm());
      *
      */
     public void doDataProviderForm4(HttpServletRequest request, HttpServletResponse response,
-        String tLoggedInAs, String ipAddress) throws Throwable {
+        String tLoggedInAs, String ipAddress, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs, currLang);
         OutputStream out = null;
         Writer writer = null;
 
@@ -3363,7 +3383,7 @@ writer.write(widgets.endForm());
             tOtherComments = HtmlWidgets.validateNotNullNotTooLong(
                 "Other Comments", "", tOtherComments, 500, errorMsgSB);
             if (errorMsgSB.length() > 0)
-                errorMsgSB.insert(0, EDStatic.dpf_fixProblem
+                errorMsgSB.insert(0, EDStatic.dpf_fixProblem_s[currLang]
                     // "<br>Please fix these problems, then 'Submit' this part of the form again.\n"
                     );
 
@@ -3405,10 +3425,10 @@ writer.write(widgets.endForm());
 
             //write the HTML
             out = getHtmlOutputStreamUtf8(request, response);
-            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 4", out);
+            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Part 4", out, currLang);
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP4));
+                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormP4_s[currLang], currLang));
                 // EDStatic.youAreHere(tLoggedInAs, "Data Provider Form - Part 4"));
 
             //begin form
@@ -3429,7 +3449,7 @@ writer.write(widgets.endForm());
                 "\n");
 
 //begin text
-writer.write(EDStatic.dpf_part4Header.replace("&fromInfo;", XML.encodeAsHTML(fromInfo))
+writer.write(EDStatic.dpf_part4Header_s[currLang].replace("&fromInfo;", XML.encodeAsHTML(fromInfo))
                 .replace("&safeEmail", XML.encodeAsHTML(SSR.getSafeEmailAddress(EDStatic.adminEmail)))
 // "This is part 4 (of 4) of the Data Provider Form\n" +
 // "<br>from " + XML.encodeAsHTML(fromInfo) + ".\n" +
@@ -3444,7 +3464,7 @@ writer.write("<span class=\"warningColor\">" + errorMsgSB.toString() + "</span> 
     "<br>&nbsp;\n");
 
 //other comments
-writer.write(EDStatic.dpf_otherComment.replace("&dpfTAWidth;", String.valueOf(dpfTAWidth))
+writer.write(EDStatic.dpf_otherComment_s[currLang].replace("&dpfTAWidth;", String.valueOf(dpfTAWidth))
         .replace("&tOtherComments;", XML.encodeAsHTML(tOtherComments))
 // "<h2>Other Comments</h2>\n" + 
 // "Optional: If there are other things you think the ERDDAP administrator\n" +
@@ -3458,7 +3478,7 @@ writer.write(EDStatic.dpf_otherComment.replace("&dpfTAWidth;", String.valueOf(dp
 );
 
 //Submit
-writer.write(EDStatic.dpf_finishPart4.replace("&widgetsSubmitButton;", widgets.button("submit", "Submit", "", "Submit", ""))
+writer.write(EDStatic.dpf_finishPart4_s[currLang].replace("&widgetsSubmitButton;", widgets.button("submit", "Submit", "", "Submit", ""))
 // "<h2>Finished with part 4?</h2>\n" + 
 // "Click\n" + 
 // widgets.button("submit", "Submit", "", "Submit", "") +
@@ -3472,12 +3492,12 @@ writer.write(widgets.endForm());
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
             if (writer != null)
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             if (writer != null) {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
         }
         return;
@@ -3487,9 +3507,9 @@ writer.write(widgets.endForm());
      * This is Data Provider Form Done
      */
     public void doDataProviderFormDone(HttpServletRequest request, HttpServletResponse response,
-        String tLoggedInAs) throws Throwable {
+        String tLoggedInAs, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(tLoggedInAs, currLang);
         OutputStream out = null;
         Writer writer = null;
 
@@ -3511,14 +3531,14 @@ writer.write(widgets.endForm());
 
             //write the HTML
             out = getHtmlOutputStreamUtf8(request, response);
-            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Done", out);
+            writer = getHtmlWriterUtf8(tLoggedInAs, "Data Provider Form - Done", out, currLang);
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormDone));
+                EDStatic.youAreHere(tLoggedInAs, EDStatic.hpn_dataProviderFormDone_s[currLang], currLang));
                 // EDStatic.youAreHere(tLoggedInAs, "Data Provider Form - Done"));
 
 //begin text
-writer.write(EDStatic.dpf_congratulation
+writer.write(EDStatic.dpf_congratulation_s[currLang]
         .replace("&tTimestamp;", tTimestamp)
         .replaceAll("&tErddapUrl;", tErddapUrl)
         .replace("&tYourName;", SSR.minimalPercentEncode(tYourName))
@@ -3538,12 +3558,12 @@ writer.write(EDStatic.dpf_congratulation
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
             if (writer != null) 
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             if (writer != null) {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
         }
         return;
@@ -3557,17 +3577,17 @@ writer.write(EDStatic.dpf_congratulation
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doStatus(HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Status", out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Status", out, currLang);
         try {
             int nGridDatasets = gridDatasetHashMap.size();
             int nTableDatasets = tableDatasetHashMap.size();
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_status) +
+                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_status_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, "Status") +
                 "<pre>");
             StringBuilder sb = new StringBuilder();
@@ -3586,13 +3606,13 @@ writer.write(EDStatic.dpf_congratulation
             writer.write("</pre>\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
 
             //end of status.html
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
 
             //as a convenience to admins, viewing status.html calls String2.flushLog()
             String2.flushLog();
@@ -3606,11 +3626,11 @@ writer.write(EDStatic.dpf_congratulation
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doRestHtml(HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "RESTful Web Services", out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "RESTful Web Services", out, currLang);
         try {
             String htmlQueryUrl = tErddapUrl + "/search/index.html?" +
                 EDStatic.encodedDefaultPIppQuery + "&#x26;searchFor=temperature";
@@ -3620,13 +3640,13 @@ writer.write(EDStatic.dpf_congratulation
             String griddapExample  = tErddapUrl + "/griddap/" + EDStatic.EDDGridIdExample;
             String tabledapExample = tErddapUrl + "/tabledap/" + EDStatic.EDDTableIdExample;
             
-            String modifiedRestfulHTML = EDStatic.restfulHTML
-                .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl))
+            String modifiedRestfulHTML = EDStatic.restfulHTML_s[currLang]
+                .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl, currLang))
                 .replaceAll("&htmlQueryUrl;", htmlQueryUrl)
                 .replaceAll("&jsonQueryUrl;", jsonQueryUrl)
                 .replaceAll("&htmlQueryUrlWithSpaces;", htmlQueryUrlWithSpaces)
                 .replaceAll("&tErddapUrl;", tErddapUrl)
-                .replaceAll("&acceptEncodingHtmlh3tErddapUrl;", EDStatic.acceptEncodingHtml("h3", tErddapUrl))
+                .replaceAll("&acceptEncodingHtmlh3tErddapUrl;", EDStatic.acceptEncodingHtml("h3", tErddapUrl, currLang))
                 .replaceAll("&plainLinkExamples1;", plainLinkExamples(tErddapUrl, "/index", ""))
                 .replaceAll("&plainLinkExamples2;", plainLinkExamples(tErddapUrl, "/info/index", EDStatic.encodedAllPIppQuery))
                 .replaceAll("&plainLinkExamples3;", plainLinkExamples(tErddapUrl, 
@@ -3644,14 +3664,14 @@ writer.write(EDStatic.dpf_congratulation
                 .replaceAll("&plainLinkExamples8;", plainLinkExamples(tErddapUrl, "/categorize/standard_name/time/index", //8
                     EDStatic.encodedDefaultPIppQuery))
                 .replaceAll("&encodedDefaultPIppQuery;", EDStatic.encodedDefaultPIppQuery)
-                .replaceAll("&advancedSearch;", EDStatic.advancedSearch);
+                .replaceAll("&advancedSearch;", EDStatic.advancedSearch_s[currLang]);
 
 
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_restfulWebService) +
+                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_restfulWebService_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, "RESTful Web Services") +
-                "<h2 style=\"text-align:center;\"><a class=\"selfLink\" id=\"WebService\" href=\"#WebService\" rel=\"bookmark\">" + EDStatic.accessRESTFUL +"</a></h2>\n"
+                "<h2 style=\"text-align:center;\"><a class=\"selfLink\" id=\"WebService\" href=\"#WebService\" rel=\"bookmark\">" + EDStatic.accessRESTFUL_s[currLang] +"</a></h2>\n"
                 + modifiedRestfulHTML
                 /*
                 "ERDDAP is both:\n" +
@@ -3917,7 +3937,7 @@ writer.write(EDStatic.dpf_congratulation
                     */);
             int tDasIndex = String2.indexOf(EDDTable.dataFileTypeNames, ".das");
             int tDdsIndex = String2.indexOf(EDDTable.dataFileTypeNames, ".dds");
-            String restfulGetAllDataset = EDStatic.restfulGetAllDataset
+            String restfulGetAllDataset = EDStatic.restfulGetAllDataset_s[currLang]
                 .replace("&plainLinkExamples1;", plainLinkExamples(tErddapUrl, 
                         "/griddap/index", EDStatic.encodedAllPIppQuery))
                 .replace("&plainLinkExamples1;", plainLinkExamples(tErddapUrl, 
@@ -3937,25 +3957,25 @@ writer.write(EDStatic.dpf_congratulation
                 */
                     ); 
             if (EDStatic.sosActive) writer.write(
-                "  <li>" + EDStatic.forSOSUse + "\n<br>" +
+                "  <li>" + EDStatic.forSOSUse_s[currLang] + "\n<br>" +
                 //"  <li>For SOS: use\n<br>" +
                     plainLinkExamples(tErddapUrl, "/sos/index", 
                     EDStatic.encodedAllPIppQuery)); 
             if (EDStatic.wcsActive) writer.write(
-                "  <li>" + EDStatic.forWCSUse + "\n<br>" +
+                "  <li>" + EDStatic.forWCSUse_s[currLang] + "\n<br>" +
                 //"  <li>For WCS: use\n<br>" +
                     plainLinkExamples(tErddapUrl, "/wcs/index", 
                     EDStatic.encodedAllPIppQuery)); 
             if (EDStatic.wmsActive) writer.write(
-                "  <li>" + EDStatic.forWMSUse + "\n<br>" +
+                "  <li>" + EDStatic.forWMSUse_s[currLang] + "\n<br>" +
                 //"  <li>For WMS: use\n<br>" +
                     plainLinkExamples(tErddapUrl, "/wms/index", 
                     EDStatic.encodedAllPIppQuery));
                     
-            String restfulHTMLContinued = EDStatic.restfulHTMLContinued
+            String restfulHTMLContinued = EDStatic.restfulHTMLContinued_s[currLang]
                 .replaceAll("&tErddapUrl;", tErddapUrl)
                 .replace("&dataFileTypeInfo1;", XML.encodeAsHTMLAttribute(EDDTable.dataFileTypeInfo[tDdsIndex]))
-                .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl))
+                .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl, currLang))
                 .replaceAll("&griddapExample;", griddapExample)
                 .replaceAll("&tabledapExample;", tabledapExample)
                 .replace("&dataFileTypeInfo2;", XML.encodeAsHTMLAttribute(EDDTable.dataFileTypeInfo[tDasIndex]));
@@ -4012,7 +4032,7 @@ writer.write(EDStatic.dpf_congratulation
                 */);
             if (EDStatic.sosActive || EDStatic.wcsActive || EDStatic.wmsActive) {
                 writer.write(
-                    EDStatic.restfulProtocols
+                    EDStatic.restfulProtocols_s[currLang]
                     /*
                 "<li><a class=\"selfLink\" id=\"OtherProtocols\" href=\"#OtherProtocols\" rel=\"bookmark\"\n" +
                 ">ERDDAP's other protocols</a> also have web services that you can use.\n" +
@@ -4021,18 +4041,18 @@ writer.write(EDStatic.dpf_congratulation
                 */);
                 if (EDStatic.sosActive) writer.write(
                     // "    <li><a rel=\"help\" href=\"" + tErddapUrl + "/sos/documentation.html\">ERDDAP's SOS documentation</a>\n");
-                    "    <li><a rel=\"help\" href=\"" + tErddapUrl + "/sos/documentation.html\">" + EDStatic.SOSDocumentation + "</a>\n");
+                    "    <li><a rel=\"help\" href=\"" + tErddapUrl + "/sos/documentation.html\">" + EDStatic.SOSDocumentation_s[currLang] + "</a>\n");
                 if (EDStatic.wcsActive) writer.write(
                     // "   <li><a rel=\"help\" href=\"" + tErddapUrl + "/wcs/documentation.html\">ERDDAP's WCS documentation</a>\n");
-                    "   <li><a rel=\"help\" href=\"" + tErddapUrl + "/wcs/documentation.html\">" + EDStatic.WCSDocumentation + "</a>\n");
+                    "   <li><a rel=\"help\" href=\"" + tErddapUrl + "/wcs/documentation.html\">" + EDStatic.WCSDocumentation_s[currLang] + "</a>\n");
                 if (EDStatic.wmsActive) writer.write(
                     // "    <li><a rel=\"help\" href=\"" + tErddapUrl + "/wms/documentation.html\">ERDDAP's WMS documentation</a>\n");
-                    "    <li><a rel=\"help\" href=\"" + tErddapUrl + "/wms/documentation.html\">" + EDStatic.WMSDocumentation + "</a>\n");
+                    "    <li><a rel=\"help\" href=\"" + tErddapUrl + "/wms/documentation.html\">" + EDStatic.WMSDocumentation_s[currLang] + "</a>\n");
                 writer.write(
                     "    <br>&nbsp;\n" +
                     "    </ul>\n");
             }
-            String subscriptionRSSHTML = EDStatic.subscriptionRSSHTML.replace("&tErddapUrl;", tErddapUrl);
+            String subscriptionRSSHTML = EDStatic.subscriptionOfferRss_s[currLang].replace("&tErddapUrl;", tErddapUrl);
             writer.write(subscriptionRSSHTML
                 /*
                 "<li><a class=\"selfLink\" id=\"subscriptions\" href=\"#subscriptions\" rel=\"bookmark\">ERDDAP</a> offers \n" +
@@ -4042,7 +4062,7 @@ writer.write(EDStatic.dpf_congratulation
                 "  <br>&nbsp;\n"
                 */
                 );
-                String subscriptionURLHTML = EDStatic.subscriptionURLHTML.replace("&tErddapUrl;", tErddapUrl);
+                String subscriptionURLHTML = EDStatic.subscriptionOfferUrl_s[currLang].replace("&tErddapUrl;", tErddapUrl);
             if (EDStatic.subscriptionSystemActive) writer.write(subscriptionURLHTML
                 /*
                 "<li>ERDDAP offers \n" +
@@ -4053,21 +4073,21 @@ writer.write(EDStatic.dpf_congratulation
                 */
                 );
             writer.write(
-                "<li>" + EDStatic.converterWebService + "\n" +
+                "<li>" + EDStatic.converterWebService_s[currLang] + "\n" +
                 // "<li>ERDDAP offers several converters as web pages and as web services:\n" +
                 (EDStatic.convertersActive?
                   "  <ul>\n" +
-                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericAcronyms.html#computerProgram\">" + EDStatic.convertOceanicAtmosphericAcronyms + "</a>\n" +
-                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericVariableNames.html#computerProgram\">" + EDStatic.convertOceanicAtmosphericVariableNames + "</a>\n" +
-                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/fipscounty.html#computerProgram\">" + EDStatic.convertFipsCounty + "</a>\n" +
-                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/keywords.html#computerProgram\">" + EDStatic.convertKeywords + "</a>\n" +
-                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/time.html#computerProgram\">" + EDStatic.convertTime + "</a>\n" +
-                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/units.html#computerProgram\">" + EDStatic.convertUnits + "</a>\n" +
-                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/urls.html#computerProgram\">" + EDStatic.convertURLs + "</a>\n" +
+                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericAcronyms.html#computerProgram\">" + EDStatic.convertOceanicAtmosphericAcronyms_s[currLang] + "</a>\n" +
+                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericVariableNames.html#computerProgram\">" + EDStatic.convertOceanicAtmosphericVariableNames_s[currLang] + "</a>\n" +
+                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/fipscounty.html#computerProgram\">" + EDStatic.convertFipsCounty_s[currLang] + "</a>\n" +
+                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/keywords.html#computerProgram\">" + EDStatic.convertKeywords_s[currLang] + "</a>\n" +
+                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/time.html#computerProgram\">" + EDStatic.convertTime_s[currLang] + "</a>\n" +
+                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/units.html#computerProgram\">" + EDStatic.convertUnits_s[currLang] + "</a>\n" +
+                  "  <li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/urls.html#computerProgram\">" + EDStatic.convertURLs_s[currLang] + "</a>\n" +
                   "    <br>&nbsp;\n" +
                   "  </ul>\n" :
-                  "<br> (" + MessageFormat.format(EDStatic.disabled, "convert") + ")\n<br>&nbsp;\n"));
-            String outOfDateKeepTrack = EDStatic.outOfDateKeepTrack.replace("&tErddapUrl;", tErddapUrl);
+                  "<br> (" + MessageFormat.format(EDStatic.disabled_s[currLang], "convert") + ")\n<br>&nbsp;\n"));
+            String outOfDateKeepTrack = EDStatic.outOfDateKeepTrack_s[currLang].replace("&tErddapUrl;", tErddapUrl);
             if (EDStatic.outOfDateDatasetsActive) writer.write(outOfDateKeepTrack
             /*
                 "<li>ERDDAP has a system to keep track of\n" +
@@ -4077,12 +4097,12 @@ writer.write(EDStatic.dpf_congratulation
                 */);
             writer.write(
                 "</ul>\n" +
-                EDStatic.additionalLinks + "\n");
+                EDStatic.additionalLinks_s[currLang] + "\n");
                 // "If you have suggestions for additional links, contact <kbd>bob dot simons at noaa dot gov</kbd>.\n");
 
             //JavaPrograms
             //setup.html always from coastwatch's erddap
-            writer.write(EDStatic.javaProgramsHTML
+            writer.write(EDStatic.javaProgramsHTML_s[currLang]
             /*
                 "<h2><a class=\"selfLink\" id=\"JavaPrograms\" href=\"#JavaPrograms\" rel=\"bookmark\">Using ERDDAP as a Data Source within Your Java Program</a></h2>\n" +
                 "As described above, since Java programs can access data available on the web, you can\n" +
@@ -4098,7 +4118,7 @@ writer.write(EDStatic.dpf_congratulation
 
             //login
             writer.write(
-                EDStatic.loginHTML
+                EDStatic.loginHTML_s[currLang]
                 /*
                 "<h2><a class=\"selfLink\" id=\"login\" href=\"#login\" rel=\"bookmark\">Log in to access private datasets.</a></h2>\n" +
                 "Many ERDDAP installations don't have authentication enabled and thus\n" +
@@ -4115,7 +4135,7 @@ writer.write(EDStatic.dpf_congratulation
                 */);
 
             //erddap version
-            String erddapVersionHTML = EDStatic.erddapVersionHTML.replaceAll("tErddapUrl", tErddapUrl)
+            String erddapVersionHTML = EDStatic.erddapVersionHTML_s[currLang].replaceAll("tErddapUrl", tErddapUrl)
                 .replaceAll("&erddapVersion", EDStatic.erddapVersion);
             writer.write(erddapVersionHTML
                 /*
@@ -4144,11 +4164,11 @@ writer.write(EDStatic.dpf_congratulation
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -4388,9 +4408,9 @@ writer.write(EDStatic.dpf_congratulation
      */
     public void doDap(int requestNumber, HttpServletRequest request, HttpServletResponse response,
         String ipAddress, String loggedInAs,
-        String protocol, int datasetIDStartsAt, String userDapQuery) throws Throwable {
+        String protocol, int datasetIDStartsAt, String userDapQuery, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);       
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);       
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String fileTypeName = "";
         boolean hasDatasetID = datasetIDStartsAt < requestUrl.length();
@@ -4400,22 +4420,22 @@ writer.write(EDStatic.dpf_congratulation
         if (endOfRequestUrl.equals("documentation.html")) {
 
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, protocol + " Documentation", out); 
+            Writer writer = getHtmlWriterUtf8(loggedInAs, protocol + " Documentation", out, currLang); 
             try {
                 writer.write("<div class=\"standard_width\">\n");
-                writer.write(EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_documentation));
+                writer.write(EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_documentation_s[currLang], currLang));
                 // writer.write(EDStatic.youAreHere(loggedInAs, protocol, "Documentation"));
                 if (protocol.equals("griddap"))       
-                    EDDGrid.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true);
+                    EDDGrid.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true, currLang);
                 else if (protocol.equals("tabledap")) 
-                    EDDTable.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true);
+                    EDDTable.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true, currLang);
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t;
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -4476,32 +4496,32 @@ writer.write(EDStatic.dpf_congratulation
             OutputStream out = outputStreamSource.outputStream(String2.ISO_8859_1);
             Writer writer = String2.getBufferedOutputStreamWriter88591(out);
             try {
-                writer.write(EDStatic.startHeadHtml(tErddapUrl, protocol + " Help"));
+                writer.write(EDStatic.startHeadHtml(tErddapUrl, protocol + " Help", currLang));
                 writer.write("\n</head>\n");
-                writer.write(EDStatic.startBodyHtml(loggedInAs));
+                writer.write(EDStatic.startBodyHtml(loggedInAs, currLang));
                 writer.write("\n");
                 writer.write(HtmlWidgets.htmlTooltipScript(EDStatic.imageDirUrl(loggedInAs)));     
                 writer.write("<div class=\"standard_width\">\n");
-                writer.write(EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_help));
+                writer.write(EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_help_s[currLang], currLang));
                 // writer.write(EDStatic.youAreHere(loggedInAs, protocol, "Help"));
                 writer.flush(); //Steve Souder says: the sooner you can send some html to user, the better
                 try {
                     if (protocol.equals("griddap")) 
-                        EDDGrid.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true); //true=complete
+                        EDDGrid.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true, currLang); //true=complete
                     if (protocol.equals("tabledap")) 
-                        EDDTable.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true); //true=complete
+                        EDDTable.writeGeneralDapHtmlInstructions(tErddapUrl, writer, true, currLang); //true=complete
 
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(t));
+                    writer.write(EDStatic.htmlForException(t, currLang));
                 }
                 writer.write("</div>\n");
             } catch (Exception e) {
                 EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(e));
+                writer.write(EDStatic.htmlForException(e, currLang));
                 throw e; 
             } finally {
-                writer.write(EDStatic.endBodyHtml(tErddapUrl));
+                writer.write(EDStatic.endBodyHtml(tErddapUrl, currLang));
                 writer.write("</html>");           
                 writer.flush(); //essential
                 if (out instanceof ZipOutputStream) ((ZipOutputStream)out).closeEntry();
@@ -4548,7 +4568,7 @@ writer.write(EDStatic.dpf_congratulation
         //respond to xxx/index request
         //show list of 'protocol'-supported datasets in .html file
         if (id.equals("index") && nextPath.length() == 0) {
-            sendDatasetList(requestNumber, request, response, loggedInAs, protocol, fileTypeName);
+            sendDatasetList(requestNumber, request, response, loggedInAs, protocol, fileTypeName, currLang);
             return;
         }
 
@@ -4558,7 +4578,7 @@ writer.write(EDStatic.dpf_congratulation
                       null;
         if (dataset == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unknownDatasetID, id));
+                MessageFormat.format(EDStatic.unknownDatasetID_s[currLang], id));
             return;
         }
         if (!dataset.isAccessibleTo(EDStatic.getRoles(loggedInAs))) { //listPrivateDatasets doesn't apply
@@ -4567,11 +4587,11 @@ writer.write(EDStatic.dpf_congratulation
                 if (dataset.graphsAccessibleTo_fileTypeNamesContains(fileTypeName)) {
                     //fall through to get graphics
                 } else {
-                    EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, id, true);
+                    EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, id, true, currLang);
                     return;
                 }
             } else {
-                EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, id, false);
+                EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, id, false, currLang);
                 return;
             }
         }
@@ -4616,9 +4636,9 @@ writer.write(EDStatic.dpf_congratulation
                 if (!fileTypeName.equals(".geoJson") && 
                     !fileTypeName.equals(".json") && //e.g., .jsonlCSV .jsonlKVP
                     !fileTypeName.equals(".ncoJson")) 
-                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpNotAllowed);
+                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpNotAllowed_s[currLang]);
                 if (!String2.isJsonpNameSafe(jsonp))
-                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName);
+                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName_s[currLang]);
             }
         }
 
@@ -4757,9 +4777,9 @@ writer.write(EDStatic.dpf_congratulation
      * @param userDapQuery  post "?".  Still percentEncoded.  May be "".  May not be null.
      */
     public void doFiles(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, int datasetIDStartsAt, String userDapQuery) throws Throwable {
+        String loggedInAs, int datasetIDStartsAt, String userDapQuery, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);       
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);       
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String fullRequestUrl = EDStatic.baseUrl(loggedInAs) + requestUrl;
         String roles[] = EDStatic.getRoles(loggedInAs);
@@ -4779,20 +4799,20 @@ writer.write(EDStatic.dpf_congratulation
         //is request for documentation.html? 
         if (endOfRequestUrl.equals("documentation.html")) {
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, "ERDDAP \"files\" Documentation", out);
+            Writer writer = getHtmlWriterUtf8(loggedInAs, "ERDDAP \"files\" Documentation", out, currLang);
             try {
                 writer.write("<div class=\"standard_width\">\n");
-                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.hpn_files, EDStatic.hpn_documentation));
+                writer.write(EDStatic.youAreHere(loggedInAs, EDStatic.hpn_files_s[currLang], EDStatic.hpn_documentation_s[currLang], currLang));
                 // writer.write(EDStatic.youAreHere(loggedInAs, "files", "Documentation"));
-                writer.write(EDStatic.filesDocumentation(tErddapUrl));
+                writer.write(EDStatic.filesDocumentation(tErddapUrl, currLang));
             } catch (Exception e) {
                 EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(e));
+                writer.write(EDStatic.htmlForException(e, currLang));
                 throw e; 
             } finally {
                 writer.write("\n" +
                     "</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -4804,7 +4824,7 @@ writer.write(EDStatic.dpf_congratulation
         int slashPoNP = endOfRequestUrl.indexOf('/');
         if (slashPoNP == 0) {  //e.g. files//something  
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unknownDatasetID, "\"\""));
+                MessageFormat.format(EDStatic.unknownDatasetID_s[currLang], "\"\""));
             return;
             
         } else if (slashPoNP > 0) {
@@ -4910,18 +4930,18 @@ writer.write(EDStatic.dpf_congratulation
             }
             
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, "Browse Source Files", out);
+            Writer writer = getHtmlWriterUtf8(loggedInAs, "Browse Source Files", out, currLang);
             try {
 
                 writer.write(
                     "<div class=\"standard_width\">\n" +
-                    EDStatic.youAreHere(loggedInAs, EDStatic.hpn_files) + 
+                    EDStatic.youAreHere(loggedInAs, EDStatic.hpn_files_s[currLang], currLang) + 
                     // EDStatic.youAreHere(loggedInAs, "files") + 
-                    EDStatic.filesDescription + 
-                    "\n<br><span class=\"warningColor\">" + EDStatic.warning + "</span> " +
-                    EDStatic.filesWarning + "\n" +
+                    EDStatic.filesDescription_s[currLang] + 
+                    "\n<br><span class=\"warningColor\">" + EDStatic.warning_s[currLang] + "</span> " +
+                    EDStatic.filesWarning_s[currLang] + "\n" +
                     "(<a rel=\"help\" href=\"" + tErddapUrl + "/files/documentation.html\">" + 
-                        MessageFormat.format(EDStatic.indexDocumentation, "\"files\"") + "</a>" +
+                        MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "\"files\"") + "</a>" +
                     ", including <a rel=\"help\" href=\"" + tErddapUrl + 
                       "/files/documentation.html#HowCanIWorkWithTheseFiles\">\"How can I work with these files?\"</a>)\n" +
                     "<br>&nbsp;\n");
@@ -4934,11 +4954,11 @@ writer.write(EDStatic.dpf_congratulation
                         true, subDirNames, subDirDes)); //addParentDir
             } catch (Exception e) {
                 EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(e));
+                writer.write(EDStatic.htmlForException(e, currLang));
                 throw e; 
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
 
             return;
@@ -4950,7 +4970,7 @@ writer.write(EDStatic.dpf_congratulation
             edd = tableDatasetHashMap.get(id);
         if (edd == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unknownDatasetID, id));
+                MessageFormat.format(EDStatic.unknownDatasetID_s[currLang], id));
             return;
         }
 
@@ -4962,7 +4982,7 @@ writer.write(EDStatic.dpf_congratulation
             // /files/ access: all requests are data requests
             //listPrivateDatasets and graphsAccessibleToPublic don't apply
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, id, 
-                edd.graphsAccessibleToPublic());
+                edd.graphsAccessibleToPublic(), currLang);
             return;
         }
         if (!edd.accessibleViaFiles()) {
@@ -5027,33 +5047,33 @@ writer.write(EDStatic.dpf_congratulation
 
             //show web page
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, "files/" + id + "/" + nextPath, out);
+            Writer writer = getHtmlWriterUtf8(loggedInAs, "files/" + id + "/" + nextPath, out, currLang);
             try {
                 writer.write("<div class=\"standard_width\">\n");
                 writer.write(
                     // nextPath.length() == 0? EDStatic.youAreHere(loggedInAs, "files", id) :
-                    nextPath.length() == 0? EDStatic.youAreHere(loggedInAs, EDStatic.hpn_files, id) :
-                    "\n<h1>" + EDStatic.erddapHref(tErddapUrl) +
+                    nextPath.length() == 0? EDStatic.youAreHere(loggedInAs, EDStatic.hpn_files_s[currLang], id, currLang) :
+                    "\n<h1>" + EDStatic.erddapHref(tErddapUrl, currLang) +
                     "\n &gt; <a rel=\"contents\" href=\"" + 
                         XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(tErddapUrl, "files")) +
                         "\">files</a>" +
                     "\n &gt; <a rel=\"contents\" href=\"" + 
                         XML.encodeAsHTMLAttribute(
-                            EDStatic.erddapUrl(loggedInAs) + "/files/" + id + "/") + 
+                            EDStatic.erddapUrl(loggedInAs, currLang) + "/files/" + id + "/") + 
                         "\">" + id + "</a>" +  
                     "\n &gt; " + XML.encodeAsXML(nextPath) + 
                     "</h1>\n");
-                writer.write(EDStatic.filesDescription + "\n");
+                writer.write(EDStatic.filesDescription_s[currLang] + "\n");
                 if (!(edd instanceof EDDTableFromFileNames))
                     writer.write(
-                        "<br><span class=\"warningColor\">" + EDStatic.warning + "</span> " + 
-                        EDStatic.filesWarning + "\n");
+                        "<br><span class=\"warningColor\">" + EDStatic.warning_s[currLang] + "</span> " + 
+                        EDStatic.filesWarning_s[currLang] + "\n");
                 writer.write(" (<a rel=\"help\" href=\"" + tErddapUrl + "/files/documentation.html\">" + 
-                    MessageFormat.format(EDStatic.indexDocumentation, "\"files\"") + "</a>" +
+                    MessageFormat.format(EDStatic.indexDocumentation_s[currLang], "\"files\"") + "</a>" +
                     ", including <a rel=\"help\" href=\"" + tErddapUrl + 
                       "/files/documentation.html#HowCanIWorkWithTheseFiles\">\"How can I work with these files?\"</a>)\n" +
                     "<br>&nbsp;\n");
-                edd.writeHtmlDatasetInfo(loggedInAs, writer, true, true, false, true, "", "");
+                edd.writeHtmlDatasetInfo(loggedInAs, writer, true, true, false, true, "", "", currLang);
                 writer.write("<br>");  //causes nice spacing between datasetInfo and file table
                 writer.flush();
                 writer.write(
@@ -5065,11 +5085,11 @@ writer.write(EDStatic.dpf_congratulation
                         true, subDirs, null));  //addParentDir                
             } catch (Exception e) {
                 EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(e));
+                writer.write(EDStatic.htmlForException(e, currLang));
                 throw e; 
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -5080,7 +5100,7 @@ writer.write(EDStatic.dpf_congratulation
         String localFullName = edd.accessibleViaFilesGetLocal(nextPath + nameAndExt);
         if (localFullName == null) {//for any reason
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.errorFileNotFound, nameAndExt)); 
+                MessageFormat.format(EDStatic.errorFileNotFound_s[currLang], nameAndExt)); 
             return;
         }
 
@@ -5121,16 +5141,16 @@ writer.write(EDStatic.dpf_congratulation
      * throws Throwable if trouble
      */
     public void sendDatasetList(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String protocol, String fileTypeName) throws Throwable {
+        String loggedInAs, String protocol, String fileTypeName, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl(), pre "?"
 
         //ensure valid fileTypeName
         int pft = String2.indexOf(plainFileTypes, fileTypeName);
         if (pft < 0 && !fileTypeName.equals(".html")) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unsupportedFileType, fileTypeName));
+                MessageFormat.format(EDStatic.unsupportedFileType_s[currLang], fileTypeName));
             return;
         }
 
@@ -5140,7 +5160,7 @@ writer.write(EDStatic.dpf_congratulation
                 EDStatic.getRequestedPIpp(request))) {
             sendRedirect(response, 
                 EDStatic.baseUrl(loggedInAs) + requestUrl + "?" +
-                EDStatic.passThroughJsonpQuery(request) +
+                EDStatic.passThroughJsonpQuery(request, currLang) +
                 EDStatic.passThroughPIppQuery(request));  //should be nothing else in query
             return;
         }      
@@ -5164,7 +5184,7 @@ writer.write(EDStatic.dpf_congratulation
                     ids.add(   edd.datasetID());
                 }
             }
-            description = EDStatic.EDDGridDapDescription;
+            description = EDStatic.EDDGridDapDescription_s[currLang];
         } else if (protocol.equals("tabledap")) {
             StringArray tids = tableDatasetIDs();
             int ntids = tids.size();
@@ -5179,7 +5199,7 @@ writer.write(EDStatic.dpf_congratulation
                     ids.add(   edd.datasetID());
                 }
             }
-            description = EDStatic.EDDTableDapDescription;
+            description = EDStatic.EDDTableDapDescription_s[currLang];
         } else if (EDStatic.sosActive && protocol.equals("sos")) {
             StringArray tids = tableDatasetIDs();
             int ntids = tids.size();
@@ -5195,7 +5215,7 @@ writer.write(EDStatic.dpf_congratulation
                     ids.add(   edd.datasetID());
                 }
             }
-            description = EDStatic.sosDescriptionHtml +
+            description = EDStatic.sosDescriptionHtml_s[currLang] +
                "\nFor details, see the 'S'OS links below.";
         } else if (EDStatic.wcsActive && protocol.equals("wcs")) {
             StringArray tids = gridDatasetIDs();
@@ -5212,7 +5232,7 @@ writer.write(EDStatic.dpf_congratulation
                     ids.add(   edd.datasetID());
                 }
             }
-            description = EDStatic.wcsDescriptionHtml;
+            description = EDStatic.wcsDescriptionHtml_s[currLang];
         } else if (EDStatic.wmsActive && protocol.equals("wms")) {
             StringArray tids = gridDatasetIDs();
             int ntids = tids.size();
@@ -5228,10 +5248,10 @@ writer.write(EDStatic.dpf_congratulation
                     ids.add(   edd.datasetID());
                 }
             }
-            description = EDStatic.wmsDescriptionHtml;
+            description = EDStatic.wmsDescriptionHtml_s[currLang];
         } else {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unknownProtocol, protocol));
+                MessageFormat.format(EDStatic.unknownProtocol_s[currLang], protocol));
             return;
         }
 
@@ -5265,10 +5285,10 @@ writer.write(EDStatic.dpf_congratulation
         String error[] = null;
         if (nMatches == 0) {
             error = new String[] {
-                MessageFormat.format(EDStatic.noDatasetWith, "protocol=\"" + protocol + "\""),
+                MessageFormat.format(EDStatic.noDatasetWith_s[currLang], "protocol=\"" + protocol + "\""),
                 ""};
         } else if (page > lastPage) {
-            error = EDStatic.noPage(page, lastPage);
+            error = EDStatic.noPage(page, lastPage, currLang);
         }
         
         //clean up description
@@ -5282,11 +5302,11 @@ writer.write(EDStatic.dpf_congratulation
         //you can't use noLongLinesAtSpace for fear of  "<a <br>href..."
         if (protocol.equals("tabledap"))
             description += "\n" + 
-                MessageFormat.format(EDStatic.tabledapVideoIntro, tErddapUrl) +
+                MessageFormat.format(EDStatic.tabledapVideoIntro_s[currLang], tErddapUrl) +
                 "\n";
         if (!protocol.equals("sos"))
             description += "\n" + 
-                MessageFormat.format(EDStatic.seeProtocolDocumentation,
+                MessageFormat.format(EDStatic.seeProtocolDocumentation_s[currLang],
                     tErddapUrl, uProtocol) +
                     //tErddapUrl, protocol, uProtocol) +
                 "\n";
@@ -5298,28 +5318,28 @@ writer.write(EDStatic.dpf_congratulation
                 throw new SimpleException(EDStatic.queryError + error[0] + " " + error[1]);
 
             //make the plain table with the dataset list
-            table = makePlainDatasetTable(loggedInAs, ids, sortByTitle, fileTypeName);  
+            table = makePlainDatasetTable(loggedInAs, ids, sortByTitle, fileTypeName, currLang);  
             sendPlainTable(requestNumber, loggedInAs, request, response, table, protocol, fileTypeName);
             return;
         }
 
 
         //make the html table with the dataset list
-        table = makeHtmlDatasetTable(loggedInAs, ids, sortByTitle);  
+        table = makeHtmlDatasetTable(loggedInAs, ids, sortByTitle, currLang);  
 
         //display start of web page
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
         Writer writer = getHtmlWriterUtf8(loggedInAs, 
-            MessageFormat.format(EDStatic.listOfDatasets, uProtocol),
-            out); 
+            MessageFormat.format(EDStatic.listOfDatasets_s[currLang], uProtocol),
+            out, currLang); 
         try {
-            String refine = EDStatic.orRefineSearchWith + 
+            String refine = EDStatic.orRefineSearchWith_s[currLang] + 
                 getAdvancedSearchLink(loggedInAs, 
                     EDStatic.passThroughPIppQueryPage1(request) + 
-                    "&protocol=" + uProtocol);
+                    "&protocol=" + uProtocol, currLang);
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, uProtocol) +
+                EDStatic.youAreHere(loggedInAs, uProtocol, currLang) +
                 description);
 
                 /*getYouAreHereTable(
@@ -5340,7 +5360,7 @@ writer.write(EDStatic.dpf_congratulation
                 String nMatchingHtml = EDStatic.nMatchingDatasetsHtml(
                     nMatches, page, lastPage, false, //=alphabetical
                     EDStatic.baseUrl(loggedInAs) + requestUrl + 
-                    EDStatic.questionQuery(request.getQueryString()));
+                    EDStatic.questionQuery(request.getQueryString()), currLang);
 
                 writer.write(
                     "<p>" + nMatchingHtml + "\n" +
@@ -5355,10 +5375,10 @@ writer.write(EDStatic.dpf_congratulation
                 //list plain file types
                 writer.write(
                     "\n" +
-                    "<p>" + EDStatic.restfulInformationFormats + " \n(" +
+                    "<p>" + EDStatic.restfulInformationFormats_s[currLang] + " \n(" +
                     plainFileTypesString + //not links, which would be indexed by search engines
                     ") <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                        EDStatic.restfulViaService + "</a>.\n");
+                        EDStatic.restfulViaService_s[currLang] + "</a>.\n");
             } else {
                 writer.write("<p><span class=\"warningColor\">" + 
                     XML.encodeAsHTML(error[0] + " " + error[1]) + "</span>\n");
@@ -5366,13 +5386,13 @@ writer.write(EDStatic.dpf_congratulation
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -5402,11 +5422,11 @@ writer.write(EDStatic.dpf_congratulation
      *   This must include service="SOS", request=[aValidValue like GetCapabilities].
      */
     public void doSos(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String ipAddress, String loggedInAs, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String ipAddress, String loggedInAs, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.sosActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "SOS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "SOS"));
         }
 /*
 This isn't finished!   Reference server (ndbcSOS) is in flux and ...
@@ -5414,7 +5434,7 @@ Interesting IOOS DIF info c:/programs/sos/EncodingIOOSv0.6.0Observations.doc
 Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.gov 
 */
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
@@ -5428,13 +5448,13 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
         //list the SOS datasets
         if (endOfRequestUrl.startsWith("index.")) {
-            sendDatasetList(requestNumber, request, response, loggedInAs, "sos", endOfRequestUrl.substring(5)); 
+            sendDatasetList(requestNumber, request, response, loggedInAs, "sos", endOfRequestUrl.substring(5), currLang); 
             return;
         }        
 
         //SOS documentation web page
         if (endOfRequestUrl.equals("documentation.html")) {
-            doSosDocumentation(requestNumber, request, response, loggedInAs);
+            doSosDocumentation(requestNumber, request, response, loggedInAs, currLang);
             return;
         }       
 
@@ -5445,7 +5465,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
         EDDTable eddTable = tableDatasetHashMap.get(tDatasetID);
         if (eddTable == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unknownDatasetID, tDatasetID));
+                MessageFormat.format(EDStatic.unknownDatasetID_s[currLang], tDatasetID));
             return;
         }
 
@@ -5465,7 +5485,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             //SOS access: all requests are data requests
             //listPrivateDatasets and graphAccessibleToPublic don't apply
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID, 
-                eddTable.graphsAccessibleToPublic());
+                eddTable.graphsAccessibleToPublic(), currLang);
             return;
         }
 
@@ -5481,17 +5501,17 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             EDStatic.tally.add("SOS index.html (since last daily report)", tDatasetID);
             EDStatic.tally.add("SOS index.html (since startup)", tDatasetID);
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, XML.encodeAsHTML(eddTable.title()) + " - SOS", out);
+            Writer writer = getHtmlWriterUtf8(loggedInAs, XML.encodeAsHTML(eddTable.title()) + " - SOS", out, currLang);
             try {
                 writer.write("<div class=\"standard_width\">\n");
-                eddTable.sosDatasetHtml(loggedInAs, writer);
+                eddTable.sosDatasetHtml(loggedInAs, writer, currLang);
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t; 
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -5747,24 +5767,25 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doSosDocumentation(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
         if (!EDStatic.sosActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "SOS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "SOS"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "SOS Documentation", out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "SOS Documentation", out, currLang);
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_SOS) +
+                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_SOS_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, "Sensor Observation Service (SOS)") +
                 "\n" +
-                EDStatic.sosOverview1.replaceAll("&tErddapUrl;", tErddapUrl)
+                EDStatic.sosOverview1_s[currLang]
+                    .replaceAll("&tErddapUrl;", tErddapUrl)
                     .replaceAll("&encodedDefaultPIppQuery;", EDStatic.encodedDefaultPIppQuery) +
                     /*
                 "<h2>Overview</h2>\n" +
@@ -5778,8 +5799,8 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                 "\n" +
                 "<p>" + 
                 */
-                String2.replaceAll(EDStatic.sosLongDescriptionHtml, "&erddapUrl;", tErddapUrl) + 
-                EDStatic.sosOverview2.replace("&tErddapUrl;", tErddapUrl).replace("&encodedDefaultPIppQuery;", EDStatic.encodedDefaultPIppQuery) +
+                String2.replaceAll(EDStatic.sosLongDescriptionHtml_s[currLang], "&erddapUrl;", tErddapUrl) + 
+                EDStatic.sosOverview2_s[currLang].replace("&tErddapUrl;", tErddapUrl).replace("&encodedDefaultPIppQuery;", EDStatic.encodedDefaultPIppQuery) +
                 /*
                 "<p>See the\n" +
                 "<a rel=\"bookmark\" href=\"" + tErddapUrl + "/sos/index.html?" + 
@@ -5791,11 +5812,11 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
 
     }
@@ -5820,15 +5841,15 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param userQuery  post "?", still percentEncoded, may be null.
      */
     public void doWcs(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String ipAddress, String loggedInAs, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String ipAddress, String loggedInAs, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.wcsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WCS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WCS"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
@@ -5842,13 +5863,13 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
         //list the WCS datasets
         if (endOfRequestUrl.startsWith("index.")) {
-            sendDatasetList(requestNumber, request, response, loggedInAs, "wcs", endOfRequestUrl.substring(5)); 
+            sendDatasetList(requestNumber, request, response, loggedInAs, "wcs", endOfRequestUrl.substring(5), currLang); 
             return;
         }        
 
         //WCS documentation web page
         if (endOfRequestUrl.equals("documentation.html")) {
-            doWcsDocumentation(requestNumber, request, response, loggedInAs);
+            doWcsDocumentation(requestNumber, request, response, loggedInAs, currLang);
             return;
         }       
 
@@ -5859,7 +5880,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
         EDDGrid eddGrid = gridDatasetHashMap.get(tDatasetID);
         if (eddGrid == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unknownDatasetID, tDatasetID));
+                MessageFormat.format(EDStatic.unknownDatasetID_s[currLang], tDatasetID));
             return;
         }
 
@@ -5869,7 +5890,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             //WCS access: all requests are data requests
             //listPrivateDatasets and graphsAccessibleToPublic don't apply
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID, 
-                eddGrid.graphsAccessibleToPublic());
+                eddGrid.graphsAccessibleToPublic(), currLang);
             return;
         }
 
@@ -5895,17 +5916,17 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             EDStatic.tally.add("WCS index.html (since last daily report)", tDatasetID);
             EDStatic.tally.add("WCS index.html (since startup)", tDatasetID);
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, XML.encodeAsHTML(eddGrid.title()) + " - WCS", out);
+            Writer writer = getHtmlWriterUtf8(loggedInAs, XML.encodeAsHTML(eddGrid.title()) + " - WCS", out, currLang);
             try {
                 writer.write("<div class=\"standard_width\">\n");
-                eddGrid.wcsDatasetHtml(loggedInAs, writer);
+                eddGrid.wcsDatasetHtml(loggedInAs, writer, currLang);
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t; 
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -6063,24 +6084,24 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doWcsDocumentation(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
 
         if (!EDStatic.wcsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WCS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WCS"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "WCS Documentation", out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "WCS Documentation", out, currLang);
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_WCS) +
+                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_WCS_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, "Web Coverage Service (WCS)") +
                 "\n" +
-                EDStatic.wcsOverview1.replace("&tErddapUrl;", tErddapUrl)
+                EDStatic.wcsOverview1_s[currLang].replace("&tErddapUrl;", tErddapUrl)
                     .replace("&encodedDefaultPIppQuery;", EDStatic.encodedDefaultPIppQuery) + 
                 // "<h2>Overview</h2>\n" +
                 // "In addition to making data available via \n" +
@@ -6095,8 +6116,8 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                 //     EDStatic.encodedDefaultPIppQuery + "\">list of datasets available via WCS</a>\n" +
                 // "at this ERDDAP installation.\n" +
                 "\n" +
-                "<p>" + String2.replaceAll(EDStatic.wcsLongDescriptionHtml, "&erddapUrl;", tErddapUrl) + "\n" +
-                EDStatic.wcsOverview2.replace("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl)) + 
+                "<p>" + String2.replaceAll(EDStatic.wcsLongDescriptionHtml_s[currLang], "&erddapUrl;", tErddapUrl) + "\n" +
+                EDStatic.wcsOverview2_s[currLang].replace("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl, currLang)) + 
                 // "\n" + 
                 // "<p>WCS clients send HTTP POST or GET requests (specially formed URLs) to the WCS service and get XML responses.\n" +
                 // "See this <a rel=\"bookmark\" href=\"https://en.wikipedia.org/wiki/Web_Coverage_Service#WCS_Implementations\" \n" +
@@ -6105,11 +6126,11 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                 "\n</ul>\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
 
     }
@@ -6129,15 +6150,15 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param userQuery  post "?", still percentEncoded, may be null.
      */
     public void doWms(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String loggedInAs, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.wmsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WMS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WMS"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
@@ -6154,25 +6175,25 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             return;
         }
         if (endEnd.length() == 0 && endOfRequestUrl.startsWith("index.")) {
-            sendDatasetList(requestNumber, request, response, loggedInAs, "wms", endOfRequestUrl.substring(5)); 
+            sendDatasetList(requestNumber, request, response, loggedInAs, "wms", endOfRequestUrl.substring(5), currLang); 
             return;
         }
         if (endOfRequestUrl.equals("documentation.html")) {
-            doWmsDocumentation(requestNumber, request, response, loggedInAs);
+            doWmsDocumentation(requestNumber, request, response, loggedInAs, currLang);
             return;
         }
 
 //these 3 are demos.  Remove them (and links to them)?  add update()?
         if (endOfRequestUrl.equals("demo110.html")) { 
-            doWmsDemo(requestNumber, request, response, loggedInAs, "1.1.0", EDStatic.wmsSampleDatasetID);
+            doWmsDemo(requestNumber, request, response, loggedInAs, "1.1.0", EDStatic.wmsSampleDatasetID, currLang);
             return;
         }
         if (endOfRequestUrl.equals("demo111.html")) { 
-            doWmsDemo(requestNumber, request, response, loggedInAs, "1.1.1", EDStatic.wmsSampleDatasetID);
+            doWmsDemo(requestNumber, request, response, loggedInAs, "1.1.1", EDStatic.wmsSampleDatasetID, currLang);
             return;
         }
         if (endOfRequestUrl.equals("demo130.html")) { 
-            doWmsDemo(requestNumber, request, response, loggedInAs, "1.3.0", EDStatic.wmsSampleDatasetID);
+            doWmsDemo(requestNumber, request, response, loggedInAs, "1.3.0", EDStatic.wmsSampleDatasetID, currLang);
             return;
         }
 
@@ -6185,7 +6206,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
         EDDGrid eddGrid = gridDatasetHashMap.get(tDatasetID);
         if (eddGrid == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unknownDatasetID, tDatasetID));
+                MessageFormat.format(EDStatic.unknownDatasetID_s[currLang], tDatasetID));
             return;
         }
 
@@ -6194,7 +6215,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             //WMS access: all requests are graphics requests
             //listPrivateDatasets doesn't apply
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response,
-                tDatasetID, false);
+                tDatasetID, false, currLang);
             return;
         }
 
@@ -6216,7 +6237,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
         }
 
         if (endEnd.equals("index.html")) {
-            doWmsDemo(requestNumber, request, response, loggedInAs, "1.3.0", tDatasetID);
+            doWmsDemo(requestNumber, request, response, loggedInAs, "1.3.0", tDatasetID, currLang);
             return;
         }
 
@@ -6248,13 +6269,13 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                 }
             }
 
-            doWmsRequest(requestNumber, request, response, loggedInAs, tDatasetID, userQuery); 
+            doWmsRequest(requestNumber, request, response, loggedInAs, tDatasetID, userQuery, currLang); 
             return;
         }
 
         //error
         throw new SimpleException(EDStatic.queryError +
-            MessageFormat.format(EDStatic.queryErrorInvalid, "endEnd=" + String2.toJson(endEnd)));
+            MessageFormat.format(EDStatic.queryErrorInvalid_s[currLang], "endEnd=" + String2.toJson(endEnd)));
     } 
 
     /**
@@ -6268,11 +6289,11 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param userQuery post '?', still percentEncoded, may be null.
      */
     public void doWmsRequest(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String tDatasetID, String userQuery) throws Throwable {
+        String loggedInAs, String tDatasetID, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.wmsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WMS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WMS"));
             return;
         }
 
@@ -6293,12 +6314,12 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
             //e.g., ?service=WMS&request=GetCapabilities
             if (tRequest.equals("GetCapabilities")) {
-                doWmsGetCapabilities(requestNumber, request, response, loggedInAs, tDatasetID, queryMap); 
+                doWmsGetCapabilities(requestNumber, request, response, loggedInAs, tDatasetID, queryMap, currLang); 
                 return;
             }
             
             if (tRequest.equals("GetMap")) {
-                doWmsGetMap(requestNumber, request, response, loggedInAs, queryMap); 
+                doWmsGetMap(requestNumber, request, response, loggedInAs, queryMap, currLang); 
                 return;
             }
 
@@ -6356,15 +6377,15 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param loggedInAs  the name of the logged in user (or null if not logged in)
      */
     public void doWmsDocumentation(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs) throws Throwable {
+        String loggedInAs, int currLang) throws Throwable {
        
         if (!EDStatic.wmsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WMS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WMS"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String e0 = tErddapUrl + "/wms/" + EDStatic.wmsSampleDatasetID + "/" + EDD.WMS_SERVER + "?"; 
         String ec = "service=WMS&#x26;request=GetCapabilities&#x26;version=";
         String e1 = "service=WMS&#x26;version="; 
@@ -6394,12 +6415,12 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
         //What is WMS?   (generic) 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "WMS Documentation", out);
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "WMS Documentation", out, currLang);
         try {
             String likeThis = "<a href=\"" + tErddapUrl + "/wms/" + EDStatic.wmsSampleDatasetID + 
                      "/index.html\">like this</a>";
             String makeAGraphRef = "<a rel=\"help\" href=\"https://coastwatch.pfeg.noaa.gov/erddap/images/embed.html\">" +
-                EDStatic.mag + "</a>\n";
+                EDStatic.mag_s[currLang] + "</a>\n";
             String datasetListRef = 
                 "  See the <a rel=\"bookmark\" href=\"" + tErddapUrl + 
                 "/wms/index.html?" + EDStatic.encodedDefaultPIppQuery + 
@@ -6412,13 +6433,13 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             writer.write(
                 //see almost identical documentation at ...
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, "wms", EDStatic.hpn_documentation) +
+                EDStatic.youAreHere(loggedInAs, "wms", EDStatic.hpn_documentation_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, "wms", "Documentation") +
-                String2.replaceAll(EDStatic.wmsLongDescriptionHtml, "&erddapUrl;", tErddapUrl) + "\n" +
+                String2.replaceAll(EDStatic.wmsLongDescriptionHtml_s[currLang], "&erddapUrl;", tErddapUrl) + "\n" +
                 datasetListRef +
                 //"<p>\n" +
-                EDStatic.WMSDocumentation1
-                    .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl))
+                EDStatic.WMSDocumentation1_s[currLang]
+                    .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl, currLang))
                     .replaceAll("&tErddapUrl;", tErddapUrl)
                     .replace("&WMS_SERVER;", EDD.WMS_SERVER)
                     .replace("&e0;", e0)
@@ -6494,9 +6515,9 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
             //GetCapabilities
             writer.write(
-                EDStatic.WMSGetCapabilities
+                EDStatic.WMSGetCapabilities_s[currLang]
                     .replaceAll("&tWmsGetCapabilities130;", tWmsGetCapabilities130)
-                    .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl)) +
+                    .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl, currLang)) +
                 // "<h2><a class=\"selfLink\" id=\"GetCapabilities\" href=\"#GetCapabilities\" rel=\"bookmark\">Forming GetCapabilities URLs</a></h2>\n" +
                 // "A GetCapabilities request returns an XML document which provides background information\n" +
                 // "  about the service and basic information about all of the data available from this\n" +
@@ -6539,12 +6560,13 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
             //getMap
             writer.write(
-                EDStatic.WMSGetMap.replaceAll("&tErddapUrl;", tErddapUrl)
+                EDStatic.WMSGetMap_s[currLang]
+                    .replaceAll("&tErddapUrl;", tErddapUrl)
                     .replaceAll("&WMS_SERVER;", EDD.WMS_SERVER)
                     .replaceAll("&tWmsOpaqueExample130;", tWmsOpaqueExample130)
                     .replaceAll("&tWmsOpaqueExample130Replaced;", String2.replaceAll(tWmsOpaqueExample130, "&", "<wbr>&"))
                     .replaceAll("&WMS_SEPARATOR;", Character.toString(EDD.WMS_SEPARATOR))
-                    .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl)) +
+                    .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl, currLang)) +
                 // "<h2><a class=\"selfLink\" id=\"GetMap\" href=\"#GetMap\" rel=\"bookmark\">Forming GetMap URLs</a></h2>\n" +
                 // "  A person with a browser or a computer program can generate a special URL to request a map.\n" + 
                 // "  The URL must be in the form\n" +
@@ -6712,7 +6734,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
 
             //notes
             writer.write(
-                EDStatic.WMSNotes.replace("&WMS_SEPARATOR;", Character.toString(EDD.WMS_SEPARATOR))
+                EDStatic.WMSNotes_s[currLang].replace("&WMS_SEPARATOR;", Character.toString(EDD.WMS_SEPARATOR))
                 // "<h3><a class=\"selfLink\" id=\"notes\" href=\"#notes\" rel=\"bookmark\">Notes</a></h3>\n" +
                 // "<ul>\n" +     
                 // //These WMS requirements are also in setupDatasetXml.
@@ -6783,7 +6805,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                 "  </tr>\n" +
                 "  <tr>\n" +
                 "    <td class=\"N\"><strong> In <a rel=\"bookmark\" href=\"https://leafletjs.com\">Leaflet" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> </strong></td> \n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> </strong></td> \n" +
                 "    <td><a href=\"" + tErddapUrl + "/wms/demo130.html\">Demo (WMS 1.3.0)</a></td>\n" +  
                 "  </tr>\n" +
                 "</table>\n" +
@@ -6811,7 +6833,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                 "  </tr>\n" +
                 "  <tr>\n" +
                 "    <td class=\"N\"><strong> In <a rel=\"bookmark\" href=\"https://leafletjs.com\">Leaflet" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> </strong></td> \n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> </strong></td> \n" +
                 "    <td><a href=\"" + tErddapUrl + "/wms/demo111.html\">Demo (WMS 1.1.1)</a></td>\n" +  
                 "  </tr>\n" +
                 "</table>\n" +
@@ -6839,18 +6861,18 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                 "  </tr>\n" +
                 "  <tr>\n" +
                 "    <td class=\"N\"><strong> In <a rel=\"bookmark\" href=\"https://leafletjs.com\">Leaflet" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> </strong></td> \n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> </strong></td> \n" +
                 "    <td><a href=\"" + tErddapUrl + "/wms/demo110.html\">Demo (WMS 1.1.0)</a></td>\n" +  
                 "  </tr>\n" +
                 "</table>\n" +
                 "\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -6873,11 +6895,11 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      *    names are toLowerCase. values are original values.
      */
     public void doWmsGetMap(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, HashMap<String, String> queryMap) throws Throwable {
+        String loggedInAs, HashMap<String, String> queryMap, int currLang) throws Throwable {
 
         if (!EDStatic.wmsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WMS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WMS"));
             return;
         }
 
@@ -6909,7 +6931,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                     //WMS: all requests are graphics requests
                     //listPrivateDatasets doesn't apply
                     EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, mainDatasetID,
-                        false);
+                        false, currLang);
                     return;
                 } else if (eddGrid instanceof EDDGridFromErddap) {
                     EDDGridFromErddap fromErddap = (EDDGridFromErddap)eddGrid;
@@ -6954,7 +6976,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                             sendRedirect(response, etUrl.toString()); 
                             return;
                         } else {
-                            String2.log(EDStatic.errorInternal + "\"/griddap/\" should have been in " +
+                            String2.log(EDStatic.errorInternal_s[currLang] + "\"/griddap/\" should have been in " +
                                 "EDDGridFromErddap.getNextLocalSourceErddapUrl()=" + tUrl + " .");
                             //fall through
                         }
@@ -7215,7 +7237,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
                     //WMS: all requests are graphics requests
                     //listPrivateDatasets doesn't apply
                     EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, datasetID,
-                        false);
+                        false, currLang);
                     return;
                 }
                 if (eddGrid.accessibleViaWMS().length() > 0)
@@ -7453,16 +7475,16 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param queryMap should have lowercase'd names
      */
     public void doWmsGetCapabilities(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String tDatasetID, HashMap<String, String> queryMap) throws Throwable {
+        String loggedInAs, String tDatasetID, HashMap<String, String> queryMap, int currLang) throws Throwable {
 
         if (!EDStatic.wmsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WMS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WMS"));
             return;
         }
 
         //make sure version is unspecified (latest), 1.1.0, 1.1.1, or 1.3.0.
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String tVersion = queryMap.get("version");
         if (tVersion == null)
             tVersion = "1.3.0";
@@ -7486,14 +7508,14 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
         EDDGrid eddGrid = gridDatasetHashMap.get(tDatasetID);
         if (eddGrid == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.notAvailable, tDatasetID));
+                MessageFormat.format(EDStatic.notAvailable_s[currLang], tDatasetID));
             return;
         }
         if (!eddGrid.isAccessibleTo(roles) &&
             !eddGrid.graphsAccessibleToPublic()) {
             //WMS: all requests are graphics requests
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID,
-                false);
+                false, currLang);
             return;
         }
         if (eddGrid.accessibleViaWMS().length() > 0) {
@@ -8032,16 +8054,16 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
      * @param tDatasetID  currently must be an EDDGrid datasetID, e.g., erdBAssta5day   
      */
     public void doWmsDemo(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String tVersion, String tDatasetID) throws Throwable {
+        String loggedInAs, String tVersion, String tDatasetID, int currLang) throws Throwable {
 
         if (!EDStatic.wmsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "WMS"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "WMS"));
             return;
         }
         boolean wmsClientActive = EDStatic.wmsClientActive;
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         if (!tVersion.equals("1.1.0") &&
             !tVersion.equals("1.1.1") &&
             !tVersion.equals("1.3.0"))
@@ -8068,7 +8090,7 @@ Spec questions? Ask Jeff DLb (author of WMS spec!): Jeff.deLaBeaujardiere@noaa.g
             //WMS: all requests are graphics requests
             //listPrivateDatasets doesn't apply
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID,
-                false);
+                false, currLang);
             return;
         }
         int loni = eddGrid.lonIndex();
@@ -8213,7 +8235,7 @@ scripts.append(
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
         Writer writer = String2.getBufferedOutputStreamWriterUtf8(out);
         try {
-            writer.write(EDStatic.startHeadHtml(tErddapUrl, eddGrid.title() + " - WMS"));
+            writer.write(EDStatic.startHeadHtml(tErddapUrl, eddGrid.title() + " - WMS", currLang));
             writer.write("\n" + eddGrid.rssHeadLink());
             if (thisWmsClientActive)
                 writer.write(HtmlWidgets.leafletHead(tErddapUrl));
@@ -8223,12 +8245,12 @@ scripts.append(
 
             //*** html body
             String makeAGraphRef = "<a href=\"" + tErddapUrl + "/griddap/" + tDatasetID + ".graph\">" +
-                EDStatic.mag + "</a>";
+                EDStatic.mag_s[currLang] + "</a>";
             writer.write(
-                EDStatic.startBodyHtml(loggedInAs) + "\n" +
+                EDStatic.startBodyHtml(loggedInAs, currLang) + "\n" +
                 HtmlWidgets.htmlTooltipScript(EDStatic.imageDirUrl(loggedInAs)) +
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, "wms", tDatasetID));
+                EDStatic.youAreHere(loggedInAs, "wms", tDatasetID, currLang));
             String queryString = request.getQueryString();
             if (queryString == null)
                 queryString = "";
@@ -8236,11 +8258,11 @@ scripts.append(
                 queryString, "");
             if (!wmsClientActive) {
                 writer.write("\n<p><span class=\"warningColor\">" +
-                    MessageFormat.format(EDStatic.noXxxBecause, "Leaflet", 
-                        MessageFormat.format(EDStatic.noXxxNotActive, "Leaflet")) + "</span>\n\n");
+                    MessageFormat.format(EDStatic.noXxxBecause_s[currLang], "Leaflet", 
+                        MessageFormat.format(EDStatic.noXxxNotActive_s[currLang], "Leaflet")) + "</span>\n\n");
             } else if (!thisWmsClientActive) {
                 writer.write("\n<p><span class=\"warningColor\">" +
-                    MessageFormat.format(EDStatic.noXxx, "Leaflet") + "</span>\n\n");
+                    MessageFormat.format(EDStatic.noXxx_s[currLang], "Leaflet") + "</span>\n\n");
             } else {
                 //write all the leaflet stuff
                 writer.write(HtmlWidgets.ifJavaScriptDisabled + "\n");
@@ -8248,7 +8270,7 @@ scripts.append(
                 writer.write(
                     "<br>" +
                     String2.replaceAll( //these are actually Leaflet instructions
-                        String2.replaceAll(EDStatic.wmsInstructions, "&wmsVersion;", tVersion),
+                        String2.replaceAll(EDStatic.wmsInstructions_s[currLang], "&wmsVersion;", tVersion),
                         "&erddapUrl;", tErddapUrl));
                 StringBuilder tAxisConstraintsSB = new StringBuilder();
                 if (hasNonLatLonAxes) {
@@ -8357,7 +8379,7 @@ scripts.append(
             String capUrl = wmsUrl + "service=WMS&#x26;request=GetCapabilities&#x26;version=" + tVersion;
             writer.write(
                 "<h2><a class=\"selfLink\" id=\"description\" href=\"#description\" rel=\"bookmark\">What</a> is WMS?</h2>\n" +
-                String2.replaceAll(EDStatic.wmsLongDescriptionHtml, "&erddapUrl;", tErddapUrl) + "\n" +
+                String2.replaceAll(EDStatic.wmsLongDescriptionHtml_s[currLang], "&erddapUrl;", tErddapUrl) + "\n" +
                 datasetListRef +
                 "\n" +
                 "<h2>Three Ways to Make Maps with WMS</h2>\n" +
@@ -8365,9 +8387,9 @@ scripts.append(
                 "<li> <strong>In theory, anyone can download, install, and use WMS client software.</strong>\n" +
                 "  <br>Some clients are: \n" +
                 "    <a href=\"https://www.esri.com/software/arcgis/\">ArcGIS" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> and\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> and\n" +
                 "    <a href=\"http://udig.refractions.net//\">uDig" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>. \n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>. \n" +
                 "  To make a client work, you would install the software on your computer.\n" +
                 "  Then, you would enter the URL of the WMS service into the client.\n" +
                 "  For example, in ArcGIS (not yet fully working because it doesn't handle time!), use\n" +
@@ -8383,19 +8405,19 @@ scripts.append(
                 makeAGraphRef + "\n" +
                 "    and selecting the .kml file type (an OGC\n" +
                 "  standard) to load images into <a href=\"https://www.google.com/earth/\">Google Earth" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> provides\n" +            
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> provides\n" +            
                 "     a good (non-WMS) map client.\n" +
                 makeAGraphListRef +
                 "<li> <strong>Web page authors can embed a WMS client in a web page.</strong>\n" +
                 "  <br>For the map above, ERDDAP is using \n" +
                 "    <a rel=\"bookmark\" href=\"https://leafletjs.com\">Leaflet" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>, which is a very versatile WMS client.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>, which is a very versatile WMS client.\n" +
                 "  Leaflet doesn't automatically deal with dimensions other than longitude and latitude\n" +            
                 "  (e.g., time), so you will have to write JavaScript (or other scripting code) to do that.\n" +
                 "  (Adventurous JavaScript programmers can look at the Souce Code for this web page.)\n" + 
                 "  Another commonly used JavaScript WMS client is\n" +
                 "    <a rel=\"bookmark\" href=\"https://openlayers.org/\">OpenLayers" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
                 "  <br>&nbsp;\n" +
                 "<li> <strong>A person with a browser or a computer program can generate special WMS URLs.</strong>\n" +
                 "  <br>For example,\n" +
@@ -8427,10 +8449,10 @@ scripts.append(
             writer.write("</div>\n");
         } catch (Exception e) {
             EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(e));
+            writer.write(EDStatic.htmlForException(e, currLang));
             throw e; 
         } finally {
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -8446,9 +8468,9 @@ scripts.append(
      * @param userQuery  post "?", still percentEncoded, may be null.
      */
     public void doMetadata(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String endOfRequest, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequest, String userQuery, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String fileIconsDir = EDStatic.imageDirUrl(loggedInAs) + "fileIcons/";
         String questionMarkUrl = EDStatic.imageDirUrl(loggedInAs) + EDStatic.questionMarkImageFile;
 
@@ -8503,7 +8525,7 @@ scripts.append(
 
             String title = "Index of " + tErddapUrl + "/" + endOfRequest;
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, title, out); 
+            Writer writer = getHtmlWriterUtf8(loggedInAs, title, out, currLang); 
             try {
                 writer.write(
                     "<div class=\"standard_width\">\n" +
@@ -8515,11 +8537,11 @@ scripts.append(
                         true, dirNames, null));  
             } catch (Exception e) {
                 EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(e));
+                writer.write(EDStatic.htmlForException(e, currLang));
                 throw e; 
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -8554,7 +8576,7 @@ scripts.append(
 
             String title = "Index of " + tErddapUrl + "/" + endOfRequest;
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, title, out); 
+            Writer writer = getHtmlWriterUtf8(loggedInAs, title, out, currLang); 
             try {
                 writer.write(
                     "<div class=\"standard_width\">\n" +
@@ -8565,11 +8587,11 @@ scripts.append(
                         fileIconsDir, questionMarkUrl, true, dirNames, null));  
             } catch (Exception e) {
                 EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(e));
+                writer.write(EDStatic.htmlForException(e, currLang));
                 throw e; 
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -8622,7 +8644,7 @@ scripts.append(
 
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
             String title = "Index of " + tErddapUrl + "/" + endOfRequest;
-            Writer writer = getHtmlWriterUtf8(loggedInAs, title, out); 
+            Writer writer = getHtmlWriterUtf8(loggedInAs, title, out, currLang); 
             writer.write(
                 "<div class=\"standard_width\">\n" +
                 "<h1>" + title + "</h1>\n");
@@ -8631,7 +8653,7 @@ scripts.append(
                     null, tErddapUrl + "/" + endOfRequest, userQuery, 
                     fileIconsDir, questionMarkUrl, true, dirNames, null));  
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             return;
         }
 
@@ -8761,15 +8783,15 @@ scripts.append(
      * @param userQuery  post "?", still percentEncoded, may be null.
      */
     public void doGeoServicesRest(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String endOfRequest, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequest, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.geoServicesRestActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "GeoServices REST"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "GeoServices REST"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String erddapRestServices = "/" + EDStatic.warName + "/rest/services";  //ESRI uses relative URLs
         String roles[] = EDStatic.getRoles(loggedInAs);
         String teor = String2.replaceAll(endOfRequest, "//", "/"); //bypasses a common ArcGIS problem
@@ -8887,7 +8909,7 @@ scripts.append(
             } else if (fParamIsHtml) {  
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
                 Writer writer = getHtmlWriterUtf8(loggedInAs, 
-                    "Folder: /", out); 
+                    "Folder: /", out, currLang); 
                 try {
                 writer.write(
 //?? "<div class=\"standard_width\">\n" +
@@ -8896,7 +8918,7 @@ breadCrumbs + endBreadCrumbs +
 "\n" +
 //ESRI documentation: https://resources.arcgis.com/en/help/main/10.1/index.html#/Making_a_user_connection_to_ArcGIS_Server_in_ArcGIS_for_Desktop/01540000047m000000/\
 //which ESRI makes freely reusable under the Open Web Foundation Agreement
-"<p>" + String2.replaceAll(EDStatic.geoServicesDescription, "&erddapUrl;", tErddapUrl) +
+"<p>" + String2.replaceAll(EDStatic.geoServicesDescription_s[currLang], "&erddapUrl;", tErddapUrl) +
 "\n" +
 //then mimic ESRI servers  (except for <div>)
 "<h2>Folder: /</h2>\n" +
@@ -8926,10 +8948,10 @@ breadCrumbs + endBreadCrumbs +
 "<br/>\n");
                 } catch (Exception e) {
                     EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(e));
+                    writer.write(EDStatic.htmlForException(e, currLang));
                     throw e; 
                 } finally {
-                    endHtmlWriter(out, writer, tErddapUrl, false);
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang);
                 }
 
             } else {
@@ -8952,7 +8974,7 @@ breadCrumbs + endBreadCrumbs +
         if (!tEddGrid.isAccessibleTo(EDStatic.getRoles(loggedInAs))) { //authorization (very important)
             //ESRI REST: all requests are data requests
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID,
-                tEddGrid.graphsAccessibleToPublic());
+                tEddGrid.graphsAccessibleToPublic(), currLang);
             return;
         }
         if (tEddGrid.accessibleViaGeoServicesRest().length() > 0) {
@@ -8995,7 +9017,7 @@ breadCrumbs + endBreadCrumbs +
             } else if (fParamIsHtml) {  
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
                 Writer writer = getHtmlWriterUtf8(loggedInAs, //"Folder: " + 
-                    tDatasetID, out); 
+                    tDatasetID, out, currLang); 
                 try {
                     writer.write(
 //?? "<div class=\"standard_width\">\n" +
@@ -9027,7 +9049,7 @@ breadCrumbs + endBreadCrumbs +
 //"&nbsp;&nbsp;<a target=\"_blank\" href=\"" + relativeUrl + "?f=geositemap\">Geo Sitemap</a>\n" +
 "<br/>\n");
                 } finally {
-                    endHtmlWriter(out, writer, tErddapUrl, false);  //would be better to call writer.close() here
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang);  //would be better to call writer.close() here
                 }
 
             } else {
@@ -9222,7 +9244,7 @@ breadCrumbs + endBreadCrumbs +
 
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
                 Writer writer = getHtmlWriterUtf8(loggedInAs, //"Folder: " + 
-                    tDatasetID + "/" + tDestName, out); 
+                    tDatasetID + "/" + tDestName, out, currLang); 
                 try {
                     writer.write(
 // ??"<div class=\"standard_width\">\n" +
@@ -9332,10 +9354,10 @@ breadCrumbs + endBreadCrumbs +
 "<br/>\n");
                 } catch (Exception e) {
                     EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(e));
+                    writer.write(EDStatic.htmlForException(e, currLang));
                     throw e; 
                 } finally {
-                    endHtmlWriter(out, writer, tErddapUrl, false); //better to call writer.close() here
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang); //better to call writer.close() here
                 }
 
             } else {
@@ -9868,7 +9890,7 @@ breadCrumbs + endBreadCrumbs +
      *   in the requestUrl
      */
     public void doRss(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String protocol, int datasetIDStartsAt) throws Throwable {
+        String loggedInAs, String protocol, int datasetIDStartsAt, int currLang) throws Throwable {
 
         String requestUrl = request.getRequestURI();  // /erddap/images/QuestionMark.jpg
         String nameAndExt = requestUrl.length() <= datasetIDStartsAt? "" : 
@@ -9891,7 +9913,7 @@ breadCrumbs + endBreadCrumbs +
                 //But without edd, I can't tell if it is a private dataset.
                 //so just send resourceNotFound
                 //Not good: if edd is private, anyone can find out when it isn't available.
-                sendResourceNotFoundError(requestNumber, request, response, EDStatic.rssNo);
+                sendResourceNotFoundError(requestNumber, request, response, EDStatic.rssNo_s[currLang]);
             return;
             }
         }
@@ -9902,20 +9924,20 @@ breadCrumbs + endBreadCrumbs +
         if (gatp || edd.isAccessibleTo(roles)) {
             //okay
         } else {
-            EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID, gatp);
+            EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID, gatp, currLang);
             return;
         }
 
         //get rss content
         byte rssAr[] = tDatasetID.length() == 0? null : rssHashMap.get(tDatasetID);
         if (tDatasetID.equals(EDDTableFromAllDatasets.DATASET_ID) || rssAr == null) {
-            sendResourceNotFoundError(requestNumber, request, response, EDStatic.rssNo);
+            sendResourceNotFoundError(requestNumber, request, response, EDStatic.rssNo_s[currLang]);
             return;
         }
 
         //Okay. This is going to work!
         //substitute &erddapUrl;
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String s = String2.utf8BytesToString(rssAr);
         s = String2.replaceAll(s, "&erddapUrl;", tErddapUrl);
         rssAr = String2.stringToUtf8Bytes(s);
@@ -10047,16 +10069,16 @@ breadCrumbs + endBreadCrumbs +
      * @throws Throwable if trouble
      */
     public void doOutOfDateDatasets(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String endOfRequest, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequest, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.outOfDateDatasetsActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "Out-Of-Date Datasets"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "Out-Of-Date Datasets"));
             return;
         }
 
         //constants 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         int refreshEveryNMinutes = Math2.roundToInt(EDStatic.loadDatasetsMinMillis / 60000.0);
 
         //parse endOfRequest
@@ -10091,7 +10113,7 @@ breadCrumbs + endBreadCrumbs +
 
         //get the table from allDatasets
         String currentTimeZulu = Calendar2.getCurrentISODateTimeStringZulu() + "Z";
-        Table table = allDatasets.makeDatasetTable(loggedInAs);
+        Table table = allDatasets.makeDatasetTable(loggedInAs, currLang);
         BitSet keep = new BitSet();
         keep.set(0, table.nRows());
         table.justKeepColumns(new String[]{"outOfDate", "testOutOfDate", "maxTime", "datasetID", "title"}, "");
@@ -10118,7 +10140,7 @@ breadCrumbs + endBreadCrumbs +
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
         Writer writer = getHtmlWriterUtf8(loggedInAs, shortTitle, 
             "<meta http-equiv=\"refresh\" content=\"" + (refreshEveryNMinutes * 60) + "\" >", 
-            out); 
+            out, currLang); 
         try {
             //make some changes to table
             int nRows = table.nRows();
@@ -10157,18 +10179,18 @@ breadCrumbs + endBreadCrumbs +
 
             //write html response
             writer.write("<div class=\"standard_width\">");
-            writer.write(EDStatic.youAreHere(loggedInAs, shortTitle)); 
-            writer.write(XML.encodeAsHTML(EDStatic.advc_outOfDate));
+            writer.write(EDStatic.youAreHere(loggedInAs, shortTitle, currLang)); 
+            writer.write(XML.encodeAsHTML(EDStatic.advc_outOfDate_s[currLang]));
             writer.write(
                 "\n<p>");
             if (table.nRows() == 0) {
                 writer.write("[" +
-                    MessageFormat.format(EDStatic.nMatching, "0") + " " +
-                    EDStatic.advn_outOfDate + "]");
+                    MessageFormat.format(EDStatic.nMatching_s[currLang], "0") + " " +
+                    EDStatic.advn_outOfDate_s[currLang] + "]");
             } else {
                 writer.write(
-                    MessageFormat.format(EDStatic.nMatching, "" + table.nRows()) + " " +
-                    MessageFormat.format(EDStatic.generatedAt, 
+                    MessageFormat.format(EDStatic.nMatching_s[currLang], "" + table.nRows()) + " " +
+                    MessageFormat.format(EDStatic.generatedAt_s[currLang], 
                         "<span class=\"N\">" + currentTimeZulu + "</span>") + 
                     "\n<br>");
                 table.saveAsHtmlTable(writer, 
@@ -10179,38 +10201,38 @@ breadCrumbs + endBreadCrumbs +
 
             //autoRefresh message
             writer.write("<p>" + 
-                MessageFormat.format(EDStatic.generatedAt, 
+                MessageFormat.format(EDStatic.generatedAt_s[currLang], 
                     "<span class=\"N\">" + currentTimeZulu + "</span>") + 
                 "\n<br>" +
-                MessageFormat.format(EDStatic.autoRefresh, 
+                MessageFormat.format(EDStatic.autoRefresh_s[currLang], 
                     "" + refreshEveryNMinutes) + 
                 "\n");
 
             //addConstraints
             writer.write(
-                "<h3><a class=\"selfLink\" id=\"Options\" href=\"#Options\" rel=\"bookmark\">" + EDStatic.options + "</a></h3>\n" +
-                XML.encodeAsHTML(EDStatic.addConstraints) +
+                "<h3><a class=\"selfLink\" id=\"Options\" href=\"#Options\" rel=\"bookmark\">" + EDStatic.options_s[currLang] + "</a></h3>\n" +
+                XML.encodeAsHTML(EDStatic.addConstraints_s[currLang]) +
                 "<br><a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + start + 
                     "html?&amp;outOfDate%3E=0.5\">"  + tErddapUrl + "/" + start +
                     "html?&amp;outOfDate&gt;=0.5</a> .\n" +
-                String2.replaceAll(EDStatic.percentEncode, "&erddapUrl;", tErddapUrl));
+                String2.replaceAll(EDStatic.percentEncode_s[currLang], "&erddapUrl;", tErddapUrl));
 
             //list plain file types
             writer.write(
                 "\n" +
-                "<p>" + EDStatic.restfulInformationFormats + " \n(" +
+                "<p>" + EDStatic.restfulInformationFormats_s[currLang] + " \n(" +
                 plainFileTypesString + //not links, which would be indexed by search engines
                 ") <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                    EDStatic.restfulViaService + "</a>.\n");
+                    EDStatic.restfulViaService_s[currLang] + "</a>.\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
 
             writer.write("</div>\n"); 
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }        
     }
 
@@ -10227,12 +10249,12 @@ breadCrumbs + endBreadCrumbs +
      * @throws Throwable if trouble
      */
     public void doSlideSorter(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String userQuery) throws Throwable {
+        String loggedInAs, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.slideSorterActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "SlideSorter"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "SlideSorter"));
             return;
         }
 
@@ -10240,7 +10262,7 @@ breadCrumbs + endBreadCrumbs +
         //and move it to forefront (zlevel=highest).
 
         //constants 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String formName = "f1";
         String dFormName = "document." + formName;
         int border = 20;
@@ -10249,7 +10271,7 @@ breadCrumbs + endBreadCrumbs +
         int defaultContentWidth = 360;
         String bgColor = "#ffffff";  //before ERDDAP v2: was "#d7dcdd" here; ERDDAP was "#ccccff";
         int connTimeout = 120000; //ms
-        String ssBePatientAlt = "alt=\"" + EDStatic.ssBePatient + "\" ";
+        String ssBePatientAlt = "alt=\"" + EDStatic.ssBePatient_s[currLang] + "\" ";
 
         //DON'T use GET-style params, use POST-style (request.getParameter)  
 
@@ -10263,13 +10285,13 @@ breadCrumbs + endBreadCrumbs +
 
         //generate html response
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Slide Sorter", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Slide Sorter", out, currLang); 
         try {
             writer.write(HtmlWidgets.dragDropScript(EDStatic.imageDirUrl(loggedInAs)));
             // writer.write(EDStatic.youAreHereWithHelp(loggedInAs, "Slide Sorter", 
-            writer.write(EDStatic.youAreHereWithHelp(loggedInAs, EDStatic.hpn_slideSorter, 
-                "<div class=\"standard_max_width\">" + EDStatic.ssInstructionsHtml +
-                "</div>")); 
+            writer.write(EDStatic.youAreHereWithHelp(loggedInAs, EDStatic.hpn_slideSorter_s[currLang], 
+                "<div class=\"standard_max_width\">" + EDStatic.ssInstructionsHtml_s[currLang] +
+                "</div>", currLang)); 
             writer.write(HtmlWidgets.ifJavaScriptDisabled + "\n");
 
             //begin form
@@ -10588,7 +10610,7 @@ breadCrumbs + endBreadCrumbs +
                 "Submit",  //button label
                 "style=\"cursor:default;\" onClick=\"setHidden(); " + dFormName + ".submit();\""));
             writer.write("<a class=\"selfLink\" id=\"instructions\" href=\"#instructions\" rel=\"bookmark\">&nbsp;</a><p>");
-            writer.write(EDStatic.ssInstructionsHtml);
+            writer.write(EDStatic.ssInstructionsHtml_s[currLang]);
             writer.write("</div>\n"); 
 
             //end form
@@ -10625,13 +10647,13 @@ breadCrumbs + endBreadCrumbs +
                 "\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of slidesorter
             writer.write("</div>\n"); 
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
         
     }
@@ -10648,9 +10670,9 @@ breadCrumbs + endBreadCrumbs +
      * @param userQuery  post "?", still percentEncoded, may be null.
      */
     public void doSearch(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
         
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String fileTypeName = "";
         String searchFor = "";
@@ -10696,7 +10718,7 @@ breadCrumbs + endBreadCrumbs +
                     EDStatic.getRequestedPIpp(request))) {
                 sendRedirect(response, 
                     EDStatic.baseUrl(loggedInAs) + request.getRequestURI() + "?" +
-                    EDStatic.passThroughJsonpQuery(request) +
+                    EDStatic.passThroughJsonpQuery(request, currLang) +
                     EDStatic.passThroughPIppQuery(request) + 
                     (searchFor.length() == 0? "" : "&searchFor=" + SSR.minimalPercentEncode(searchFor)));
                 return;
@@ -10719,7 +10741,7 @@ breadCrumbs + endBreadCrumbs +
             } else if (endsWithPlainFileType(endOfRequestUrl, "index")) {
                 if (searchFor.length() == 0) {
                     sendResourceNotFoundError(requestNumber, request, response, //or SC_NO_CONTENT error?
-                        MessageFormat.format(EDStatic.searchWithQuery, fileTypeName, "?page=1&itemsPerPage=1000&searchFor=wind+temperature"));
+                        MessageFormat.format(EDStatic.searchWithQuery_s[currLang], fileTypeName, "?page=1&itemsPerPage=1000&searchFor=wind+temperature"));
                     return;
                 }
                 //else handle just below here
@@ -10756,9 +10778,9 @@ breadCrumbs + endBreadCrumbs +
             //error messages
             String error[] = null;
             if (nMatches == 0) {
-                error = EDStatic.noSearchMatch(searchFor);
+                error = EDStatic.noSearchMatch(searchFor, currLang);
             } else if (page > lastPage) {
-                error = EDStatic.noPage(page, lastPage);
+                error = EDStatic.noPage(page, lastPage, currLang);
             }
 
 
@@ -10767,34 +10789,34 @@ breadCrumbs + endBreadCrumbs +
             if (fileTypeName.equals(".html")) { 
                 //display start of web page
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
-                Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.searchTitle, out); 
+                Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.searchTitle_s[currLang], out, currLang); 
                 try {
                     //you are here    Search
                     writer.write(
                         "<div class=\"standard_width\">\n" +
-                        EDStatic.youAreHere(loggedInAs, protocol));
+                        EDStatic.youAreHere(loggedInAs, protocol, currLang));
                         //youAreHereTable);
 
                     //display the search form
                     writer.write(getSearchFormHtml(request, loggedInAs, 
-                        preText, postText, searchFor) +
+                        preText, postText, searchFor, currLang) +
                         "&nbsp;" +
                         "<br>");
 
                     //display datasets
                     if (error == null) {
 
-                        Table table = makeHtmlDatasetTable(loggedInAs, datasetIDs, sortByTitle);
+                        Table table = makeHtmlDatasetTable(loggedInAs, datasetIDs, sortByTitle, currLang);
 
                         String nMatchingHtml = EDStatic.nMatchingDatasetsHtml(
                             nMatches, page, lastPage, true, //=most relevant first
                             EDStatic.baseUrl(loggedInAs) + requestUrl + 
-                            EDStatic.questionQuery(request.getQueryString()));
+                            EDStatic.questionQuery(request.getQueryString()), currLang);
                                 
                         writer.write(
                             nMatchingHtml + "\n" +
-                            "<span class=\"N\">(" + EDStatic.orRefineSearchWith + 
-                                getAdvancedSearchLink(loggedInAs, userQuery) + ")</span>\n" +
+                            "<span class=\"N\">(" + EDStatic.orRefineSearchWith_s[currLang] + 
+                                getAdvancedSearchLink(loggedInAs, userQuery, currLang) + ")</span>\n" +
                             "<br>&nbsp;\n"); //necessary for the blank line before the table (not <p>)
 
                         table.saveAsHtmlTable(writer, "commonBGColor", null, 1, false, -1, 
@@ -10806,10 +10828,10 @@ breadCrumbs + endBreadCrumbs +
                         //list plain file types
                         writer.write(
                             "\n" +
-                            "<p>" + EDStatic.restfulInformationFormats + " \n(" +
+                            "<p>" + EDStatic.restfulInformationFormats_s[currLang] + " \n(" +
                             plainFileTypesString + //not links, which would be indexed by search engines
                             ") <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                                EDStatic.restfulViaService + "</a>.\n");
+                                EDStatic.restfulViaService_s[currLang] + "</a>.\n");
                             
                     } else {
                         //error
@@ -10821,13 +10843,13 @@ breadCrumbs + endBreadCrumbs +
 
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(t));
+                    writer.write(EDStatic.htmlForException(t, currLang));
                     throw t; 
                 } finally {
 
                     //end of document
                     writer.write("</div>\n");
-                    endHtmlWriter(out, writer, tErddapUrl, false);
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang);
                 }
                 return;
             }
@@ -10836,7 +10858,7 @@ breadCrumbs + endBreadCrumbs +
             if (error != null)
                 throw new SimpleException(EDStatic.resourceNotFound + error[0] + " " + error[1]);
 
-            Table table = makePlainDatasetTable(loggedInAs, datasetIDs, sortByTitle, fileTypeName);
+            Table table = makePlainDatasetTable(loggedInAs, datasetIDs, sortByTitle, fileTypeName, currLang);
             sendPlainTable(requestNumber, loggedInAs, request, response, table, protocol, fileTypeName);
             return;
 
@@ -10858,12 +10880,12 @@ breadCrumbs + endBreadCrumbs +
             //make html page with [error message and] search form
             String error = MustBe.getShortErrorMessage(t);
             out = getHtmlOutputStreamUtf8(request, response);
-            writer = getHtmlWriterUtf8(loggedInAs, EDStatic.searchTitle, out);
+            writer = getHtmlWriterUtf8(loggedInAs, EDStatic.searchTitle_s[currLang], out, currLang);
             try {
                 //you are here      Search
                 writer.write(
                     "<div class=\"standard_width\">\n" +
-                    EDStatic.youAreHere(loggedInAs, protocol));
+                    EDStatic.youAreHere(loggedInAs, protocol, currLang));
                     //youAreHereTable);
 
                 //write (error and) search form
@@ -10871,7 +10893,7 @@ breadCrumbs + endBreadCrumbs +
                     writeErrorHtml(writer, request, error);
                 writer.write(getSearchFormHtml(request, loggedInAs, 
                     "<span style=\"font-size:150%;\"><strong>", ":&nbsp;</strong></span>",
-                    searchFor));
+                    searchFor, currLang));
                 String2.log(String2.ERROR + " message sent to user: " + error);
                 String2.log(MustBe.throwableToString(t));
 
@@ -10882,11 +10904,11 @@ breadCrumbs + endBreadCrumbs +
 
             } catch (Throwable t2) {
                 EDStatic.rethrowClientAbortException(t2);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t2));
+                writer.write(EDStatic.htmlForException(t2, currLang));
                 throw t2; 
             } finally {
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -10906,9 +10928,9 @@ breadCrumbs + endBreadCrumbs +
      * @param userQuery  post "?", still percentEncoded, may be null.
      */
     public void doOpenSearch(HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String protocol, int pageNameStartsAt, String userQuery) throws Throwable {
+        String loggedInAs, String protocol, int pageNameStartsAt, String userQuery, int currLang) throws Throwable {
         
-        String tErddapUrl     = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl     = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl     = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String descriptionUrl = tErddapUrl + "/" + protocol + "/description.xml";
         String serviceWord    = "search";
@@ -10942,16 +10964,16 @@ breadCrumbs + endBreadCrumbs +
         if (endOfRequestUrl.equals("index.html")) {
             //display start of web page
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, niceProtocol, out); 
-            String openSearchDescription = EDStatic.openSearchDescription
-                .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl))
+            Writer writer = getHtmlWriterUtf8(loggedInAs, niceProtocol, out, currLang); 
+            String openSearchDescription = EDStatic.openSearchDescription_s[currLang]
+                .replaceAll("&externalLinkHtml;", EDStatic.externalLinkHtml(tErddapUrl, currLang))
                 .replaceAll("&niceProtocol;", niceProtocol)
                 .replaceAll("&descriptionUrl;", descriptionUrl)
                 .replaceAll("&sampleUrl;", sampleUrl)
                 .replaceAll("&tErddapUrl;", tErddapUrl);
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, niceProtocol) + openSearchDescription
+                EDStatic.youAreHere(loggedInAs, niceProtocol, currLang) + openSearchDescription
                 /*
                 "<p><a rel=\"bookmark\" href=\"https://github.com/dewitt/opensearch#what-is-opensearch\">" + niceProtocol + "" + //""?
                     EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
@@ -10986,7 +11008,7 @@ breadCrumbs + endBreadCrumbs +
                 "  <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">RESTful services</a>.\n" +
                 "</div>\n"
                 */);
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             return;
         }      
 
@@ -11048,7 +11070,7 @@ XML.encodeAsXML(EDStatic.adminInstitution.length() <= 38? " at " + EDStatic.admi
 XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</Attribution>\n" +
 "  <SyndicationRight>" + (loggedInAs == null? "open" : "private") + "</SyndicationRight>\n" +
 "  <AdultContent>false</AdultContent>\n" +
-"  <Language>" + EDStatic.langCode + "</Language>\n" +  //language could change if messages.xml is translated
+"  <Language>" + EDStatic.langCode_s[currLang] + "</Language>\n" +  //language could change if messages.xml is translated
 "  <InputEncoding>UTF-8</InputEncoding>\n" +
 "  <OutputEncoding>UTF-8</OutputEncoding>\n" +
 "</OpenSearchDescription>\n");
@@ -11112,11 +11134,11 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
         String title0 = "";
         String msg0 = "";
         if (nMatches == 0) {
-            String sar[] = EDStatic.noSearchMatch(searchTerms);
+            String sar[] = EDStatic.noSearchMatch(searchTerms, currLang);
             title0 = sar[0];
             msg0   = sar[1];
         } else if (page > lastPage) {
-            String sar[] = EDStatic.noPage(page, lastPage);
+            String sar[] = EDStatic.noPage(page, lastPage, currLang);
             title0 = sar[0];
             msg0   = sar[1];
         }
@@ -11292,15 +11314,15 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
      *    (or "" or null)
      *    but should at least have page= and itemsPerPage= (PIppQuery).
      */
-    public String getAdvancedSearchLink(String loggedInAs, String paramString) throws Throwable {
+    public String getAdvancedSearchLink(String loggedInAs, String paramString, int currLang) throws Throwable {
 
         return 
             "<span class=\"N\"><a href=\"" + 
-                XML.encodeAsHTMLAttribute(EDStatic.erddapUrl(loggedInAs) + "/search/advanced.html" +
+                XML.encodeAsHTMLAttribute(EDStatic.erddapUrl(loggedInAs, currLang) + "/search/advanced.html" +
                 EDStatic.questionQuery(paramString)) +
-            "\">" + String2.replaceAll(EDStatic.advancedSearch, " ", "&nbsp;") + "</a>&nbsp;" +
+            "\">" + String2.replaceAll(EDStatic.advancedSearch_s[currLang], " ", "&nbsp;") + "</a>&nbsp;" +
             EDStatic.htmlTooltipImage(loggedInAs, 
-                "<div class=\"narrow_max_width\">" + EDStatic.advancedSearchTooltip +
+                "<div class=\"narrow_max_width\">" + EDStatic.advancedSearchTooltip_s[currLang] +
                 "</div>") + 
             "</span>";
     }
@@ -11319,9 +11341,9 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
      * @param userQuery  post "?", still percentEncoded, may be null.
      */
     public void doAdvancedSearch(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String loggedInAs, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
         
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String fileTypeName = "";
         String catAtts[]       = EDStatic.categoryAttributes;
@@ -11472,24 +11494,24 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
         //protocol
         StringBuilder protocolTooltip = new StringBuilder(
-            EDStatic.protocolSearch2Html +
-            "\n<p><strong>griddap</strong> - "  + EDStatic.EDDGridDapDescription +
-            "\n<p><strong>tabledap</strong> - " + EDStatic.EDDTableDapDescription);
+            EDStatic.protocolSearch2Html_s[currLang] +
+            "\n<p><strong>griddap</strong> - "  + EDStatic.EDDGridDapDescription_s[currLang] +
+            "\n<p><strong>tabledap</strong> - " + EDStatic.EDDTableDapDescription_s[currLang]);
         StringArray protocols = new StringArray();
         protocols.add(ANY);
         protocols.add("griddap");
         protocols.add("tabledap");
         if (EDStatic.wmsActive) {
             protocols.add("WMS");
-            protocolTooltip.append("\n<p><strong>WMS</strong> - " + EDStatic.wmsDescriptionHtml);
+            protocolTooltip.append("\n<p><strong>WMS</strong> - " + EDStatic.wmsDescriptionHtml_s[currLang]);
         }
         if (EDStatic.wcsActive) {
             protocols.add("WCS");
-            protocolTooltip.append("\n<p><strong>WCS</strong> - " + EDStatic.wcsDescriptionHtml);
+            protocolTooltip.append("\n<p><strong>WCS</strong> - " + EDStatic.wcsDescriptionHtml_s[currLang]);
         }
         if (EDStatic.sosActive) {
             protocols.add("SOS");
-            protocolTooltip.append("\n<p><strong>SOS</strong> - " + EDStatic.sosDescriptionHtml);
+            protocolTooltip.append("\n<p><strong>SOS</strong> - " + EDStatic.sosDescriptionHtml_s[currLang]);
         }
         String tProt = request.getParameter("protocol");
         int whichProtocol = protocols.indexOfIgnoreCase(tProt); 
@@ -11524,7 +11546,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
         if (toHtml) { 
             //display start of web page
             out = getHtmlOutputStreamUtf8(request, response);
-            writer = getHtmlWriterUtf8(loggedInAs, EDStatic.advancedSearch, out); 
+            writer = getHtmlWriterUtf8(loggedInAs, EDStatic.advancedSearch_s[currLang], out, currLang); 
             try {
                 HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
                 widgets.htmlTooltips = true;
@@ -11534,12 +11556,12 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 String formName = "f1";
                 writer.write(
                     "<div class=\"standard_width\">\n" +
-                    EDStatic.youAreHere(loggedInAs, EDStatic.advancedSearch + " " +
+                    EDStatic.youAreHere(loggedInAs, EDStatic.advancedSearch_s[currLang] + " " +
                         EDStatic.htmlTooltipImage(loggedInAs, 
-                            "<div class=\"narrow_max_width\">" + EDStatic.advancedSearchTooltip +
-                            "</div>")) + 
+                            "<div class=\"narrow_max_width\">" + EDStatic.advancedSearchTooltip_s[currLang] +
+                            "</div>"), currLang) + 
                     "\n\n" +
-                    EDStatic.advancedSearchDirections + "\n" +
+                    EDStatic.advancedSearchDirections_s[currLang] + "\n" +
                     HtmlWidgets.ifJavaScriptDisabled + "\n" +
                     widgets.beginForm(formName, "GET",
                         tErddapUrl + "/search/advanced.html", "") + "\n");
@@ -11550,11 +11572,11 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                 //full text search...
                 writer.write(
-                    "<p><strong>" + EDStatic.searchFullTextHtml + "</strong>\n" + 
-                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.searchHintsTooltip) + "\n" +
+                    "<p><strong>" + EDStatic.searchFullTextHtml_s[currLang] + "</strong>\n" + 
+                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.searchHintsTooltip_s[currLang]) + "\n" +
                     "<br>" +
                     widgets.textField("searchFor", 
-                        MessageFormat.format(EDStatic.searchTip, "noaa wind"),
+                        MessageFormat.format(EDStatic.searchTip_s[currLang], "noaa wind"),
                         70, 255, searchFor, "") + "\n");
 
                 //categorize      
@@ -11563,9 +11585,9 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     "&nbsp;\n" + //necessary for the blank line before the form (not <p>)
                     widgets.beginTable("class=\"compact nowrap\"") +
                     "<tr>\n" +
-                    "  <td colspan=\"2\"><strong>" + EDStatic.categoryTitleHtml + "</strong>\n" +
+                    "  <td colspan=\"2\"><strong>" + EDStatic.categoryTitleHtml_s[currLang] + "</strong>\n" +
                     EDStatic.htmlTooltipImage(loggedInAs, 
-                        "<div class=\"narrow_max_width\">" + EDStatic.advancedSearchCategoryTooltip +
+                        "<div class=\"narrow_max_width\">" + EDStatic.advancedSearchCategoryTooltip_s[currLang] +
                         "</div>") +
                     "  </td>\n" +
                     "</tr>\n" +
@@ -11593,9 +11615,9 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 }
 
                 //bounding box...
-                String mapTooltip    = EDStatic.advancedSearchMapTooltip;
-                String lonTooltip    = mapTooltip + EDStatic.advancedSearchLonTooltip;
-                String timeTooltip   = EDStatic.advancedSearchTimeTooltip;
+                String mapTooltip    = EDStatic.advancedSearchMapTooltip_s[currLang];
+                String lonTooltip    = mapTooltip + EDStatic.advancedSearchLonTooltip_s[currLang];
+                String timeTooltip   = EDStatic.advancedSearchTimeTooltip_s[currLang];
                 String twoClickMap[] = HtmlWidgets.myTwoClickMap540Big(formName, 
                     widgets.imageDirUrl + "world540Big.png", false); //debugInBrowser
 
@@ -11608,10 +11630,10 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     //lon lat time ranges
                     "<tr>\n" +
                     "  <td colspan=\"2\"><strong>" + 
-                        EDStatic.advancedSearchBounds + "</strong>\n" +
+                        EDStatic.advancedSearchBounds_s[currLang] + "</strong>\n" +
                     EDStatic.htmlTooltipImage(loggedInAs, 
                         "<div class=\"standard_max_width\">" + 
-                        EDStatic.advancedSearchRangeTooltip +
+                        EDStatic.advancedSearchRangeTooltip_s[currLang] +
                         "<p>" + lonTooltip +
                         "</div>") +
                     "  </td>\n" +
@@ -11619,11 +11641,11 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                     //max lat
                     "<tr>\n" +
-                    "  <td class=\"N\">" + EDStatic.advancedSearchMaxLat + "</td>\n" +
+                    "  <td class=\"N\">" + EDStatic.advancedSearchMaxLat_s[currLang] + "</td>\n" +
                     "  <td>&nbsp;=&nbsp;" + 
                     "    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n" +
                         widgets.textField("maxLat", 
-                            EDStatic.advancedSearchMaxLat + " (-90 to 90)<p>" + mapTooltip, 
+                            EDStatic.advancedSearchMaxLat_s[currLang] + " (-90 to 90)<p>" + mapTooltip, 
                             8, 12, (Double.isNaN(maxLat)? "" : "" + maxLat), "") + 
                     "    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n" +
                     "    </td>\n" +
@@ -11631,17 +11653,17 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                     //min max lon
                     "<tr>\n" +
-                    "  <td class=\"N\">" + EDStatic.advancedSearchMinMaxLon + "</td>\n" +
+                    "  <td class=\"N\">" + EDStatic.advancedSearchMinMaxLon_s[currLang] + "</td>\n" +
                     "  <td>&nbsp;=&nbsp;" + 
                         widgets.textField("minLon", 
                             "<div class=\"standard_max_width\">" + 
-                            EDStatic.advancedSearchMinLon + "<p>" + lonTooltip +
+                            EDStatic.advancedSearchMinLon_s[currLang] + "<p>" + lonTooltip +
                             "</div>", 
                             8, 12, 
                             (Double.isNaN(minLon)? "" : "" + minLon), "") + "\n" +
                         widgets.textField("maxLon", 
                             "<div class=\"standard_max_width\">" + 
-                            EDStatic.advancedSearchMaxLon + "<p>" + lonTooltip +
+                            EDStatic.advancedSearchMaxLon_s[currLang] + "<p>" + lonTooltip +
                             "</div>", 
                             8, 12, 
                             (Double.isNaN(maxLon)? "" : "" + maxLon), "") +
@@ -11650,16 +11672,16 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                     //min lat
                     "<tr>\n" +
-                    "  <td class=\"N\">" + EDStatic.advancedSearchMinLat + "</td>\n" +
+                    "  <td class=\"N\">" + EDStatic.advancedSearchMinLat_s[currLang] + "</td>\n" +
                     "  <td>&nbsp;=&nbsp;" + 
                     "    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n" +
                         widgets.textField("minLat", 
-                            EDStatic.advancedSearchMinLat + " (-90 to 90)<p>" + mapTooltip, 8, 12, 
+                            EDStatic.advancedSearchMinLat_s[currLang] + " (-90 to 90)<p>" + mapTooltip, 8, 12, 
                             (Double.isNaN(minLat)? "" : "" + minLat), "") +
                     "    &nbsp;\n" +
                         widgets.htmlButton("button", "", "", 
-                            EDStatic.advancedSearchClearHelp,
-                            EDStatic.advancedSearchClear,
+                            EDStatic.advancedSearchClearHelp_s[currLang],
+                            EDStatic.advancedSearchClear_s[currLang],
                             "onClick='f1.minLon.value=\"\"; f1.maxLon.value=\"\"; " +
                                      "f1.minLat.value=\"\"; f1.maxLat.value=\"\"; " +
                                      "((document.all)? document.all.rubberBand : " +
@@ -11683,15 +11705,15 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                     //time
                     "<tr>\n" +
-                    "  <td class=\"N\">" + EDStatic.advancedSearchMinTime + "</td>\n" +
+                    "  <td class=\"N\">" + EDStatic.advancedSearchMinTime_s[currLang] + "</td>\n" +
                     "  <td>&nbsp;=&nbsp;" + widgets.textField("minTime", 
-                        EDStatic.advancedSearchMinTime + "<p>" + timeTooltip, 27, 40, minTimeParam, "") + 
+                        EDStatic.advancedSearchMinTime_s[currLang] + "<p>" + timeTooltip, 27, 40, minTimeParam, "") + 
                         "</td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "  <td class=\"N\">" + EDStatic.advancedSearchMaxTime + "</td>\n" +
+                    "  <td class=\"N\">" + EDStatic.advancedSearchMaxTime_s[currLang] + "</td>\n" +
                     "  <td>&nbsp;=&nbsp;" + widgets.textField("maxTime", 
-                        EDStatic.advancedSearchMaxTime + "<p>" + timeTooltip, 27, 40, maxTimeParam, "") + 
+                        EDStatic.advancedSearchMaxTime_s[currLang] + "<p>" + timeTooltip, 27, 40, maxTimeParam, "") + 
                         "</td>\n" +
                     "</tr>\n" +
 
@@ -11700,8 +11722,8 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                     //submit button 
                     "<p>" +
-                    widgets.htmlButton("submit", null, null, EDStatic.searchClickTip, 
-                        "<span style=\"font-size:large;\"><strong>" + EDStatic.searchButton + "</strong></span>", "") + "\n" +
+                    widgets.htmlButton("submit", null, null, EDStatic.searchClickTip_s[currLang], 
+                        "<span style=\"font-size:large;\"><strong>" + EDStatic.searchButton_s[currLang] + "</strong></span>", "") + "\n" +
 
                     //end form
                     widgets.endForm() + "\n" +
@@ -11710,9 +11732,9 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
                 throw t; 
             } //otherwise there is more to the document below...
         }
@@ -11915,8 +11937,8 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
             //make the resultsTable 
             boolean sortByTitle = false;  //already put in appropriate order above
             if (toHtml)
-                 resultsTable = makeHtmlDatasetTable( loggedInAs, matchingDatasetIDs, sortByTitle);  
-            else resultsTable = makePlainDatasetTable(loggedInAs, matchingDatasetIDs, sortByTitle, fileTypeName);  
+                 resultsTable = makeHtmlDatasetTable( loggedInAs, matchingDatasetIDs, sortByTitle, currLang);  
+            else resultsTable = makePlainDatasetTable(loggedInAs, matchingDatasetIDs, sortByTitle, fileTypeName, currLang);  
         }
 
 
@@ -11927,12 +11949,12 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 writer.write(
                     //"<br>&nbsp;\n" +
                     "<hr>\n" +
-                    "<h2>" + EDStatic.advancedSearchResults + "</h2>\n");  
+                    "<h2>" + EDStatic.advancedSearchResults_s[currLang] + "</h2>\n");  
                 if (searchPerformed) {
                     if (resultsTable.nRows() == 0) {
                          writer.write("<strong>" + XML.encodeAsHTML(MustBe.THERE_IS_NO_DATA) + "</strong>\n" +
-                             (searchFor.length() > 0? "<br>" + EDStatic.searchSpelling + "\n" : "") +
-                             "<br>" + EDStatic.advancedSearchFewerCriteria + "\n" +
+                             (searchFor.length() > 0? "<br>" + EDStatic.searchSpelling_s[currLang] + "\n" : "") +
+                             "<br>" + EDStatic.advancedSearchFewerCriteria_s[currLang] + "\n" +
                              "</div>\n"); //which controls width
                     } else {
 
@@ -11940,7 +11962,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                             nMatches, page, lastPage, 
                             searchFor.length() > 0 && !searchFor.equals("all"),  //true=most relevant first
                             EDStatic.baseUrl(loggedInAs) + requestUrl + 
-                            EDStatic.questionQuery(request.getQueryString()));
+                            EDStatic.questionQuery(request.getQueryString()), currLang);
                             
                         writer.write(nMatchingHtml +
                             "<br>&nbsp;\n"); 
@@ -11954,25 +11976,25 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                         //list plain file types and error handling
                         writer.write(
                             "\n" +
-                            "<p>" + EDStatic.restfulInformationFormats + " \n(" +
+                            "<p>" + EDStatic.restfulInformationFormats_s[currLang] + " \n(" +
                             plainFileTypesString + //not links, which would be indexed by search engines
                             ") <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                                EDStatic.restfulViaService + "</a>.\n" +
-                            "<p>" + EDStatic.advancedSearchErrorHandling + "\n");
+                                EDStatic.restfulViaService_s[currLang] + "</a>.\n" +
+                            "<p>" + EDStatic.advancedSearchErrorHandling_s[currLang] + "\n");
                     }
                 } else {
                     writer.write(
-                        MessageFormat.format(EDStatic.advancedSearchNoCriteria,
-                            EDStatic.searchButton, tErddapUrl, "" + pipp[1])); 
+                        MessageFormat.format(EDStatic.advancedSearchNoCriteria_s[currLang],
+                            EDStatic.searchButton_s[currLang], tErddapUrl, "" + pipp[1])); 
                 }
 
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t;
             } finally {
                 writer.write("</div>\n");  //which controls width
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -11986,7 +12008,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 return;
             } else {
                 throw new SimpleException(EDStatic.queryError + 
-                    MessageFormat.format(EDStatic.advancedSearchWithCriteria, fileTypeName));
+                    MessageFormat.format(EDStatic.advancedSearchWithCriteria_s[currLang], fileTypeName));
             }
         }
 
@@ -12042,14 +12064,14 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
      * @throws Throwable, notably ClientAbortException
      */
     public Table getSearchTable(String loggedInAs, StringArray tDatasetIDs,
-        String searchFor, boolean toHtml, String fileTypeName) throws Throwable {
+        String searchFor, boolean toHtml, String fileTypeName, int currLang) throws Throwable {
 
         tDatasetIDs = getSearchDatasetIDs(loggedInAs, tDatasetIDs, searchFor);
 
         boolean sortByTitle = false; //already sorted by search 
         return toHtml? 
-            makeHtmlDatasetTable( loggedInAs, tDatasetIDs, sortByTitle) : 
-            makePlainDatasetTable(loggedInAs, tDatasetIDs, sortByTitle, fileTypeName);
+            makeHtmlDatasetTable( loggedInAs, tDatasetIDs, sortByTitle, currLang) : 
+            makePlainDatasetTable(loggedInAs, tDatasetIDs, sortByTitle, fileTypeName, currLang);
     }
 
     /**
@@ -12280,7 +12302,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
                     throw new SimpleException(EDStatic.resourceNotFound +
-                        EDStatic.searchNotAvailable, t);
+                        EDStatic.searchNotAvailable_s[0], t);
                 }
 
             } else {
@@ -12400,9 +12422,9 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
      * @throws Throwable if trouble
      */
     public void doCategorize(int requestNumber, HttpServletRequest request, HttpServletResponse response,
-        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
         
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);  
@@ -12417,7 +12439,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 EDStatic.getRequestedPIpp(request))) {
             sendRedirect(response, 
                 EDStatic.baseUrl(loggedInAs) + requestUrl + "?" +
-                EDStatic.passThroughJsonpQuery(request) +
+                EDStatic.passThroughJsonpQuery(request, currLang) +
                 EDStatic.passThroughPIppQuery(request));  //should be nothing else in query
             return;
         }      
@@ -12460,13 +12482,13 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 ////Or, search text
                 //"<p>" + getSearchFormHtml(request, loggedInAs, EDStatic.orComma, ":\n<br>", "") +
                 //Use <p> below if other options above are enabled.
-                "<span class=\"N\">(" + EDStatic.orRefineSearchWith + 
+                "<span class=\"N\">(" + EDStatic.orRefineSearchWith_s[currLang] + 
                     getAdvancedSearchLink(loggedInAs, 
                         EDStatic.passThroughPIppQueryPage1(request) + 
-                        "&" + advancedQuery) + 
+                        "&" + advancedQuery, currLang) + 
                 ")</span>\n";
 
-        String youAreHere = EDStatic.youAreHere(loggedInAs, EDStatic.categoryTitleHtml);
+        String youAreHere = EDStatic.youAreHere(loggedInAs, EDStatic.categoryTitleHtml_s[currLang], currLang);
         //String youAreHereTable = 
         //    getYouAreHereTable(youAreHere, refine) +
         //    "\n" + HtmlWidgets.ifJavaScriptDisabled + "\n";
@@ -12499,7 +12521,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
             } else { 
                 //respond to categorize/index.html or errors: unknown attribute, unknown fileTypeName 
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
-                Writer writer = getHtmlWriterUtf8(loggedInAs, "Categorize", out); 
+                Writer writer = getHtmlWriterUtf8(loggedInAs, "Categorize", out, currLang); 
                 try {
                     //you are here  Categorize    
                     writer.write(
@@ -12511,15 +12533,15 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                         writeErrorHtml(writer, request, 
                             "categoryAttribute=\"" + XML.encodeAsHTML(attributeInURL) + "\" is not an option.");
 
-                    writeCategorizeOptionsHtml1(request, loggedInAs, writer, null, false);
+                    writeCategorizeOptionsHtml1(request, loggedInAs, writer, null, false, currLang);
 
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(t));
+                    writer.write(EDStatic.htmlForException(t, currLang));
                     throw t; 
                 } finally {
                     writer.write("</div>\n");
-                    endHtmlWriter(out, writer, tErddapUrl, false);
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang);
                 }
             }
             return;
@@ -12549,7 +12571,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     parts[1] = parts[1].toLowerCase();
                     sendRedirect(response, tErddapUrl + "/" + protocol + "/" +
                         String2.toSVString(parts, "/", false) + "?" +
-                        EDStatic.passThroughJsonpQuery(request) +
+                        EDStatic.passThroughJsonpQuery(request, currLang) +
                         EDStatic.passThroughPIppQueryPage1(request)); 
                     return;
                 }   
@@ -12565,7 +12587,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     //respond to categorize/attribute/index.xxx
                     //display list of categoryNames in plainFileType file
                     sendCategoryPftOptionsTable(requestNumber, request, response, loggedInAs, 
-                        attribute, attributeInURL, fileTypeName);
+                        attribute, attributeInURL, fileTypeName, currLang);
                 } else {
                     if (verbose) String2.log(EDStatic.resourceNotFound + "unknown categoryName=" + categoryName);
                     sendResourceNotFoundError(requestNumber, request, response, "");
@@ -12575,7 +12597,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 //respond to categorize/index.html or errors: 
                 //  unknown attribute, unknown fileTypeName 
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
-                Writer writer = getHtmlWriterUtf8(loggedInAs, "Categorize", out); 
+                Writer writer = getHtmlWriterUtf8(loggedInAs, "Categorize", out, currLang); 
                 try {
                     writer.write(
                         "<div class=\"standard_width\">\n" +
@@ -12583,7 +12605,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                         //youAreHereTable);
                     if (!categoryName.equals("index.html")) {
                         writeErrorHtml(writer, request, 
-                            MessageFormat.format(EDStatic.categoryNotAnOption,
+                            MessageFormat.format(EDStatic.categoryNotAnOption_s[currLang],
                                 attributeInURL, categoryName));
                         writer.write("<hr>\n");
                     }
@@ -12593,14 +12615,14 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     //    "<tr>\n" +
                     //    "<td class=\"T\">\n");
                     writeCategorizeOptionsHtml1(request, loggedInAs, writer, 
-                        attributeInURL, false);
+                        attributeInURL, false, currLang);
                     writer.write(
                         "<p>");
                     //    "</td>\n" +
                     //    "<td>" + gap + "</td>\n" +
                     //    "<td class=\"T\">\n");
                     writeCategoryOptionsHtml2(request, loggedInAs, writer, 
-                        attribute, attributeInURL, categoryName);
+                        attribute, attributeInURL, categoryName, currLang);
                     //writer.write(
                     //    "</td>\n" +
                     //    "</tr>\n" +
@@ -12608,11 +12630,11 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(t));
+                    writer.write(EDStatic.htmlForException(t, currLang));
                     throw t; 
                 } finally {
                     writer.write("</div>\n");
-                    endHtmlWriter(out, writer, tErddapUrl, false);
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang);
                 }
             }
             return;
@@ -12665,7 +12687,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
         boolean sortByTitle = false;
         if (endsWithPlainFileType(part2, "index")) {
             //show the results as plain file type
-            Table table = makePlainDatasetTable(loggedInAs, catDats, sortByTitle, fileTypeName);
+            Table table = makePlainDatasetTable(loggedInAs, catDats, sortByTitle, fileTypeName, currLang);
             sendPlainTable(requestNumber, loggedInAs, request, response, table, 
                 attributeInURL + "_" + categoryName, fileTypeName);
             return;
@@ -12674,11 +12696,11 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
         //respond to categorize/{attributeInURL}/{categoryName}/index.html request
         if (part2.equals("index.html")) {
             //make a table of the datasets
-            Table table = makeHtmlDatasetTable(loggedInAs, catDats, sortByTitle);
+            Table table = makeHtmlDatasetTable(loggedInAs, catDats, sortByTitle, currLang);
 
             //display start of web page
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
-            Writer writer = getHtmlWriterUtf8(loggedInAs, "Categorize", out); 
+            Writer writer = getHtmlWriterUtf8(loggedInAs, "Categorize", out, currLang); 
             try {
                 writer.write(
                     "<div class=\"standard_width\">\n" +
@@ -12691,7 +12713,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 //    "<table class=\"compact nowrap\">\n" +
                 //    "<tr>\n" +
                 //    "<td class=\"T\">\n");
-                writeCategorizeOptionsHtml1(request, loggedInAs, writer, attributeInURL, false);
+                writeCategorizeOptionsHtml1(request, loggedInAs, writer, attributeInURL, false, currLang);
                 writer.write(
                     "<p>");
                 //    "</td>\n" +
@@ -12700,7 +12722,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     
                 //write categoryOptions
                 writeCategoryOptionsHtml2(request, loggedInAs, writer, 
-                    attribute, attributeInURL, categoryName);
+                    attribute, attributeInURL, categoryName, currLang);
                 //writer.write(
                 //    "</td>\n" +
                 //    "</tr>\n" +
@@ -12709,11 +12731,11 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 String nMatchingHtml = EDStatic.nMatchingDatasetsHtml(
                     nMatches, page, lastPage, false, //=alphabetical
                     EDStatic.baseUrl(loggedInAs) + requestUrl + 
-                    EDStatic.questionQuery(userQuery));
+                    EDStatic.questionQuery(userQuery), currLang);
 
                 //display datasets
                 writer.write("<h3>3) " + 
-                    MessageFormat.format(EDStatic.resultsOfSearchFor, 
+                    MessageFormat.format(EDStatic.resultsOfSearchFor_s[currLang], 
                         "\n<span class=\"N\"><kbd>" + attributeInURL + " = " + categoryName + "</kbd></span>") + 
                     "</h3>\n" +
                     nMatchingHtml + "\n" +
@@ -12736,20 +12758,20 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 //list plain file types
                 writer.write(
                     "\n" +
-                    "<p>" + EDStatic.restfulInformationFormats + " \n(" +
+                    "<p>" + EDStatic.restfulInformationFormats_s[currLang] + " \n(" +
                     plainFileTypesString + //not links, which would be indexed by search engines
                     ") <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                        EDStatic.restfulViaService + "</a>.\n");
+                        EDStatic.restfulViaService_s[currLang] + "</a>.\n");
 
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t; 
             } finally {
 
                 //end of document
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -12770,9 +12792,9 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
      * @throws Throwable if trouble
      */
     public void doInfo(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String protocol, int datasetIDStartsAt) throws Throwable {
+        String loggedInAs, String protocol, int datasetIDStartsAt, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String requestUrlNoLang = getUrlWithoutLang(request);
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
@@ -12800,7 +12822,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
         boolean endsWithPlainFileType = endsWithPlainFileType(parts[nParts - 1], "index");
         if (!endsWithPlainFileType && !fileTypeName.equals(".html")) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.unsupportedFileType, fileTypeName));
+                MessageFormat.format(EDStatic.unsupportedFileType_s[currLang], fileTypeName));
             return;
         }
         EDStatic.tally.add("Info File Type (since startup)", fileTypeName);
@@ -12814,7 +12836,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     EDStatic.getRequestedPIpp(request))) {
                 sendRedirect(response, 
                     EDStatic.baseUrl(loggedInAs) + request.getRequestURI() + "?" +
-                    EDStatic.passThroughJsonpQuery(request) +
+                    EDStatic.passThroughJsonpQuery(request, currLang) +
                     EDStatic.passThroughPIppQuery(request)); 
                 return;
             }      
@@ -12851,19 +12873,19 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                     MustBe.THERE_IS_NO_DATA,
                     ""};
             } else if (page > lastPage) {
-                error = EDStatic.noPage(page, lastPage);
+                error = EDStatic.noPage(page, lastPage, currLang);
             }
 
             boolean sortByTitle = false; //already sorted above
             if (fileTypeName.equals(".html")) {
                 //make the table with the dataset list
-                Table table = makeHtmlDatasetTable(loggedInAs, tIDs, sortByTitle);
+                Table table = makeHtmlDatasetTable(loggedInAs, tIDs, sortByTitle, currLang);
 
                 //display start of web page
                 OutputStream out = getHtmlOutputStreamUtf8(request, response);
                 Writer writer = getHtmlWriterUtf8(loggedInAs, 
-                    MessageFormat.format(EDStatic.listOfDatasets, EDStatic.listAll),
-                    out); 
+                    MessageFormat.format(EDStatic.listOfDatasets_s[currLang], EDStatic.listAll_s[currLang]),
+                    out, currLang); 
                 try {
                     //you are here  View All Datasets
                     String secondLine = error == null?
@@ -12876,7 +12898,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                         EDStatic.nMatchingDatasetsHtml(
                             nDatasets, page, lastPage, false,  //=alphabetical
                             EDStatic.baseUrl(loggedInAs) + requestUrl + 
-                            EDStatic.questionQuery(request.getQueryString())) + 
+                            EDStatic.questionQuery(request.getQueryString()), currLang) + 
                         "<br>&nbsp;\n";
 
                     writer.write(                        
@@ -12884,7 +12906,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                         //getYouAreHereTable(
                         EDStatic.youAreHere(loggedInAs, 
-                            MessageFormat.format(EDStatic.listOfDatasets, EDStatic.listAll)) +
+                            MessageFormat.format(EDStatic.listOfDatasets_s[currLang], EDStatic.listAll_s[currLang]), currLang) +
                         secondLine +
                         nMatchingHtml);
 
@@ -12911,10 +12933,10 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                         //list plain file types
                         writer.write(
                             "\n" +
-                            "<p>" + EDStatic.restfulInformationFormats + " \n(" +
+                            "<p>" + EDStatic.restfulInformationFormats_s[currLang] + " \n(" +
                             plainFileTypesString + //not links, which would be indexed by search engines
                             ") <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                                EDStatic.restfulViaService + "</a>.\n");
+                                EDStatic.restfulViaService_s[currLang] + "</a>.\n");
                     }
 
 
@@ -12953,26 +12975,26 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                    writer.write(EDStatic.htmlForException(t));
+                    writer.write(EDStatic.htmlForException(t, currLang));
                     throw t; 
                 } finally {
 
                     //end of document
                     writer.write("</div>\n");
-                    endHtmlWriter(out, writer, tErddapUrl, false);
+                    endHtmlWriter(out, writer, tErddapUrl, false, currLang);
                 }
             } else {
                 if (error != null)
                     throw new SimpleException(EDStatic.resourceNotFound + error[0] + " " + error[1]);
 
-                Table table = makePlainDatasetTable(loggedInAs, tIDs, sortByTitle, fileTypeName);
+                Table table = makePlainDatasetTable(loggedInAs, tIDs, sortByTitle, fileTypeName, currLang);
                 sendPlainTable(requestNumber, loggedInAs, request, response, table, protocol, fileTypeName);
             }
             return;
         }
         if (nParts > 2) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.infoRequestForm, EDStatic.warName));
+                MessageFormat.format(EDStatic.infoRequestForm_s[currLang], EDStatic.warName));
             return;
         }
         String tID = parts[0];
@@ -12981,7 +13003,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
             edd = tableDatasetHashMap.get(tID);
         if (edd == null) { 
             sendResourceNotFoundError(requestNumber, request, response,
-                MessageFormat.format(EDStatic.unknownDatasetID, tID));
+                MessageFormat.format(EDStatic.unknownDatasetID_s[currLang], tID));
             return;
         }
         if (!edd.isAccessibleTo(EDStatic.getRoles(loggedInAs)) &&
@@ -12989,7 +13011,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
             // /info/ request: all requests are graphics|metadata requests
             //listPrivateDatasets doesn't apply
             EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tID, 
-                false);
+                false, currLang);
             return;
         }
 
@@ -13103,21 +13125,21 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
             //display start of web page
             OutputStream out = getHtmlOutputStreamUtf8(request, response);
             Writer writer = getHtmlWriterUtf8(loggedInAs, 
-                MessageFormat.format(EDStatic.infoAboutFrom, edd.title(), edd.institution()), 
-                out); 
+                MessageFormat.format(EDStatic.infoAboutFrom_s[currLang], edd.title(), edd.institution()), 
+                out, currLang); 
             try {
                 writer.write("<div class=\"wide_max_width\">\n");  //not standard_width
-                writer.write(EDStatic.youAreHere(loggedInAs, protocol, parts[0]));
+                writer.write(EDStatic.youAreHere(loggedInAs, protocol, parts[0], currLang));
 
                 //display a table with the one dataset
                 StringArray sa = new StringArray();
                 sa.add(parts[0]);
                 boolean sortByTitle = true;
-                Table dsTable = makeHtmlDatasetTable(loggedInAs, sa, sortByTitle);
+                Table dsTable = makeHtmlDatasetTable(loggedInAs, sa, sortByTitle, currLang);
                 dsTable.saveAsHtmlTable(writer, "commonBGColor", null, 1, false, -1, false, false);        
 
                 //html format the valueSA values
-                String externalLinkHtml = EDStatic.externalLinkHtml(tErddapUrl);
+                String externalLinkHtml = EDStatic.externalLinkHtml(tErddapUrl, currLang);
                 for (int i = 0; i < valueSA.size(); i++) {                    
                     String s = valueSA.get(i);
                     if (String2.isUrl(s)) {
@@ -13136,7 +13158,7 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 }
 
                 //display the info table
-                writer.write("<h2>" + EDStatic.infoTableTitleHtml + "</h2>");
+                writer.write("<h2>" + EDStatic.infoTableTitleHtml_s[currLang] + "</h2>");
 
                 //******** custom table writer (to change color on "variable" rows)
                 writer.write(
@@ -13171,10 +13193,10 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
                 //list plain file types
                 writer.write(
                     "\n" +
-                    "<p>" + EDStatic.restfulInformationFormats + " \n(" +
+                    "<p>" + EDStatic.restfulInformationFormats_s[currLang] + " \n(" +
                     plainFileTypesString + //not links, which would be indexed by search engines
                     ") <a rel=\"help\" href=\"" + tErddapUrl + "/rest.html\">" + 
-                        EDStatic.restfulViaService + "</a>.\n");
+                        EDStatic.restfulViaService_s[currLang] + "</a>.\n");
 
                 //jsonld
                 if (EDStatic.jsonldActive) { //javascript: && EDStatic.isSchemaDotOrgEnabled()) {
@@ -13196,13 +13218,13 @@ XML.encodeAsXML(String2.noLongerThanDots(EDStatic.adminInstitution, 256)) + "</A
 
             } catch (Throwable t) {
                 EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(t));
+                writer.write(EDStatic.htmlForException(t, currLang));
                 throw t; 
             } finally {
 
                 //end of document
                 writer.write("</div>\n");
-                endHtmlWriter(out, writer, tErddapUrl, false);
+                endHtmlWriter(out, writer, tErddapUrl, false, currLang);
             }
             return;
         }
@@ -13586,15 +13608,15 @@ writer.write(
      */
     public void doSubscriptions(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
         String loggedInAs, String ipAddress,
-        String endOfRequest, String protocol, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String endOfRequest, String protocol, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.subscriptionSystemActive || EDStatic.subscriptions == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "subscriptions"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "subscriptions"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
@@ -13611,16 +13633,16 @@ writer.write(
         if (endOfRequest.equals(Subscriptions.INDEX_HTML)) {
             //fall through
         } else if (endOfRequest.equals(Subscriptions.ADD_HTML)) {
-            doAddSubscription(requestNumber, request, response, loggedInAs, ipAddress, protocol, datasetIDStartsAt, userQuery);
+            doAddSubscription(requestNumber, request, response, loggedInAs, ipAddress, protocol, datasetIDStartsAt, userQuery, currLang);
             return;
         } else if (endOfRequest.equals(Subscriptions.LIST_HTML)) {
-            doListSubscriptions(requestNumber, request, response, loggedInAs, ipAddress, protocol, datasetIDStartsAt, userQuery);
+            doListSubscriptions(requestNumber, request, response, loggedInAs, ipAddress, protocol, datasetIDStartsAt, userQuery, currLang);
             return;
         } else if (endOfRequest.equals(Subscriptions.REMOVE_HTML)) {
-            doRemoveSubscription(requestNumber, request, response, loggedInAs, protocol, datasetIDStartsAt, userQuery);
+            doRemoveSubscription(requestNumber, request, response, loggedInAs, protocol, datasetIDStartsAt, userQuery, currLang);
             return;
         } else if (endOfRequest.equals(Subscriptions.VALIDATE_HTML)) {
-            doValidateSubscription(requestNumber, request, response, loggedInAs, protocol, datasetIDStartsAt, userQuery);
+            doValidateSubscription(requestNumber, request, response, loggedInAs, protocol, datasetIDStartsAt, userQuery, currLang);
             return;
         } else {
             if (verbose) String2.log(EDStatic.resourceNotFound + "end of Subscriptions");
@@ -13631,30 +13653,30 @@ writer.write(
         //display start of web page
         if (reallyVerbose) String2.log("doSubscriptions");
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.subscriptionsTitle, out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, EDStatic.subscriptionsTitle_s[currLang], out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, protocol) +
-                EDStatic.subscription0Html + 
-                MessageFormat.format(EDStatic.subscription1Html, tErddapUrl) + "\n");
+                EDStatic.youAreHere(loggedInAs, protocol, currLang) +
+                EDStatic.subscription0Html_s[currLang] + 
+                MessageFormat.format(EDStatic.subscription1Html_s[currLang], tErddapUrl) + "\n");
             writer.write(
-                "<p><strong>" + EDStatic.options + ":</strong>\n" +
+                "<p><strong>" + EDStatic.options_s[currLang] + ":</strong>\n" +
                 "<ul>\n" +
-                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.ADD_HTML      + "\">" + EDStatic.subscriptionAdd      + "</a>\n" +
-                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.VALIDATE_HTML + "\">" + EDStatic.subscriptionValidate + "</a>\n" +
-                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.LIST_HTML     + "\">" + EDStatic.subscriptionList     + "</a>\n" +
-                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.REMOVE_HTML   + "\">" + EDStatic.subscriptionRemove   + "</a>\n" +
+                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.ADD_HTML      + "\">" + EDStatic.subscriptionAdd_s[currLang]      + "</a>\n" +
+                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.VALIDATE_HTML + "\">" + EDStatic.subscriptionValidate_s[currLang] + "</a>\n" +
+                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.LIST_HTML     + "\">" + EDStatic.subscriptionList_s[currLang]     + "</a>\n" +
+                "<li> <a rel=\"bookmark\" href=\"" + tErddapUrl + "/" + Subscriptions.REMOVE_HTML   + "\">" + EDStatic.subscriptionRemove_s[currLang]   + "</a>\n" +
                 "</ul>\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -13692,18 +13714,18 @@ writer.write(
      */
     public void doAddSubscription(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
         String loggedInAs, String ipAddress, String protocol, int datasetIDStartsAt, 
-        String userQuery) throws Throwable {
+        String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.subscriptionSystemActive || EDStatic.subscriptions == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "subscriptions"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "subscriptions"));
             return;
         }
 
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
 
         //parse the userQuery
         HashMap<String, String> queryMap = EDD.userQueryHashMap(userQuery, true); //true=lowercase keys
@@ -13721,26 +13743,26 @@ writer.write(
         String trouble = "";
 
         if (tEmail.length() == 0) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailUnspecified + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailUnspecified_s[currLang] + "</span>\n";
         } else if (tEmail.length() > Subscriptions.EMAIL_LENGTH) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailTooLong + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailTooLong_s[currLang] + "</span>\n";
         } else if (!String2.isEmailAddress(tEmail) ||  //tests syntax
                    tEmail.startsWith("your.name") || tEmail.startsWith("your.email")) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailInvalid_s[currLang] + "</span>\n";
         } else if (EDStatic.subscriptions.testEmailValid(tEmail).length() > 0) {  //tests syntax and blacklist             
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailOnBlacklist + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailOnBlacklist_s[currLang] + "</span>\n";
         }
         if (trouble.length() > 0)
             tEmail = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
 
 
         if (tDatasetID.length() == 0) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDUnspecified + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDUnspecified_s[currLang] + "</span>\n";
         } else if (tDatasetID.length() > Subscriptions.DATASETID_LENGTH) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDTooLong + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDTooLong_s[currLang] + "</span>\n";
             tDatasetID = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         } else if (!String2.isFileNameSafe(tDatasetID)) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid_s[currLang] + "</span>\n";
             tDatasetID = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         } else if (tDatasetID.equals(EDDTableFromAllDatasets.DATASET_ID)) {
             trouble += "<li><span class=\"warningColor\">'allDatasets' doesn't accept subscriptions.</span>\n";
@@ -13750,14 +13772,14 @@ writer.write(
             if (edd == null) 
                 edd = tableDatasetHashMap.get(tDatasetID);
             if (edd == null) {
-                trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid + "</span>\n";
+                trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid_s[currLang] + "</span>\n";
                 tDatasetID = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
             } else if (!edd.isAccessibleTo(EDStatic.getRoles(loggedInAs)) &&
                        !edd.graphsAccessibleToPublic()) { 
                 //subscription: all requests are graphics|metadata requests
                 //listPrivateDatasets doesn't apply
                 EDStatic.sendHttpUnauthorizedError(requestNumber, loggedInAs, response, tDatasetID,
-                    false);
+                    false, currLang);
                 return;
             }
         }
@@ -13766,7 +13788,7 @@ writer.write(
         if (tAction.length() == 0) {
             //no action is fine
         } else if (tAction.length() > Subscriptions.ACTION_LENGTH) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionUrlTooLong + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionUrlTooLong_s[currLang] + "</span>\n";
             tAction = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         } else if (tAction.length() <= 10 || 
             !(tAction.startsWith("http://") || tAction.startsWith("https://")) ||
@@ -13776,10 +13798,10 @@ writer.write(
              //this isn't allowed because a remote user could use it to gain access to other services on other local servers
              tAction.startsWith("http://192.168.") || 
              tAction.startsWith("https://192.168.")) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionUrlInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionUrlInvalid_s[currLang] + "</span>\n";
             tAction = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         } else if (tAction.indexOf('<') >= 0 || tAction.indexOf('>') >= 0) {  //prevent e.g., <script>
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionUrlInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionUrlInvalid_s[currLang] + "</span>\n";
             tAction = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         }
 
@@ -13787,20 +13809,20 @@ writer.write(
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Add a Subscription", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Add a Subscription", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
                 // EDStatic.youAreHere(loggedInAs, protocol, "add") +
-                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_add) +
-                EDStatic.subscription0Html +
-                MessageFormat.format(EDStatic.subscription1Html, tErddapUrl) + "\n" +
-                MessageFormat.format(EDStatic.subscription2Html, tErddapUrl) + "\n");
+                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_add_s[currLang], currLang) +
+                EDStatic.subscription0Html_s[currLang] +
+                MessageFormat.format(EDStatic.subscription1Html_s[currLang], tErddapUrl) + "\n" +
+                MessageFormat.format(EDStatic.subscription2Html_s[currLang], tErddapUrl) + "\n");
 
             if (trouble.length() > 0) {
                 if (tShowErrors) 
                     writer.write("<p><span class=\"warningColor\">" +
-                    EDStatic.subscriptionAddError + "</span>\n" +
+                    EDStatic.subscriptionAddError_s[currLang] + "</span>\n" +
                     "<ul>\n" +
                     trouble + "\n" +
                     "</ul>\n");
@@ -13819,11 +13841,11 @@ writer.write(
                         EDStatic.tally.add("Subscriptions (since startup)", "Add successful");
                         EDStatic.tally.add("Subscriptions (since last daily report)", "Add successful");
                     }
-                    writer.write(EDStatic.subscriptionAddSuccess + "\n");
+                    writer.write(EDStatic.subscriptionAddSuccess_s[currLang] + "\n");
                 } catch (Throwable t) {
                     EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
                     writer.write("<p><span class=\"warningColor\">" +
-                        EDStatic.subscriptionAddError + "\n<br>" + 
+                        EDStatic.subscriptionAddError_s[currLang] + "\n<br>" + 
                         XML.encodeAsHTML(MustBe.getShortErrorMessage(t)) + "</span>\n");
                     String2.log("Subscription Add Exception:\n" + MustBe.throwableToString(t)); //log stack trace, too
 
@@ -13834,10 +13856,10 @@ writer.write(
             }
 
             //show the form
-            String urlTT = EDStatic.subscriptionUrlHtml;
+            String urlTT = EDStatic.subscriptionUrlHtml_s[currLang];
             writer.write(
                 widgets.beginForm("addSub", "GET", tErddapUrl + "/" + Subscriptions.ADD_HTML, "") +
-                MessageFormat.format(EDStatic.subscriptionAddHtml, tErddapUrl) + "\n" +
+                MessageFormat.format(EDStatic.subscriptionAddHtml_s[currLang], tErddapUrl) + "\n" +
                 widgets.beginTable("class=\"compact nowrap\"") +
                 "<tr>\n" +
                 "  <td>The datasetID:&nbsp;</td>\n" +
@@ -13861,25 +13883,25 @@ writer.write(
                 "</tr>\n" +
                 "<tr>\n" +
                 "  <td colspan=\"2\">" + widgets.button("submit", null, 
-                    EDStatic.clickToSubmit, "Submit", "") + "\n" +
-                "    <br>" + EDStatic.subscriptionAdd2 + "\n" +
+                    EDStatic.clickToSubmit_s[currLang], "Submit", "") + "\n" +
+                "    <br>" + EDStatic.subscriptionAdd2_s[currLang] + "\n" +
                 "  </td>\n" +
                 "</tr>\n" +
                 widgets.endTable() +  
                 widgets.endForm() +
-                EDStatic.subscriptionAbuse + "\n");
+                EDStatic.subscriptionAbuse_s[currLang] + "\n");
 
             //link to list of subscriptions
             writer.write(requestSubscriptionListHtml(tErddapUrl, tEmail));
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -13898,12 +13920,12 @@ writer.write(
      * @throws Throwable if trouble
      */
     public void doListSubscriptions(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String ipAddress, String protocol, int datasetIDStartsAt, String userQuery) 
+        String loggedInAs, String ipAddress, String protocol, int datasetIDStartsAt, String userQuery, int currLang) 
         throws Throwable {
 
         if (!EDStatic.subscriptionSystemActive || EDStatic.subscriptions == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "subscriptions"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "subscriptions"));
             return;
         }
 
@@ -13911,21 +13933,21 @@ writer.write(
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
         HashMap<String, String> queryMap = EDD.userQueryHashMap(userQuery, true); //true=names toLowerCase
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
 
         //process the query
         String tEmail = queryMap.get("email");
         if (tEmail == null) tEmail = "";
         String trouble = "";
         if (tEmail.length() == 0) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailUnspecified + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailUnspecified_s[currLang] + "</span>\n";
         } else if (tEmail.length() > Subscriptions.EMAIL_LENGTH) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailTooLong + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailTooLong_s[currLang] + "</span>\n";
         } else if (!String2.isEmailAddress(tEmail) ||  //tests syntax
             tEmail.startsWith("your.name") || tEmail.startsWith("your.email")) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailInvalid_s[currLang] + "</span>\n";
         } else if (EDStatic.subscriptions.testEmailValid(tEmail).length() > 0) {  //tests syntax and blacklist             
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailOnBlacklist + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionEmailOnBlacklist_s[currLang] + "</span>\n";
         }
         if (trouble.length() > 0)
             tEmail = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
@@ -13934,19 +13956,19 @@ writer.write(
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "List Subscriptions", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "List Subscriptions", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
                 // EDStatic.youAreHere(loggedInAs, protocol, "list") +
-                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_list) +
-                EDStatic.subscription0Html +
-                MessageFormat.format(EDStatic.subscription1Html, tErddapUrl) + "\n");
+                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_list_s[currLang], currLang) +
+                EDStatic.subscription0Html_s[currLang] +
+                MessageFormat.format(EDStatic.subscription1Html_s[currLang], tErddapUrl) + "\n");
 
             if (userQuery != null && userQuery.length() > 0) {
                 if (trouble.length() > 0) {
                     writer.write("<p><span class=\"warningColor\">" +
-                        EDStatic.subscriptionListError + "</span>\n" + 
+                        EDStatic.subscriptionListError_s[currLang] + "</span>\n" + 
                         "<ul>\n" +
                         trouble + "\n" +
                         "</ul>\n");
@@ -13958,10 +13980,10 @@ writer.write(
                         if (tError.length() > 0)
                             throw new SimpleException(tError);
 
-                        writer.write(EDStatic.subscriptionListSuccess + "\n");
+                        writer.write(EDStatic.subscriptionListSuccess_s[currLang] + "\n");
                         //end of document
                         writer.write("</div>\n");
-                        endHtmlWriter(out, writer, tErddapUrl, false);
+                        endHtmlWriter(out, writer, tErddapUrl, false, currLang);
 
                         //tally
                         EDStatic.tally.add("Subscriptions (since startup)", "List successful");
@@ -13970,7 +13992,7 @@ writer.write(
                     } catch (Throwable t) {
                         EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
                         writer.write("<p><span class=\"warningColor\">" +
-                            EDStatic.subscriptionListError + "\n" + 
+                            EDStatic.subscriptionListError_s[currLang] + "\n" + 
                             "<br>" + XML.encodeAsHTML(MustBe.getShortErrorMessage(t)) + "</span>\n");
                         String2.log("Subscription list Exception:\n" + MustBe.throwableToString(t)); //log the details
 
@@ -13984,7 +14006,7 @@ writer.write(
             //show the form
             writer.write(
                 widgets.beginForm("listSub", "GET", tErddapUrl + "/" + Subscriptions.LIST_HTML, "") +
-                MessageFormat.format(EDStatic.subscriptionListHtml, tErddapUrl) + "\n" +
+                MessageFormat.format(EDStatic.subscriptionListHtml_s[currLang], tErddapUrl) + "\n" +
                 widgets.beginTable("class=\"compact\"") +
                 "<tr>\n" +
                 "  <td>Your email address:&nbsp;</td>\n" +
@@ -13994,20 +14016,20 @@ writer.write(
                 "</tr>\n" +
                 "<tr>\n" +
                 "  <td colspan=\"2\">" + widgets.button("submit", null, 
-                    EDStatic.clickToSubmit, "Submit", "") + "</td>\n" +
+                    EDStatic.clickToSubmit_s[currLang], "Submit", "") + "</td>\n" +
                 "</tr>\n" +
                 widgets.endTable() +  
                 widgets.endForm() +
-                EDStatic.subscriptionAbuse + "\n");
+                EDStatic.subscriptionAbuse_s[currLang] + "\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -14024,11 +14046,11 @@ writer.write(
      * @throws Throwable if trouble
      */
     public void doValidateSubscription(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
 
         if (!EDStatic.subscriptionSystemActive || EDStatic.subscriptions == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "subscriptions"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "subscriptions"));
             return;
         }
 
@@ -14036,7 +14058,7 @@ writer.write(
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
         HashMap<String, String> queryMap = EDD.userQueryHashMap(userQuery, true); //true=names toLowerCase
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
 
         //process the query
         String tSubscriptionID = queryMap.get("subscriptionid"); //lowercase since case insensitive
@@ -14045,16 +14067,16 @@ writer.write(
         if (tKey            == null) tKey            = "";
         String trouble = "";
         if (tSubscriptionID.length() == 0) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDUnspecified + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDUnspecified_s[currLang] + "</span>\n";
         } else if (!tSubscriptionID.matches("[0-9]{1,10}")) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid_s[currLang] + "</span>\n";
             tSubscriptionID = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         }
 
         if (tKey.length() == 0) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyUnspecified + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyUnspecified_s[currLang] + "</span>\n";
         } else if (!tKey.matches("[0-9]{1,10}")) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyInvalid_s[currLang] + "</span>\n";
             tKey = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         }
 
@@ -14062,19 +14084,19 @@ writer.write(
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Validate a Subscription", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Validate a Subscription", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_validate) +
+                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_validate_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, protocol, "validate") +
-                EDStatic.subscription0Html +
-                MessageFormat.format(EDStatic.subscription1Html, tErddapUrl) + "\n");
+                EDStatic.subscription0Html_s[currLang] +
+                MessageFormat.format(EDStatic.subscription1Html_s[currLang], tErddapUrl) + "\n");
 
             if (userQuery != null && userQuery.length() > 0) {
                 if (trouble.length() > 0) {
                     writer.write("<p><span class=\"warningColor\">" +
-                        EDStatic.subscriptionValidateError + "</span>\n" +
+                        EDStatic.subscriptionValidateError_s[currLang] + "</span>\n" +
                         "<ul>\n" +
                         trouble + "\n" +
                         "</ul>\n");
@@ -14085,11 +14107,11 @@ writer.write(
                             String2.parseInt(tSubscriptionID), String2.parseInt(tKey));
                         if (message.length() > 0) {
                             writer.write("<p><span class=\"warningColor\">" +
-                                EDStatic.subscriptionValidateError + "\n" +
+                                EDStatic.subscriptionValidateError_s[currLang] + "\n" +
                                 "<br>" + message + "</span>\n");
 
                         } else {
-                            writer.write(EDStatic.subscriptionValidateSuccess + "\n");
+                            writer.write(EDStatic.subscriptionValidateSuccess_s[currLang] + "\n");
 
                             //tally
                             EDStatic.tally.add("Subscriptions (since startup)", "Validate successful");
@@ -14098,7 +14120,7 @@ writer.write(
                     } catch (Throwable t) {
                         EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
                         writer.write("<p><span class=\"warningColor\">" +
-                            EDStatic.subscriptionValidateError + "\n" +
+                            EDStatic.subscriptionValidateError_s[currLang] + "\n" +
                             "<br>" + XML.encodeAsHTML(MustBe.getShortErrorMessage(t)) + "</span>\n");
                         String2.log("Subscription validate Exception:\n" + MustBe.throwableToString(t));
 
@@ -14113,7 +14135,7 @@ writer.write(
             writer.write(
                 widgets.beginForm("validateSub", "GET", 
                     tErddapUrl + "/" + Subscriptions.VALIDATE_HTML, "") +
-                MessageFormat.format(EDStatic.subscriptionValidateHtml, tErddapUrl) + "\n" +
+                MessageFormat.format(EDStatic.subscriptionValidateHtml_s[currLang], tErddapUrl) + "\n" +
                 widgets.beginTable("class=\"compact\"") +
                 "<tr>\n" +
                 "  <td>The subscriptionID:&nbsp;</td>\n" +
@@ -14127,7 +14149,7 @@ writer.write(
                 "</tr>\n" +
                 "<tr>\n" +
                 "  <td colspan=\"2\">" + widgets.button("submit", null, 
-                    EDStatic.clickToSubmit, "Submit", "") + "</td>\n" +
+                    EDStatic.clickToSubmit_s[currLang], "Submit", "") + "</td>\n" +
                 "</tr>\n" +
                 widgets.endTable() +  
                 widgets.endForm());        
@@ -14136,13 +14158,13 @@ writer.write(
             writer.write(requestSubscriptionListHtml(tErddapUrl, ""));
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -14161,12 +14183,12 @@ writer.write(
      * @throws Throwable if trouble
      */
     public void doRemoveSubscription(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery) 
+        String loggedInAs, String protocol, int datasetIDStartsAt, String userQuery, int currLang) 
         throws Throwable {
 
         if (!EDStatic.subscriptionSystemActive || EDStatic.subscriptions == null) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "subscriptions"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "subscriptions"));
             return;
         }
 
@@ -14174,7 +14196,7 @@ writer.write(
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);
         HashMap<String, String> queryMap = EDD.userQueryHashMap(userQuery, true); //true=names toLowerCase
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
 
         //process the query
         String tSubscriptionID = queryMap.get("subscriptionid"); //lowercase since case insensitive
@@ -14183,16 +14205,16 @@ writer.write(
         if (tKey            == null) tKey            = "";
         String trouble = "";
         if (tSubscriptionID.length() == 0) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDUnspecified + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDUnspecified_s[currLang] + "</span>\n";
         } else if (!tSubscriptionID.matches("[0-9]{1,10}")) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionIDInvalid_s[currLang] + "</span>\n";
             tSubscriptionID = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         }
 
         if (tKey.length() == 0) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyUnspecified + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyUnspecified_s[currLang] + "</span>\n";
         } else if (!tKey.matches("[0-9]{1,10}")) {
-            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyInvalid + "</span>\n";
+            trouble += "<li><span class=\"warningColor\">" + EDStatic.subscriptionKeyInvalid_s[currLang] + "</span>\n";
             tKey = ""; //Security: if it was bad, don't show it in form (could be malicious java script)
         }
 
@@ -14200,19 +14222,19 @@ writer.write(
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Remove a Subscription", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Remove a Subscription", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
-                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_remove) +
+                EDStatic.youAreHere(loggedInAs, protocol, EDStatic.hpn_remove_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, protocol, "remove") +
-                EDStatic.subscription0Html +
-                MessageFormat.format(EDStatic.subscription1Html, tErddapUrl) + "\n");
+                EDStatic.subscription0Html_s[currLang] +
+                MessageFormat.format(EDStatic.subscription1Html_s[currLang], tErddapUrl) + "\n");
 
             if (userQuery != null && userQuery.length() > 0) {
                 if (trouble.length() > 0) {
                     writer.write("<p><span class=\"warningColor\">" +
-                        EDStatic.subscriptionRemoveError + "</span>\n" +
+                        EDStatic.subscriptionRemoveError_s[currLang] + "</span>\n" +
                         "<ul>\n" +
                         trouble + "\n" +
                         "</ul>\n");
@@ -14223,9 +14245,9 @@ writer.write(
                             String2.parseInt(tSubscriptionID), String2.parseInt(tKey));
                         if (message.length() > 0) 
                             writer.write("<p><span class=\"warningColor\">" +
-                                EDStatic.subscriptionRemoveError + "\n" +
+                                EDStatic.subscriptionRemoveError_s[currLang] + "\n" +
                                 "<br>" + message + "</span>\n");
-                        else writer.write(EDStatic.subscriptionRemoveSuccess + "\n");
+                        else writer.write(EDStatic.subscriptionRemoveSuccess_s[currLang] + "\n");
 
                         //tally
                         EDStatic.tally.add("Subscriptions (since startup)", "Remove successful");
@@ -14233,7 +14255,7 @@ writer.write(
                     } catch (Throwable t) {
                         EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
                         writer.write("<p><span class=\"warningColor\">" +
-                            EDStatic.subscriptionRemoveError + "\n" +
+                            EDStatic.subscriptionRemoveError_s[currLang] + "\n" +
                             "<br>" + XML.encodeAsHTML(MustBe.getShortErrorMessage(t)) + "</span>\n");
                         String2.log("Subscription remove Exception:\n" + MustBe.throwableToString(t)); //log the details
 
@@ -14248,7 +14270,7 @@ writer.write(
             writer.write(
                 widgets.beginForm("removeSub", "GET", 
                     tErddapUrl + "/" + Subscriptions.REMOVE_HTML, "") +
-                MessageFormat.format(EDStatic.subscriptionRemoveHtml, tErddapUrl) + "\n" +
+                MessageFormat.format(EDStatic.subscriptionRemoveHtml_s[currLang], tErddapUrl) + "\n" +
                 widgets.beginTable("class=\"compact\"") +
                 "<tr>\n" +
                 "  <td>The subscriptionID:&nbsp;</td>\n" +
@@ -14262,23 +14284,23 @@ writer.write(
                 "</tr>\n" +
                 "<tr>\n" +
                 "  <td colspan=\"2\">" + widgets.button("submit", null, 
-                    EDStatic.clickToSubmit, "Submit", "") + "</td>\n" +
+                    EDStatic.clickToSubmit_s[currLang], "Submit", "") + "</td>\n" +
                 "</tr>\n" +
                 widgets.endTable() +  
                 widgets.endForm());        
 
             //link to list of subscriptions
             writer.write(requestSubscriptionListHtml(tErddapUrl, "") +
-                "<br>" + EDStatic.subscriptionRemove2 + "\n");
+                "<br>" + EDStatic.subscriptionRemove2_s[currLang] + "\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }   
 
@@ -14298,16 +14320,16 @@ writer.write(
      */
     public void doConvert(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
         String loggedInAs, 
-        String endOfRequest, int datasetIDStartsAt, String userQuery) throws Throwable {
+        String endOfRequest, int datasetIDStartsAt, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String requestUrl = request.getRequestURI();  //post EDStatic.baseUrl, pre "?"
         String endOfRequestUrl = datasetIDStartsAt >= requestUrl.length()? "" : 
             requestUrl.substring(datasetIDStartsAt);       
@@ -14329,7 +14351,7 @@ writer.write(
         //FIPS County
         } else if (endOfRequestUrl.equals("fipscounty.html") ||
                    endOfRequestUrl.equals("fipscounty.txt")) {
-            doConvertFipsCounty(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery);
+            doConvertFipsCounty(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, currLang);
             return;
         } else if (endOfRequestUrl.startsWith("fipscounty.") && pft >= 0) {
             try {
@@ -14345,13 +14367,13 @@ writer.write(
         //interpolate
         } else if (endOfRequestUrl.equals("interpolate.html") ||
                    (pft >= 0 && endOfRequestUrl.equals("interpolate" + plainFileTypes[pft]))) {
-            doConvertInterpolate(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, pft);
+            doConvertInterpolate(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, pft, currLang);
             return;
 
         //OceanicAtmospheric Acronyms
         } else if (endOfRequestUrl.equals("oceanicAtmosphericAcronyms.html") ||
                    endOfRequestUrl.equals("oceanicAtmosphericAcronyms.txt")) {
-            doConvertOceanicAtmosphericAcronyms(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery);
+            doConvertOceanicAtmosphericAcronyms(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, currLang);
             return;
         } else if (endOfRequestUrl.startsWith("oceanicAtmosphericAcronyms.") && pft >= 0) {
             try {
@@ -14367,7 +14389,7 @@ writer.write(
         //OceanicAtmospheric VariableNames
         } else if (endOfRequestUrl.equals("oceanicAtmosphericVariableNames.html") ||
                    endOfRequestUrl.equals("oceanicAtmosphericVariableNames.txt")) {
-            doConvertOceanicAtmosphericVariableNames(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery);
+            doConvertOceanicAtmosphericVariableNames(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, currLang);
             return;
         } else if (endOfRequestUrl.startsWith("oceanicAtmosphericVariableNames.") && pft >= 0) {
             try {
@@ -14382,7 +14404,7 @@ writer.write(
 
         } else if (endOfRequestUrl.equals("keywords.html") ||
                    endOfRequestUrl.equals("keywords.txt")) {
-            doConvertKeywords(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery);
+            doConvertKeywords(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, currLang);
             return;
         } else if (endOfRequestUrl.startsWith("keywordsCf.") && pft >= 0) {
             sendPlainTable(requestNumber, loggedInAs, request, response, 
@@ -14398,15 +14420,15 @@ writer.write(
             return;
         } else if (endOfRequestUrl.equals("time.html") ||
                    endOfRequestUrl.equals("time.txt")) {
-            doConvertTime(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery);
+            doConvertTime(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, currLang);
             return;
         } else if (endOfRequestUrl.equals("units.html") ||
                    endOfRequestUrl.equals("units.txt")) {
-            doConvertUnits(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery);
+            doConvertUnits(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, currLang);
             return;
         } else if (endOfRequestUrl.equals("urls.html") ||
                    endOfRequestUrl.equals("urls.txt")) {
-            doConvertURLs(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery);
+            doConvertURLs(requestNumber, request, response, loggedInAs, endOfRequestUrl, userQuery, currLang);
             return;
         } else {
             if (verbose) String2.log(EDStatic.resourceNotFound + "end of convert");
@@ -14417,41 +14439,41 @@ writer.write(
         //display start of web page
         if (reallyVerbose) String2.log("doConvert");
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">" +
-                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_convert) +
+                EDStatic.youAreHere(loggedInAs, EDStatic.hpn_convert_s[currLang], currLang) +
                 // EDStatic.youAreHere(loggedInAs, "convert") +
-                EDStatic.convertHtml + "\n" +
+                EDStatic.convertHtml_s[currLang] + "\n" +
                 //"<p>Options:\n" +
                 "<ul>\n" +
-                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericAcronyms.html\"><strong>" + EDStatic.acronyms + "</strong></a> - " + 
-                    EDStatic.convertOceanicAtmosphericAcronyms + "\n" +
-                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/fipscounty.html\"><strong>"+ EDStatic.FIPSCountryCode + "</strong></a> - " + 
-                    EDStatic.convertFipsCounty + "\n" +
-                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/interpolate.html\"><strong>" + EDStatic.interpolate + "</strong></a> - " + 
-                    EDStatic.convertInterpolate + "\n" +
-                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/keywords.html\"><strong>"+ EDStatic.keywords_word +"</strong></a> - " + 
-                    EDStatic.convertKeywords + "\n" +
-                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/time.html\"><strong>" + EDStatic.time + "</strong></a> - " + 
-                    EDStatic.convertTime + "\n" +
-                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/units.html\"><strong>" + EDStatic.units + "</strong></a> - " + 
-                    EDStatic.convertUnits + "\n" +
+                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericAcronyms.html\"><strong>" + EDStatic.acronyms_s[currLang] + "</strong></a> - " + 
+                    EDStatic.convertOceanicAtmosphericAcronyms_s[currLang] + "\n" +
+                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/fipscounty.html\"><strong>"+ EDStatic.FIPSCountryCode_s[currLang] + "</strong></a> - " + 
+                    EDStatic.convertFipsCounty_s[currLang] + "\n" +
+                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/interpolate.html\"><strong>" + EDStatic.interpolate_s[currLang] + "</strong></a> - " + 
+                    EDStatic.convertInterpolate_s[currLang] + "\n" +
+                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/keywords.html\"><strong>"+ EDStatic.keywords_word_s[currLang] +"</strong></a> - " + 
+                    EDStatic.convertKeywords_s[currLang] + "\n" +
+                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/time.html\"><strong>" + EDStatic.time_s[currLang] + "</strong></a> - " + 
+                    EDStatic.convertTime_s[currLang] + "\n" +
+                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/units.html\"><strong>" + EDStatic.units_s[currLang] + "</strong></a> - " + 
+                    EDStatic.convertUnits_s[currLang] + "\n" +
                 "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/urls.html\"><strong>URLs</strong></a> - " + 
-                    EDStatic.convertURLs + "\n" +
-                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericVariableNames.html\"><strong>" + EDStatic.variableNames + "</strong></a> - " + 
-                    EDStatic.convertOceanicAtmosphericVariableNames + "\n" +
+                    EDStatic.convertURLs_s[currLang] + "\n" +
+                "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/oceanicAtmosphericVariableNames.html\"><strong>" + EDStatic.variableNames_s[currLang] + "</strong></a> - " + 
+                    EDStatic.convertOceanicAtmosphericVariableNames_s[currLang] + "\n" +
                 "</ul>\n");
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -14467,12 +14489,12 @@ writer.write(
      * @throws Throwable if trouble
      */
     public void doConvertFipsCounty(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -14565,25 +14587,25 @@ writer.write(
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert FIPS County", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert FIPS County", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">" +
                 // EDStatic.youAreHere(loggedInAs, "convert", "FIPS County") +
                 // The content in the parenthese requires sepcial handling, because simply calling youAreHere(String, String, String)
                 // will create an invalid URL in the page title. Similar for several other tags
-                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
-                    "\n &gt; " + EDStatic.hpn_fipsCounty + "</h1>\n"
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
+                    "\n &gt; " + EDStatic.hpn_fipsCounty_s[currLang] + "</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertFipsCounty + "</h2>\n" +
-                EDStatic.convertFipsCountyIntro + "\n");
+                "<h2>" + EDStatic.convertFipsCounty_s[currLang] + "</h2>\n" +
+                EDStatic.convertFipsCountyIntro_s[currLang] + "\n");
 
      
             //Convert from Code to County
@@ -14647,7 +14669,7 @@ writer.write(
             //reset the form
             writer.write(
                 "<p><a rel=\"bookmark\" href=\"" + tErddapUrl + 
-                    "/convert/fipscounty.html\">" + EDStatic.resetTheForm + "</a>\n" +
+                    "/convert/fipscounty.html\">" + EDStatic.resetTheForm_s[currLang] + "</a>\n" +
                 "<p>Or, <a rel=\"help\" href=\"#computerProgram\">bypass this web page</a>\n" +
                 "  and do FIPS county conversions from within a computer program, script, or web page.\n");
 
@@ -14657,20 +14679,20 @@ writer.write(
                 "  <br>" + plainLinkExamples(tErddapUrl, "/convert/fipscounty", ""));
 
             //notes  
-            writer.write(EDStatic.convertFipsCountyNotes);
+            writer.write(EDStatic.convertFipsCountyNotes_s[currLang]);
 
             //Info about .txt fips service option   
-            writer.write(MessageFormat.format(EDStatic.convertFipsCountyService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertFipsCountyService_s[currLang], tErddapUrl) + "\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -14687,12 +14709,12 @@ writer.write(
      */
     public void doConvertOceanicAtmosphericAcronyms(int requestNumber, 
         HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -14788,24 +14810,24 @@ writer.write(
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Oceanic/Atmospheric Acronyms", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Oceanic/Atmospheric Acronyms", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">" +
                 // read coments in doConverFipsCounty
                 // EDStatic.youAreHere(loggedInAs, "convert", "Oceanic/Atmospheric Acronyms") +
-                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
-                    "\n &gt; " + EDStatic.hpn_OAAcronyms + "</h1>\n"
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
+                    "\n &gt; " + EDStatic.hpn_OAAcronyms_s[currLang] + "</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertOceanicAtmosphericAcronyms + "</h2>\n" +
-                EDStatic.convertOceanicAtmosphericAcronymsIntro + "\n");
+                "<h2>" + EDStatic.convertOceanicAtmosphericAcronyms_s[currLang] + "</h2>\n" +
+                EDStatic.convertOceanicAtmosphericAcronymsIntro_s[currLang] + "\n");
 
      
             //Convert from Acronym to FullName
@@ -14872,7 +14894,7 @@ writer.write(
             //reset the form
             writer.write(
                 "<p><a rel=\"bookmark\" href=\"" + tErddapUrl + 
-                    "/convert/oceanicAtmosphericAcronyms.html\">" + EDStatic.resetTheForm + "</a>\n" +
+                    "/convert/oceanicAtmosphericAcronyms.html\">" + EDStatic.resetTheForm_s[currLang] + "</a>\n" +
                 "<p>Or, <a rel=\"help\" href=\"#computerProgram\">bypass this web page</a>\n" +
                 "  and do oceanic/atmospheric acronym conversions from within a computer program, script, or web page.\n");
 
@@ -14882,20 +14904,20 @@ writer.write(
                 "  <br>" + plainLinkExamples(tErddapUrl, "/convert/oceanicAtmosphericAcronyms", ""));
 
             //notes  
-            writer.write(EDStatic.convertOceanicAtmosphericAcronymsNotes);
+            writer.write(EDStatic.convertOceanicAtmosphericAcronymsNotes_s[currLang]);
 
             //Info about .txt fips service option  
-            writer.write(MessageFormat.format(EDStatic.convertOceanicAtmosphericAcronymsService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertOceanicAtmosphericAcronymsService_s[currLang], tErddapUrl) + "\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -14912,12 +14934,12 @@ writer.write(
      */
     public void doConvertOceanicAtmosphericVariableNames(int requestNumber, 
         HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -15012,24 +15034,24 @@ writer.write(
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Oceanic/Atmospheric Variable Names", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Oceanic/Atmospheric Variable Names", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">" +
                 // see comments in doConvertFIPSCounty
                 // EDStatic.youAreHere(loggedInAs, "convert", "Oceanic/Atmospheric Variable Names") +
-                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
-                    "\n &gt; " + EDStatic.hpn_OAVariableNames + "</h1>\n"
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
+                    "\n &gt; " + EDStatic.hpn_OAVariableNames_s[currLang] + "</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertOceanicAtmosphericVariableNames + "</h2>\n" +
-                EDStatic.convertOceanicAtmosphericVariableNamesIntro + "\n");
+                "<h2>" + EDStatic.convertOceanicAtmosphericVariableNames_s[currLang] + "</h2>\n" +
+                EDStatic.convertOceanicAtmosphericVariableNamesIntro_s[currLang] + "\n");
 
      
             //Convert from VariableName to FullName
@@ -15094,7 +15116,7 @@ writer.write(
             //reset the form
             writer.write(
                 "<p><a rel=\"bookmark\" href=\"" + tErddapUrl + 
-                    "/convert/oceanicAtmosphericVariableNames.html\">" + EDStatic.resetTheForm + "</a>\n" +
+                    "/convert/oceanicAtmosphericVariableNames.html\">" + EDStatic.resetTheForm_s[currLang] + "</a>\n" +
                 "<p>Or, <a rel=\"help\" href=\"#computerProgram\">bypass this web page</a>\n" +
                 "  and do oceanic/atmospheric variable name conversions from within a computer program, script, or web page.\n");
 
@@ -15104,20 +15126,20 @@ writer.write(
                 "  <br>" + plainLinkExamples(tErddapUrl, "/convert/oceanicAtmosphericVariableNames", ""));
 
             //notes  
-            writer.write(EDStatic.convertOceanicAtmosphericVariableNamesNotes);
+            writer.write(EDStatic.convertOceanicAtmosphericVariableNamesNotes_s[currLang]);
 
             //Info about .txt service option   
-            writer.write(MessageFormat.format(EDStatic.convertOceanicAtmosphericVariableNamesService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertOceanicAtmosphericVariableNamesService_s[currLang], tErddapUrl) + "\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -15135,12 +15157,12 @@ writer.write(
      * @throws Throwable if trouble
      */
     public void doConvertKeywords(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -15221,22 +15243,22 @@ writer.write(
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Keywords", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Keywords", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">" +
                 // EDStatic.youAreHere(loggedInAs, "convert", "keywords") +
-                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                ("\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
-                    "\n &gt; " + EDStatic.hpn_keywords + "</h1>\n"
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
+                    "\n &gt; " + EDStatic.hpn_keywords_s[currLang] + "</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertKeywords + "</h2>\n" +
-                EDStatic.convertKeywordsIntro + "\n");
+                "<h2>" + EDStatic.convertKeywords_s[currLang] + "</h2>\n" +
+                EDStatic.convertKeywordsIntro_s[currLang] + "\n");
      
             //Convert from CF to GCMD
             String selectedCF = queryCF.length() > 0? queryCF : defaultCF;
@@ -15245,7 +15267,7 @@ writer.write(
                 widgets.beginForm("getGCMD", "GET", tErddapUrl + "/convert/keywords.html", "") +
                 "<strong>Convert the CF Standard Name</strong>\n" + 
                 "<br>" +
-                widgets.select("cf", EDStatic.convertKeywordsCfTooltip, 1, 
+                widgets.select("cf", EDStatic.convertKeywordsCfTooltip_s[currLang], 1, 
                     CfToFromGcmd.cfNames,
                     String2.indexOf(CfToFromGcmd.cfNames, selectedCF), 
                     "onchange=\"this.form.submit();\"") +
@@ -15275,7 +15297,7 @@ writer.write(
                 widgets.beginForm("getCF", "GET", tErddapUrl + "/convert/keywords.html", "") +
                 "<strong>Convert the GCMD Science Keyword</strong>\n" + 
                 "<br>" +
-                widgets.select("gcmd", EDStatic.convertKeywordsGcmdTooltip, 1,
+                widgets.select("gcmd", EDStatic.convertKeywordsGcmdTooltip_s[currLang], 1,
                     CfToFromGcmd.gcmdKeywords,
                     String2.indexOf(CfToFromGcmd.gcmdKeywords, selectedGCMD), 
                     "onchange=\"this.form.submit();\"") +
@@ -15301,7 +15323,7 @@ writer.write(
                 "<p><strong>Other Options</strong>\n" +
                 "<ul>\n" +
                 "<li><a rel=\"bookmark\" href=\"" + tErddapUrl + 
-                    "/convert/keywords.html\">" + EDStatic.resetTheForm + "</a>\n" +
+                    "/convert/keywords.html\">" + EDStatic.resetTheForm_s[currLang] + "</a>\n" +
                 "  <br>&nbsp;\n" +
 
                 "<li><a rel=\"help\" href=\"#computerProgram\">Bypass this web page</a>\n" +
@@ -15317,13 +15339,13 @@ writer.write(
                 "<li>View/download the entire CF Standard Names list in these file types:" +
                 "  <br>" + plainLinkExamples(tErddapUrl, "/convert/keywordsCf", "") +
                 "  <br>Source: <a rel=\"bookmark\" href=\"https://cfconventions.org/Data/cf-standard-names/18/build/cf-standard-name-table.html\">Version 18, dated 22 July 2011" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
                 "  <br>&nbsp;\n" +
 
                 "<li>View/download the entire GCMD Science Keywords list in these file types:" +
                 "  <br>" + plainLinkExamples(tErddapUrl, "/convert/keywordsGcmd", "") +
                 "  <br>Source: <a rel=\"bookmark\" href=\"https://wiki.earthdata.nasa.gov/display/CMR/GCMD+Keyword+Access\">the version dated 2008-02-05" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
                 "    The requested citation is<kbd>\n" +
                 "  <br>Olsen, L.M., G. Major, K. Shein, J. Scialdone, R. Vogel, S. Leicester,\n" +
                 "  <br>H. Weir, S. Ritz, T. Stevens, M. Meaux, C.Solomon, R. Bilodeau,\n" +
@@ -15334,20 +15356,20 @@ writer.write(
                 "\n");
 
             //notes
-            writer.write(EDStatic.convertKeywordsNotes);
+            writer.write(EDStatic.convertKeywordsNotes_s[currLang]);
 
             //Info about .txt time service option   
-            writer.write(MessageFormat.format(EDStatic.convertKeywordsService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertKeywordsService_s[currLang], tErddapUrl) + "\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -15369,12 +15391,12 @@ writer.write(
      * @throws Throwable if trouble
      */
     public void doConvertInterpolate(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery, int pft) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int pft, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -15405,11 +15427,11 @@ writer.write(
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Nearest Data", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Nearest Data", out, currLang); 
         try {
             String defaultIDVarExample = "jplMURSST41/analysed_sst/Bilinear/4";
             String idVarExample = String2.isSomething(EDStatic.convertInterpolateRequestCSVExample)?
@@ -15436,14 +15458,14 @@ writer.write(
                 "<div class=\"standard_width\">\n" +
                 // EDStatic.youAreHere(loggedInAs, "convert", "Interpolate") +
                 (
-                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
-                    "\n &gt; " + EDStatic.interpolate + "</h1>\n"
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
+                    "\n &gt; " + EDStatic.interpolate_s[currLang] + "</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertInterpolate + "</h2>\n" +
-                MessageFormat.format(EDStatic.convertInterpolateIntro, idVarExample));
+                "<h2>" + EDStatic.convertInterpolate_s[currLang] + "</h2>\n" +
+                MessageFormat.format(EDStatic.convertInterpolateIntro_s[currLang], idVarExample));
      
             //convert
             String tableCSV = "tableCSV";  
@@ -15455,8 +15477,8 @@ writer.write(
                 widgets.beginTable("class=\"compact\"") +
 
                 "<tr><td>" + 
-                    EDStatic.convertInterpolateTLLTable + "\n" +
-                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.convertInterpolateTLLTableHelp) +
+                    EDStatic.convertInterpolateTLLTable_s[currLang] + "\n" +
+                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.convertInterpolateTLLTableHelp_s[currLang]) +
                 "</td>\n" +
                 //default maxHttpHeaderSize (in server.xml) is 4096 bytes
                 "<td><textarea name=\"TimeLatLonTable\" cols=\"66\" rows=\"6\" maxlength=\"4000\" wrap=\"soft\">" + //"hard" adds newline char for wordwrap places (hopefully irrelevant)
@@ -15465,16 +15487,16 @@ writer.write(
                 "</td></tr>\n" +
 
                 "<tr><td>" + 
-                    EDStatic.convertInterpolateDatasetIDVariable + "\n" +
+                    EDStatic.convertInterpolateDatasetIDVariable_s[currLang] + "\n" +
                     EDStatic.htmlTooltipImage(loggedInAs, 
-                        MessageFormat.format(EDStatic.convertInterpolateDatasetIDVariableHelp, idVarExample)) + 
+                        MessageFormat.format(EDStatic.convertInterpolateDatasetIDVariableHelp_s[currLang], idVarExample)) + 
                 "</td>\n" +
                 "<td class=\"N\">" + 
                     widgets.textField("requestCSV", "", //tooltip, 
                         64, 500, idVarExample, "") + //other
                 "</td></tr>\n" +
 
-                "<tr><td>&nbsp;&nbsp;&nbsp;" + EDStatic.options + ":" +
+                "<tr><td>&nbsp;&nbsp;&nbsp;" + EDStatic.options_s[currLang] + ":" +
                 "</td>\n" +
                 "<td class=\"N\">&nbsp;&nbsp;&nbsp;" +
                     widgets.select("datasetIDVarOptions", 
@@ -15509,7 +15531,7 @@ writer.write(
                 "</td></tr>\n" +
 
                 "<tr><td>" + 
-                    EDStatic.EDDFileType + 
+                    EDStatic.EDDFileType_s[currLang] + 
                 "</td>\n" +
                 "<td>" +               
                     widgets.select("fileType", "", 1, plainFileTypes, 1, "") + 
@@ -15534,20 +15556,20 @@ writer.write(
                 "\n");
 
             //notes 
-            writer.write("<br>" + EDStatic.convertInterpolateNotes + "\n");
+            writer.write("<br>" + EDStatic.convertInterpolateNotes_s[currLang] + "\n");
 
             //Info about service / plainFileType option 
-            writer.write(MessageFormat.format(EDStatic.convertInterpolateService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertInterpolateService_s[currLang], tErddapUrl) + "\n");
             writer.write('\n');
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }  
     }
 
@@ -15567,9 +15589,9 @@ writer.write(
 
         if (debugMode) String2.log("\n*** interpolate");
         if (!String2.isSomething(TLLTable))
-            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid, "TimeLatLonTable (nothing)"));
+            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid_s[0], "TimeLatLonTable (nothing)"));
         if (!String2.isSomething(requestCSV))
-            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid, "requestCSV (nothing)"));
+            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid_s[0], "requestCSV (nothing)"));
 
         //split requestCSV
         //poor man's enumeration of INTERPOLATE_ALGORITHMS
@@ -15599,7 +15621,7 @@ writer.write(
             String tParts[] = String2.split(requestParts[dv], '/');
             if (tParts.length < 2 || tParts.length > 4)
                 throw new SimpleException(EDStatic.queryError + MessageFormat.format(
-                    EDStatic.queryErrorInvalid, "datasetID/variable/algorithm/nearby value=\"" + requestParts[dv] + "\""));
+                    EDStatic.queryErrorInvalid_s[0], "datasetID/variable/algorithm/nearby value=\"" + requestParts[dv] + "\""));
             datasetIDs[dv] = tParts[0];
             variable[  dv] = tParts[1];
 
@@ -15607,7 +15629,7 @@ writer.write(
             algorithm[ dv] = tParts.length < 3? BILINEAR : String2.indexOf(INTERPOLATE_ALGORITHMS, tParts[2]); 
             if (algorithm[dv] < 0) 
                 throw new SimpleException(EDStatic.queryError + MessageFormat.format(
-                    EDStatic.queryErrorInvalid, "algorithm in " + requestParts[dv]) + 
+                    EDStatic.queryErrorInvalid_s[0], "algorithm in " + requestParts[dv]) + 
                     " (must be one of " + String2.toCSSVString(INTERPOLATE_ALGORITHMS) + ")");
 
             //nearby
@@ -15622,7 +15644,7 @@ writer.write(
                 } else if (algorithm[dv] == BILINEAR) {
                     if (tn != 4)
                         throw new SimpleException(EDStatic.queryError + MessageFormat.format(
-                            EDStatic.queryErrorInvalid, "For algorithm=Bilinear, 'nearby' must be 4."));
+                            EDStatic.queryErrorInvalid_s[0], "For algorithm=Bilinear, 'nearby' must be 4."));
                     is3D[dv] = false;
                     radius[dv] = 1;
                 } else if (String2.indexOf(NEARBY_2D, tn) >= 0) {
@@ -15633,7 +15655,7 @@ writer.write(
                     radius[dv] = String2.indexOf(NEARBY_3D, tn) + 1;
                 } else { 
                     throw new SimpleException(EDStatic.queryError + MessageFormat.format(
-                        EDStatic.queryErrorInvalid, "'nearby' value in " + requestParts[dv]));
+                        EDStatic.queryErrorInvalid_s[0], "'nearby' value in " + requestParts[dv]));
                 }
             }
         }
@@ -15643,7 +15665,7 @@ writer.write(
         for (int dv = 0; dv < ndv; dv++) {
             eddGrid[dv] = tGridDatasetHashMap.get(datasetIDs[dv]);
             if (eddGrid[dv] == null)
-                throw new SimpleException(MessageFormat.format(EDStatic.errorNotFound, 
+                throw new SimpleException(MessageFormat.format(EDStatic.errorNotFound_s[0], 
                     "datasetID=" + datasetIDs[dv]));
             edv[dv] = eddGrid[dv].findDataVariableByDestinationName(variable[dv]); //throws SimpleException if not found
             eddGrid[dv].findAxisVariableByDestinationName("time"     ); //throws SimpleException
@@ -15659,11 +15681,11 @@ writer.write(
                 0, 1, ",", //columnNamesLine, dataStartLine, tColSeparator,
                 null, null, null, null, false); //simplify
         } catch (Exception e) {
-            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid, "TimeLatLonTable"));
+            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid_s[0], "TimeLatLonTable"));
         }
         int nRows = sourceTable.nRows();
         if (nRows == 0)
-            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid, "TimeLatLonTable (nRows=0)"));
+            throw new SimpleException(EDStatic.queryError + MessageFormat.format(EDStatic.queryErrorInvalid_s[0], "TimeLatLonTable (nRows=0)"));
         if (nRows > 100)  //I don't object to more, but there is more danger of a timeout.
             throw new SimpleException(EDStatic.queryError + "The TLLTable must not have more than 100 rows.");
 
@@ -16153,7 +16175,7 @@ writer.write(
                         resultsPA.setDouble(rank[po], sumWt > 0? sum / sumWt : Double.NaN);
 
                     } else {
-                        throw new SimpleException(EDStatic.errorInternal + 
+                        throw new SimpleException(EDStatic.errorInternal_s[0] + 
                             "Unexpected algorithm=" + INTERPOLATE_ALGORITHMS[algorithm[dv]]);
                     }
                 if (debugMode) String2.log(">> dv=" + dv + "=" + requestParts[dv] + 
@@ -16487,12 +16509,12 @@ UTC                  m   deg_n    deg_east m s-1
      * @throws Throwable if trouble
      */
     public void doConvertTime(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -16518,15 +16540,15 @@ UTC                  m   deg_n    deg_east m s-1
         String answerUnits   = "";
         String numberTooltip = 
             "<div class=\"narrow_max_width\">" + 
-            MessageFormat.format(EDStatic.convertTimeNumberTooltip, defaultN) +
+            MessageFormat.format(EDStatic.convertTimeNumberTooltip_s[currLang], defaultN) +
             "</div>";
         String stringTimeTooltip = 
             "<div class=\"narrow_max_width\">" + 
-            MessageFormat.format(EDStatic.convertTimeStringTimeTooltip, defaultIsoTime) +
+            MessageFormat.format(EDStatic.convertTimeStringTimeTooltip_s[currLang], defaultIsoTime) +
             "</div>";
         String unitsTooltip = 
             "<div class=\"narrow_max_width\">" +
-            EDStatic.convertTimeUnitsTooltip + 
+            EDStatic.convertTimeUnitsTooltip_s[currLang] + 
             "</div>";
 
 
@@ -16557,7 +16579,7 @@ UTC                  m   deg_n    deg_east m s-1
         String tError = null;
         if (queryStringTime.length() > 0 &&
                queryIsoTime.length() > 0)
-            tError = EDStatic.convertTimeTwoTimeError;
+            tError = EDStatic.convertTimeTwoTimeError_s[currLang];
 
         //a query either succeeds (and sets all answer...) 
         //  or fails (doesn't change answer... and sets tError)
@@ -16568,7 +16590,7 @@ UTC                  m   deg_n    deg_east m s-1
         try {
             int sincePo = queryUnits.toLowerCase().indexOf(" since ");
             if (sincePo <= 0) {
-                unitsError = EDStatic.convertTimeNoSinceError;
+                unitsError = EDStatic.convertTimeNoSinceError_s[currLang];
             } else {
                 answerUnits = Calendar2.cleanUpNumericTimeUnits(queryUnits);
                 tbf = Calendar2.getTimeBaseAndFactor(answerUnits);
@@ -16576,7 +16598,7 @@ UTC                  m   deg_n    deg_east m s-1
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
             answerUnits = "";
-            unitsError = EDStatic.convertTimeUnitsError; 
+            unitsError = EDStatic.convertTimeUnitsError_s[currLang]; 
         }
 
         //do the calculation
@@ -16586,7 +16608,7 @@ UTC                  m   deg_n    deg_east m s-1
                 answerFormat  = Calendar2.tryToFindFormat(queryStringTime);
                 answerIsoTime = Calendar2.tryToIsoString(queryStringTime);
                 if (answerIsoTime.length() == 0)
-                    tError = EDStatic.convertTimeStringFormatError;
+                    tError = EDStatic.convertTimeStringFormatError_s[currLang];
 
             } else if (cleanUnits) {
                 //answerUnits already set
@@ -16600,14 +16622,14 @@ UTC                  m   deg_n    deg_east m s-1
                     //process stringTime=,   a toNumeric query
                     queryIsoTime = Calendar2.tryToIsoString(queryStringTime);
                     if (queryIsoTime.length() == 0)
-                        tError = EDStatic.convertTimeStringFormatError;
+                        tError = EDStatic.convertTimeStringFormatError_s[currLang];
                 }
 
                 if (tError == null) {
                     //process isoTime=,   a toNumeric query
                     epochSeconds = Calendar2.safeIsoStringToEpochSeconds(queryIsoTime); 
                     if (Double.isNaN(epochSeconds)) {
-                        tError = EDStatic.convertTimeIsoFormatError;
+                        tError = EDStatic.convertTimeIsoFormatError_s[currLang];
                     } else {
                         //success
                         answerIsoTime = queryIsoTime;
@@ -16622,7 +16644,7 @@ UTC                  m   deg_n    deg_east m s-1
                 //process n=,   a toString query            
                 double tN = String2.parseDouble(queryN);
                 if (Double.isNaN(tN)) {
-                    tError = EDStatic.convertTimeNumberError;
+                    tError = EDStatic.convertTimeNumberError_s[currLang];
                 } else if (unitsError != null) {
                     tError = unitsError;
                 } else {
@@ -16632,7 +16654,7 @@ UTC                  m   deg_n    deg_east m s-1
                     //String2.log(">> toString answerIsoTime=" + answerIsoTime + " epochSeconds=" + epochSeconds + " " +
                     //    tbf[0] + ", " + tbf[1] + ", " + tN);
                     if (answerIsoTime.length() == 0)
-                        tError = EDStatic.convertTimeNumericTimeError; 
+                        tError = EDStatic.convertTimeNumericTimeError_s[currLang]; 
                     else answerN = tN == Math2.roundToLong(tN)? 
                         "" + Math2.roundToLong(tN) : //so no .0 at end
                         "" + tN;
@@ -16648,7 +16670,7 @@ UTC                  m   deg_n    deg_east m s-1
 
             //throw exception?
             if (tError == null && !cleanString && !cleanUnits && !toNumeric && !toString)
-                tError = EDStatic.convertTimeParametersError;
+                tError = EDStatic.convertTimeParametersError_s[currLang];
             if (tError != null) 
                 throw new SimpleException(EDStatic.queryError + tError);
 
@@ -16671,24 +16693,24 @@ UTC                  m   deg_n    deg_east m s-1
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Time", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Time", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">" +
                 // EDStatic.youAreHere(loggedInAs, "convert", "time") +
                 (
-                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
-                    "\n &gt; " + EDStatic.hpn_time + "</h1>\n"
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
+                    "\n &gt; " + EDStatic.hpn_time_s[currLang] + "</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertTime + "</h2>\n" +
-                EDStatic.convertTimeIntro + "\n");
+                "<h2>" + EDStatic.convertTime_s[currLang] + "</h2>\n" +
+                EDStatic.convertTimeIntro_s[currLang] + "\n");
 
      
             //Convert from a String Time to Numeric Time n units
@@ -16830,24 +16852,24 @@ UTC                  m   deg_n    deg_east m s-1
             //reset the form
             writer.write(
                 "<br><a rel=\"bookmark\" href=\"" + tErddapUrl + 
-                    "/convert/time.html\">" + EDStatic.resetTheForm + "</a>\n" +
-                "<p>" + EDStatic.convertTimeBypass + "\n");
+                    "/convert/time.html\">" + EDStatic.resetTheForm_s[currLang] + "</a>\n" +
+                "<p>" + EDStatic.convertTimeBypass_s[currLang] + "\n");
 
             //notes  
-            writer.write(MessageFormat.format(EDStatic.convertTimeNotes, tErddapUrl, EDStatic.convertTimeUnitsHelp) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertTimeNotes_s[currLang], tErddapUrl, EDStatic.convertTimeUnitsHelp_s[currLang]) + "\n");
 
             //Info about .txt time service option  
-            writer.write(MessageFormat.format(EDStatic.convertTimeService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertTimeService_s[currLang], tErddapUrl) + "\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -16864,12 +16886,12 @@ UTC                  m   deg_n    deg_east m s-1
      * @throws Throwable if trouble
      */
     public void doConvertUnits(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -16928,24 +16950,24 @@ UTC                  m   deg_n    deg_east m s-1
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Units", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert Units", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
                 // EDStatic.youAreHere(loggedInAs, "convert", "units") +
                 (
-                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
-                    "\n &gt; " + EDStatic.hpn_units + "</h1>\n"
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
+                    "\n &gt; " + EDStatic.hpn_units_s[currLang] + "</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertUnits + "</h2>\n" +
-                EDStatic.convertUnitsIntro);
+                "<h2>" + EDStatic.convertUnits_s[currLang] + "</h2>\n" +
+                EDStatic.convertUnitsIntro_s[currLang]);
      
             //convert udunits
             writer.write(
@@ -17047,29 +17069,29 @@ UTC                  m   deg_n    deg_east m s-1
                 "<br>In tabledap requests, you can \n" +
                   "<a href=\"#unitsFilter\">request UDUNITS or UCUM</a>.\n");
 
-            writer.write(EDStatic.convertUnitsNotes);
+            writer.write(EDStatic.convertUnitsNotes_s[currLang]);
             writer.write('\n');
 
             //Info about service / .txt option   
-            writer.write(MessageFormat.format(EDStatic.convertUnitsService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertUnitsService_s[currLang], tErddapUrl) + "\n");
             writer.write('\n');
 
             //info about syntax differences 
-            writer.write(EDStatic.convertUnitsComparison);
+            writer.write(EDStatic.convertUnitsComparison_s[currLang]);
             writer.write('\n');
 
             //info about tabledap unitsFilter &units("UCUM") 
-            writer.write(MessageFormat.format(EDStatic.convertUnitsFilter, tErddapUrl, EDStatic.units_standard) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertUnitsFilter_s[currLang], tErddapUrl, EDStatic.units_standard) + "\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
 
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
     }
 
@@ -17086,12 +17108,12 @@ UTC                  m   deg_n    deg_east m s-1
      * @throws Throwable if trouble
      */
     public void doConvertURLs(int requestNumber, HttpServletRequest request, HttpServletResponse response, 
-        String loggedInAs, String endOfRequestUrl, String userQuery) throws Throwable {
+        String loggedInAs, String endOfRequestUrl, String userQuery, int currLang) throws Throwable {
 
         //first thing
         if (!EDStatic.convertersActive) {
             sendResourceNotFoundError(requestNumber, request, response, 
-                MessageFormat.format(EDStatic.disabled, "convert"));
+                MessageFormat.format(EDStatic.disabled_s[currLang], "convert"));
             return;
         }
 
@@ -17128,30 +17150,30 @@ UTC                  m   deg_n    deg_east m s-1
         }
 
         //do the .html response
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true; 
         OutputStream out = getHtmlOutputStreamUtf8(request, response);
-        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert URLs", out); 
+        Writer writer = getHtmlWriterUtf8(loggedInAs, "Convert URLs", out, currLang); 
         try {
             writer.write(
                 "<div class=\"standard_width\">\n" +
                 // EDStatic.youAreHere(loggedInAs, "convert", "URLs") +
                 (
-                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs)) +
+                    "\n<h1 class=\"nowrap\">" + EDStatic.erddapHref(EDStatic.erddapUrl(loggedInAs, currLang), currLang) +
                     "\n &gt; <a rel=\"contents\" " +
-                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs), "convert")) +
-                    "\">" + EDStatic.hpn_convert + "</a>" +
+                    "href=\"" + XML.encodeAsHTMLAttribute(EDStatic.protocolUrl(EDStatic.erddapUrl(loggedInAs, currLang), "convert")) +
+                    "\">" + EDStatic.hpn_convert_s[currLang] + "</a>" +
                     "\n &gt; URLs</h1>\n"
                 ) +
-                "<h2>" + EDStatic.convertURLs + "</h2>\n" +
-                EDStatic.convertURLsIntro);
+                "<h2>" + EDStatic.convertURLs_s[currLang] + "</h2>\n" +
+                EDStatic.convertURLsIntro_s[currLang]);
      
             //convert
             writer.write(
                 "<p>" +
                 widgets.beginForm("convertURLs", "GET", tErddapUrl + "/convert/urls.html", "") +
-                "<strong>" + EDStatic.convertURLs + "</strong>\n" +
+                "<strong>" + EDStatic.convertURLs_s[currLang] + "</strong>\n" +
                 "<br>" + 
                 "<textarea name=\"text\" cols=\"80\" rows=\"6\" maxlength=\"1000\" wrap=\"soft\">" +
                 XML.encodeAsHTML(tText.length() > 0? tText : sample) +
@@ -17173,21 +17195,21 @@ UTC                  m   deg_n    deg_east m s-1
                 "\n");
 
             //notes 
-            writer.write(EDStatic.convertURLsNotes);
+            writer.write(EDStatic.convertURLsNotes_s[currLang]);
             writer.write('\n');
 
             //Info about service / .txt option 
-            writer.write(MessageFormat.format(EDStatic.convertURLsService, tErddapUrl) + "\n");
+            writer.write(MessageFormat.format(EDStatic.convertURLsService_s[currLang], tErddapUrl) + "\n");
             writer.write('\n');
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t; 
         } finally {
             //end of document
             writer.write("</div>\n");
-            endHtmlWriter(out, writer, tErddapUrl, false);
+            endHtmlWriter(out, writer, tErddapUrl, false, currLang);
         }
   
     }
@@ -17250,8 +17272,8 @@ UTC                  m   deg_n    deg_east m s-1
      * @return writer
      * @throws Throwable if trouble
      */
-    Writer getHtmlWriterUtf8(String loggedInAs, String addToTitle, OutputStream out) throws Throwable {
-        return getHtmlWriterUtf8(loggedInAs, addToTitle, "", out);
+    Writer getHtmlWriterUtf8(String loggedInAs, String addToTitle, OutputStream out, int currLang) throws Throwable {
+        return getHtmlWriterUtf8(loggedInAs, addToTitle, "", out, currLang);
     }
 
     /**
@@ -17265,17 +17287,17 @@ UTC                  m   deg_n    deg_east m s-1
      * @throws Throwable if trouble
      */
     Writer getHtmlWriterUtf8(String loggedInAs, String addToTitle, String addToHead, 
-        OutputStream out) throws Throwable {
+        OutputStream out, int currLang) throws Throwable {
 
         Writer writer = String2.getBufferedOutputStreamWriterUtf8(out);
 
         //write the information for this protocol (dataset list table and instructions)
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
-        writer.write(EDStatic.startHeadHtml(tErddapUrl, addToTitle));
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
+        writer.write(EDStatic.startHeadHtml(tErddapUrl, addToTitle, currLang));
         if (String2.isSomething(addToHead))
             writer.write("\n" + addToHead);
         writer.write("\n</head>\n");
-        writer.write(EDStatic.startBodyHtml(loggedInAs));
+        writer.write(EDStatic.startBodyHtml(loggedInAs, currLang));
         writer.write("\n");
         writer.write(HtmlWidgets.htmlTooltipScript(EDStatic.imageDirUrl(loggedInAs)));
         writer.flush(); //Steve Souder says: the sooner you can send some html to user, the better
@@ -17292,11 +17314,11 @@ UTC                  m   deg_n    deg_east m s-1
      * @throws Throwable if trouble
      */
     void endHtmlWriter(OutputStream out, Writer writer, String tErddapUrl,
-        boolean forceWriteDiagnostics) throws Throwable {
+        boolean forceWriteDiagnostics, int currLang) throws Throwable {
 
         try {
             //end of document
-            writer.write(EDStatic.endBodyHtml(tErddapUrl));
+            writer.write(EDStatic.endBodyHtml(tErddapUrl, currLang));
             writer.write("\n</html>\n");
 
             //essential
@@ -17339,7 +17361,7 @@ UTC                  m   deg_n    deg_east m s-1
             brPo = error.length();
         writer.write(
             "<span class=\"warningColor\">" + 
-            EDStatic.errorTitle + ": " + error.substring(0, brPo) + "</span>" + 
+            EDStatic.errorTitle_s[0] + ": " + error.substring(0, brPo) + "</span>" + 
                 error.substring(brPo) + 
             "<br>&nbsp;");
     }
@@ -17372,14 +17394,14 @@ UTC                  m   deg_n    deg_east m s-1
      * @throws Throwable if trouble
      */
     public static String getSearchFormHtml(HttpServletRequest request, String loggedInAs,  
-        String pretext, String posttext, String searchFor) throws Throwable {
+        String pretext, String posttext, String searchFor, int currLang) throws Throwable {
      
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs)); //true=htmlTooltips
         widgets.enterTextSubmitsForm = true;
         StringBuilder sb = new StringBuilder();
         sb.append(widgets.beginForm("search", "GET", tErddapUrl + "/search/index.html", ""));
-        sb.append(pretext + EDStatic.searchDoFullTextHtml + posttext);
+        sb.append(pretext + EDStatic.searchDoFullTextHtml_s[currLang] + posttext);
         int pipp[] = EDStatic.getRequestedPIpp(request);
         sb.append(widgets.hidden("page", "1")); //new search always resets to page 1
         sb.append(widgets.hidden("itemsPerPage", "" + pipp[1]));
@@ -17387,13 +17409,13 @@ UTC                  m   deg_n    deg_east m s-1
             searchFor = "";
         widgets.htmlTooltips = false;
         sb.append(widgets.textField("searchFor", 
-            MessageFormat.format(EDStatic.searchTip, "noaa wind"),
+            MessageFormat.format(EDStatic.searchTip_s[currLang], "noaa wind"),
             40, 255, searchFor, ""));
         widgets.htmlTooltips = true;
-        sb.append(EDStatic.htmlTooltipImage(loggedInAs, EDStatic.searchHintsTooltip));
+        sb.append(EDStatic.htmlTooltipImage(loggedInAs, EDStatic.searchHintsTooltip_s[currLang]));
         widgets.htmlTooltips = false;
-        sb.append(widgets.htmlButton("submit", null, null, EDStatic.searchClickTip, 
-            EDStatic.searchButton, ""));
+        sb.append(widgets.htmlButton("submit", null, null, EDStatic.searchClickTip_s[currLang], 
+            EDStatic.searchButton_s[currLang], ""));
         widgets.htmlTooltips = true;
         sb.append("\n");
         sb.append(widgets.endForm());        
@@ -17444,12 +17466,12 @@ UTC                  m   deg_n    deg_east m s-1
      * @param tErddapUrl  from EDStatic.erddapUrl(loggedInAs)  (erddapUrl, or erddapHttpsUrl if user is logged in)
      * @return the html with the category links
      */
-    public String getCategoryLinksHtml(HttpServletRequest request, String tErddapUrl) 
+    public String getCategoryLinksHtml(HttpServletRequest request, String tErddapUrl, int currLang) 
         throws Throwable {
         
         Table catTable = categorizeOptionsTable(request, tErddapUrl, ".html");
         int cn = catTable.nRows();
-        StringBuilder sb = new StringBuilder(EDStatic.orComma + EDStatic.categoryTitleHtml + ":");
+        StringBuilder sb = new StringBuilder(EDStatic.orComma_s[currLang] + EDStatic.categoryTitleHtml_s[currLang] + ":");
         int charCount = 0;
         for (int row = 0; row < cn; row++) {
             if (row % 4 == 0)
@@ -17471,9 +17493,9 @@ UTC                  m   deg_n    deg_east m s-1
      */
     public void writeCategorizeOptionsHtml1(HttpServletRequest request, 
         String loggedInAs, Writer writer, 
-        String attributeInURL, boolean homePage) throws Throwable {
+        String attributeInURL, boolean homePage, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         if (homePage) {
             Table table = categorizeOptionsTable(request, tErddapUrl, ".html");
             int n = table.nRows();
@@ -17481,20 +17503,20 @@ UTC                  m   deg_n    deg_east m s-1
             for (int row = 0; row < n; row++) 
                 sb.append(table.getStringData(0, row) + (row < n - 1? ", \n" : ""));
             sb.append(")\n");
-            String tCategoryHtml = String2.replaceAll(EDStatic.categoryHtml, "<br>", "");
+            String tCategoryHtml = String2.replaceAll(EDStatic.categoryHtml_s[currLang], "<br>", "");
             writer.write(
-                "<h3>" + EDStatic.categoryTitleHtml + "</h3>\n" +
+                "<h3>" + EDStatic.categoryTitleHtml_s[currLang] + "</h3>\n" +
                 MessageFormat.format(tCategoryHtml, sb.toString()) + "\n" +
-                EDStatic.category3Html + "\n");
+                EDStatic.category3Html_s[currLang] + "\n");
             return;
         }
 
         //categorize page
         String tCategoryHtml = String2.replaceAll(
-            MessageFormat.format(EDStatic.categoryHtml, ""), "  ", " "); //{0}="" leads to 2 adjacent spaces 
+            MessageFormat.format(EDStatic.categoryHtml_s[currLang], ""), "  ", " "); //{0}="" leads to 2 adjacent spaces 
         writer.write(
             //"<h3>" + EDStatic.categoryTitleHtml + "</h3>\n" +
-            "<h3>1) " + EDStatic.categoryPickAttribute + "&nbsp;" + 
+            "<h3>1) " + EDStatic.categoryPickAttribute_s[currLang] + "&nbsp;" + 
             EDStatic.htmlTooltipImage(loggedInAs, tCategoryHtml) +
             "</h3>\n");
         String attsInURLs[] = EDStatic.categoryAttributesInURLs;
@@ -17522,15 +17544,15 @@ UTC                  m   deg_n    deg_east m s-1
      */
     public void writeCategoryOptionsHtml2(HttpServletRequest request, 
         String loggedInAs, Writer writer, 
-        String attribute, String attributeInURL, String value) throws Throwable {
+        String attribute, String attributeInURL, String value, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String values[] = categoryInfo(attribute).toArray();
         writer.write(
             "<h3>2) " + 
-            MessageFormat.format(EDStatic.categorySearchHtml, attributeInURL) +
+            MessageFormat.format(EDStatic.categorySearchHtml_s[currLang], attributeInURL) +
             ":&nbsp;" +
-            EDStatic.htmlTooltipImage(loggedInAs, EDStatic.categoryClickHtml) +
+            EDStatic.htmlTooltipImage(loggedInAs, EDStatic.categoryClickHtml_s[currLang]) +
             "</h3>\n");
         if (values.length == 0) {
             writer.write(MustBe.THERE_IS_NO_DATA);
@@ -17562,9 +17584,9 @@ UTC                  m   deg_n    deg_east m s-1
      */
     public void sendCategoryPftOptionsTable(int requestNumber, HttpServletRequest request, 
         HttpServletResponse response, String loggedInAs, String attribute, 
-        String attributeInURL, String fileTypeName) throws Throwable {
+        String attributeInURL, String fileTypeName, int currLang) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         StringArray cats = categoryInfo(attribute); //already safe
         int nCats = cats.size();
 
@@ -17600,9 +17622,9 @@ UTC                  m   deg_n    deg_east m s-1
      * @return table a table with plain text information about the datasets
      */
     public Table makePlainDatasetTable(String loggedInAs, 
-        StringArray datasetIDs, boolean sortByTitle, String fileTypeName) {
+        StringArray datasetIDs, boolean sortByTitle, String fileTypeName, int currLang) {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String roles[] = EDStatic.getRoles(loggedInAs);
         boolean isLoggedIn = loggedInAs != null && !loggedInAs.equals(EDStatic.loggedInAsHttps);
         Table table = new Table();
@@ -17717,9 +17739,9 @@ UTC                  m   deg_n    deg_east m s-1
      * @return table a table with html-formatted information about the datasets
      */
     public Table makeHtmlDatasetTable(String loggedInAs,
-        StringArray datasetIDs, boolean sortByTitle) {
+        StringArray datasetIDs, boolean sortByTitle, int currLang) {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String roles[] = EDStatic.getRoles(loggedInAs);
         boolean isLoggedIn = loggedInAs != null && !loggedInAs.equals(EDStatic.loggedInAsHttps);
         Table table = new Table();
@@ -17749,20 +17771,20 @@ UTC                  m   deg_n    deg_east m s-1
         if (EDStatic.wcsActive) table.addColumn("W<br>C<br>S", wcsCol);
         if (EDStatic.wmsActive) table.addColumn("W<br>M<br>S", wmsCol);
         if (EDStatic.filesActive) table.addColumn("Source<br>Data<br>Files", filesCol);
-        String accessTip = EDStatic.dtAccessible;
+        String accessTip = EDStatic.dtAccessible_s[currLang];
         if (isLoggedIn)
-            accessTip += EDStatic.dtAccessibleYes + //"You are logged in and ...
-                (EDStatic.listPrivateDatasets? EDStatic.dtAccessibleNo : "");   //"You are logged in and ...
+            accessTip += EDStatic.dtAccessibleYes_s[currLang] + //"You are logged in and ...
+                (EDStatic.listPrivateDatasets? EDStatic.dtAccessibleNo_s[currLang] : "");   //"You are logged in and ...
         if (EDStatic.authentication.length() > 0 && !isLoggedIn && //this erddap supports logging in
             EDStatic.listPrivateDatasets) 
-            accessTip += EDStatic.dtAccessibleLogIn;
-        accessTip += EDStatic.dtAccessibleGraphs;
+            accessTip += EDStatic.dtAccessibleLogIn_s[currLang];
+        accessTip += EDStatic.dtAccessibleGraphs_s[currLang];
         if (EDStatic.authentication.length() > 0)
             table.addColumn("Acces-<br>sible<br>" + EDStatic.htmlTooltipImage(loggedInAs, accessTip),
                 accessCol);
         String loginHref = EDStatic.authentication.length() == 0? "no" :
             "<a rel=\"bookmark\" href=\"" + EDStatic.erddapHttpsUrl + "/login.html\" " +
-            "title=\"" + EDStatic.dtLogIn + "\">log in</a>";
+            "title=\"" + EDStatic.dtLogIn_s[currLang] + "\">log in</a>";
         table.addColumn("Title", titleCol);
         int sortOn = table.addColumn("Plain Title", plainTitleCol); 
         table.addColumn("Sum-<br>mary", summaryCol);
@@ -17776,7 +17798,7 @@ UTC                  m   deg_n    deg_east m s-1
         if (EDStatic.subscriptionSystemActive) table.addColumn("E<br>mail", emailCol);
         table.addColumn("Institution", institutionCol);
         table.addColumn("Dataset ID", idCol);
-        String externalLinkHtml = EDStatic.externalLinkHtml(tErddapUrl);
+        String externalLinkHtml = EDStatic.externalLinkHtml(tErddapUrl, currLang);
         for (int i = 0; i < datasetIDs.size(); i++) {
             String tId = datasetIDs.get(i);
             EDD edd = gridDatasetHashMap.get(tId);
@@ -17793,13 +17815,13 @@ UTC                  m   deg_n    deg_east m s-1
             //just show things (URLs, info) user has access to
             String daps = "&nbsp;<a rel=\"chapter\" " +
                 "href=\"" + tErddapUrl + "/" + edd.dapProtocol() + "/" + tId + ".html\" " +
-                "title=\"" + MessageFormat.format(EDStatic.dtDAF, edd.dapProtocol()) + "\" " +
+                "title=\"" + MessageFormat.format(EDStatic.dtDAF_s[currLang], edd.dapProtocol()) + "\" " +
                 ">data</a>&nbsp;"; 
             gdCol.add(isAccessible && edd instanceof EDDGrid?  daps : "&nbsp;"); 
             subCol.add(isAccessible && edd.accessibleViaSubset().length() == 0? 
                 " &nbsp;<a rel=\"chapter\" " +
                     "href=\"" + tErddapUrl + "/tabledap/" + tId + ".subset\" " +
-                    "title=\"" + EDStatic.dtSubset + "\" " +
+                    "title=\"" + EDStatic.dtSubset_s[currLang] + "\" " +
                     ">set</a>" : 
                 "&nbsp;");
             tdCol.add(isAccessible && edd instanceof EDDTable? daps : "&nbsp;");
@@ -17807,31 +17829,31 @@ UTC                  m   deg_n    deg_east m s-1
                 " &nbsp;<a rel=\"chapter\" " +
                     "href=\"" + tErddapUrl + "/" + edd.dapProtocol() + 
                     "/" + tId + ".graph\" " +
-                    "title=\"" + EDStatic.dtMAG + "\" " +
+                    "title=\"" + EDStatic.dtMAG_s[currLang] + "\" " +
                     ">graph</a>" : 
                 "&nbsp;");
             sosCol.add(isAccessible && edd.accessibleViaSOS().length() == 0? 
                 "&nbsp;<a rel=\"chapter\" " +
                     "href=\"" + tErddapUrl + "/sos/" + tId + "/index.html\" " +
-                    "title=\"" + EDStatic.dtSOS + "\" >" +
+                    "title=\"" + EDStatic.dtSOS_s[currLang] + "\" >" +
                     "S</a>&nbsp;" : 
                 "&nbsp;");
             wcsCol.add(isAccessible && edd.accessibleViaWCS().length() == 0? 
                 "&nbsp;<a rel=\"chapter\" " +
                     "href=\"" + tErddapUrl + "/wcs/" + tId + "/index.html\" " +
-                    "title=\"" + EDStatic.dtWCS + "\" >" +
+                    "title=\"" + EDStatic.dtWCS_s[currLang] + "\" >" +
                     "C</a>&nbsp;" : 
                 "&nbsp;");
             wmsCol.add(graphsAccessible && edd.accessibleViaWMS().length() == 0? //graphs
                 "&nbsp;<a rel=\"chapter\" " +
                     "href=\"" + tErddapUrl + "/wms/" + tId + "/index.html\" " +
-                    "title=\"" + EDStatic.dtWMS + "\" >" +
+                    "title=\"" + EDStatic.dtWMS_s[currLang] + "\" >" +
                     "M</a>&nbsp;" : 
                 "&nbsp;");
             filesCol.add(isAccessible && edd.accessibleViaFiles()?
                 "&nbsp;&nbsp;<a rel=\"chapter\" " +
                     "href=\"" + tErddapUrl + "/files/" + tId + "/\" " +
-                    "title=\"" + EDStatic.dtFiles + "\" >" +
+                    "title=\"" + EDStatic.dtFiles_s[currLang] + "\" >" +
                     "files</a>&nbsp;" : 
                 "&nbsp;");
             accessCol.add(edd.getAccessibleTo() == null? "public" :
@@ -17858,7 +17880,7 @@ UTC                  m   deg_n    deg_east m s-1
                         "href=\"" + tErddapUrl + "/" + EDStatic.fgdcXmlDirectory + 
                         edd.datasetID() + EDD.fgdcSuffix + ".xml\" " + 
                         "title=\"" + 
-                        XML.encodeAsHTMLAttribute(MessageFormat.format(EDStatic.metadataDownload, "FGDC")) + 
+                        XML.encodeAsHTMLAttribute(MessageFormat.format(EDStatic.metadataDownload_s[currLang], "FGDC")) + 
                         "\" >F</a>") +
                 "\n" +
                 //iso
@@ -17869,26 +17891,26 @@ UTC                  m   deg_n    deg_east m s-1
                         edd.datasetID() + EDD.iso19115Suffix + ".xml\" " + 
                     "title=\"" + 
                         XML.encodeAsHTMLAttribute(
-                            MessageFormat.format(EDStatic.metadataDownload, "ISO 19115-2/19139")) + 
+                            MessageFormat.format(EDStatic.metadataDownload_s[currLang], "ISO 19115-2/19139")) + 
                         "\" >&nbsp;I&nbsp;</a>") +
                 //dataset metadata
                 "\n&nbsp;" +
                 "<a rel=\"chapter\" " +
                 "href=\"" + tErddapUrl + "/info/" + edd.datasetID() + 
                     "/index.html\" " + //here, always .html
-                "title=\"" + EDStatic.clickInfo + "\" >M</a>" +
+                "title=\"" + EDStatic.clickInfo_s[currLang] + "\" >M</a>" +
                 "\n&nbsp;");
             backgroundCol.add(!graphsAccessible? "" : 
                 "<a rel=\"bookmark\" " +
                 "href=\"" + XML.encodeAsHTML(edd.infoUrl()) + "\" " +
-                "title=\"" + EDStatic.clickBackgroundInfo + "\" >background" +
+                "title=\"" + EDStatic.clickBackgroundInfo_s[currLang] + "\" >background" +
                     (edd.infoUrl().startsWith(EDStatic.baseUrl)? "" : externalLinkHtml) + 
                     "</a>");
             rssCol.add(graphsAccessible && !isAllDatasets? 
-                edd.rssHref(loggedInAs) : "&nbsp;");
+                edd.rssHref(loggedInAs, currLang) : "&nbsp;");
             emailCol.add(graphsAccessible && EDStatic.subscriptionSystemActive &&
                 !isAllDatasets? 
-                edd.emailHref(loggedInAs) : "&nbsp;");
+                edd.emailHref(loggedInAs, currLang) : "&nbsp;");
             String tInstitution = edd.institution();
             if (tInstitution.length() > 20) 
                 institutionCol.add(
@@ -17942,9 +17964,9 @@ UTC                  m   deg_n    deg_east m s-1
                 if (!fileTypeName.equals(".geoJson") && 
                     !fileTypeName.equals(".json") &&  //e.g., .jsonlCSV .jsonlKVP
                     !fileTypeName.equals(".ncoJson")) 
-                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpNotAllowed);
+                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpNotAllowed_s[0]);
                 if (!String2.isJsonpNameSafe(jsonp))
-                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName);
+                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName_s[0]);
             }
         }
 
@@ -18030,7 +18052,7 @@ UTC                  m   deg_n    deg_east m s-1
 
         } else {
             throw new SimpleException(EDStatic.queryError + 
-                MessageFormat.format(EDStatic.unsupportedFileType, fileTypeName));
+                MessageFormat.format(EDStatic.unsupportedFileType_s[0], fileTypeName));
         }
 
         //essential
@@ -18830,9 +18852,9 @@ expected =
         results = SSR.getUrlResponseStringUnchanged(EDStatic.erddapUrl + "/index.htmlTable?" + 
             EDStatic.defaultPIppQuery);
         expected = 
-EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null), "Resources") + "\n" +
+EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null, 0), "Resources", 0) + "\n" +
 "</head>\n" +
-EDStatic.startBodyHtml(null) + 
+EDStatic.startBodyHtml(null, 0) + 
 "&nbsp;<br>\n" +
 "&nbsp;\n" +
 "<table class=\"erd commonBGColor nowrap\">\n" +
@@ -18870,7 +18892,7 @@ EDStatic.startBodyHtml(null) +
 "<td><a href=\"http&#x3a;&#x2f;&#x2f;localhost&#x3a;8080&#x2f;cwexperimental&#x2f;wms&#x2f;index&#x2e;htmlTable&#x3f;page&#x3d;1&#x26;itemsPerPage&#x3d;1000\">http://localhost:8080/cwexperimental/wms/index.htmlTable?page=1&amp;itemsPerPage=1000</a>\n" +
 "</tr>\n" +
 "</table>\n" +
-EDStatic.endBodyHtml(EDStatic.erddapUrl((String)null)) + "\n" +
+EDStatic.endBodyHtml(EDStatic.erddapUrl((String)null, 0), 0) + "\n" +
 "</html>\n";
         Test.ensureEqual(results, expected, "results=\n" + results);
 

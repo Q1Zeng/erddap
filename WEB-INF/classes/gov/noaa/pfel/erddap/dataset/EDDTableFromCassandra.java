@@ -574,7 +574,7 @@ public class EDDTableFromCassandra extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
 
         //create dataVariables[]
@@ -1053,6 +1053,31 @@ public class EDDTableFromCassandra extends EDDTable{
             (System.currentTimeMillis() - time) + "ms");
     }
 
+    /** 
+     * This gets the data (chunk by chunk) from this EDDTable for the 
+     * OPeNDAP DAP-style query and writes it to the TableWriter. 
+     * See the EDDTable method documentation.
+     * currLang not specified, default as 0
+     *
+     * <p>See CQL SELECT documentation
+     * http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/select_r.html
+     *
+     * <p>The method prevents CQL Injection Vulnerability
+     * (see https://en.wikipedia.org/wiki/SQL_injection) by using
+     * QueryBuilder (so String values are properly escaped and
+     * numbers are assured to be numbers). See
+     * http://www.datastax.com/documentation/developer/java-driver/2.0/pdf/javaDriver20.pdf
+     *
+     * @param loggedInAs the user's login name if logged in (or null if not logged in).
+     * @param requestUrl the part of the user's request, after EDStatic.baseUrl, before '?'.
+     * @param userDapQuery the part of the user's request after the '?', still percentEncoded, may be null.
+     * @param tableWriter
+     * @throws Throwable if trouble (notably, WaitThenTryAgainException)
+     */
+    public void getDataForDapQuery(String loggedInAs, String requestUrl, 
+        String userDapQuery, TableWriter tableWriter) throws Throwable {
+            getDataForDapQuery(loggedInAs, requestUrl, userDapQuery, tableWriter, 0);
+        }
 
     /** 
      * This gets the data (chunk by chunk) from this EDDTable for the 
@@ -1075,7 +1100,7 @@ public class EDDTableFromCassandra extends EDDTable{
      * @throws Throwable if trouble (notably, WaitThenTryAgainException)
      */
     public void getDataForDapQuery(String loggedInAs, String requestUrl, 
-        String userDapQuery, TableWriter tableWriter) throws Throwable {
+        String userDapQuery, TableWriter tableWriter, int currLang) throws Throwable {
        
         //get the sourceDapQuery (a query that the source can handle)
         StringArray resultsVariables    = new StringArray();
@@ -1310,7 +1335,7 @@ public class EDDTableFromCassandra extends EDDTable{
 
             if (Thread.currentThread().isInterrupted())
                 throw new SimpleException("EDDTableFromCassandra.getDataForDapQuery" + 
-                    EDStatic.caughtInterrupted);
+                    EDStatic.caughtInterrupted_s[currLang]);
         
             //Make the BoundStatement
             //***!!! This method avoids CQL/SQL Injection Vulnerability !!!***

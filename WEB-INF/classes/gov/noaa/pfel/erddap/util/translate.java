@@ -68,7 +68,7 @@ public class translate {
     private static final String oldMessagePath = translatedFolderPath + "messages-Copy.xml";
     
     //translation settings
-    public static final String[] languageCodeList = {"zh-cn"};
+    public static final String[] languageCodeList = {"zh-cn", "de"};
     private static HashSet<String> doNotTranslateSet = new HashSet<String>(Arrays.asList(
         //* all tags that match the regular expresion:  <EDDGrid.*Example> ,
         "/EDDGridErddapUrlExample", "/EDDGridIdExample", "/EDDGridDimensionExample", "/EDDGridNoHyperExample", "/EDDGridDimNamesExample", "/EDDGridDataTimeExample", "/EDDGridDataValueExample",
@@ -94,9 +94,6 @@ public class translate {
     // <convertOceanicAtmosphericAcronymsService> <convertInterpolateNotes> <convertUnitsComparison> </convertTimeNotes/ </theLongDescriptionHtml> </filesDocumentation>
     public static void main(String[] args) {
         String[] HTMLEntities = {"&lt;", "&gt;", "&quot;", "&amp;", "<p>", "<br>", "</a>"};
-        //System.out.println("main() Working Directory = " + System.getProperty("user.dir"));
-        //System.out.println(translate.class.getResource("").getPath().toString());
-        
         // This function will detect the tags such that its tag name follows "<EDDGrid.*Example>" or "<EDDTable.*Example>"
         // and add the tags to the doNotTranslateSet
         // Currently not needed because I have found all tags following the pattern (as 6/23/21) and hard coded them to the set
@@ -194,7 +191,6 @@ public class translate {
            e.printStackTrace();
         }
         */
-        
         System.out.println("translator called " + translationCounter + " times.");
     }
     /**

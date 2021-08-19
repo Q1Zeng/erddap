@@ -1463,7 +1463,7 @@ public class EDDTableFromHttpGet extends EDDTableFromFiles {
             requiredVariableNames, INSERT_COMMAND, 
             "stationID=\"46088\"&time=[4.4,5.5]&aByte=[18.2,18.8]&aChar=[\"\u20AC\",\" \"]" +  // unicode char
             "&aShort=[30002.2,30003.3]&anInt=3&aFloat=[1.45,1.67]" +
-            "&aDouble=[1.3,1.4]&aString=[\" s\n\tÃ\u20AC123\",\" \\n\\u20AC \"]" + //string is nBytes long, unicode char
+            "&aDouble=[1.3,1.4]&aString=[\" s\n\tï¿½\u20AC123\",\" \\n\\u20AC \"]" + //string is nBytes long, unicode char
             "&author=bsimons_aSecret",
             null, null); //Table dirTable, Table fileTable
         Test.ensureLinesMatch(results, resultsRegex(2), "results=" + results);
@@ -1500,7 +1500,7 @@ public class EDDTableFromHttpGet extends EDDTableFromFiles {
             columnNames, columnUnits, columnPATypes, columnMvFv,  
             requiredVariableNames,
             INSERT_COMMAND, 
-            "stationID=46088&time=3.3&aByte=19.9&aChar=¼" +  //stationID not in quotes    //the character itself
+            "stationID=46088&time=3.3&aByte=19.9&aChar=ï¿½" +  //stationID not in quotes    //the character itself
             "&aShort=30009.9&anInt=9&aFloat=1.99" +
             "&aDouble=1.999&aString=\"\"" + //empty string
             "&author=\"bsimons_aSecret\"",  //author in quotes
@@ -1759,7 +1759,39 @@ public class EDDTableFromHttpGet extends EDDTableFromFiles {
 
 
      }
+    /** 
+     * This generates a ready-to-use datasets.xml entry for an EDDTableFromHttpGet.
+     * The XML can then be edited by hand and added to the datasets.xml file.
+     *
+     * <p>This can't be made into a web service because it would allow any user
+     * to looks at (possibly) private .nc files on the server.
+     *
+     * currLang not specified, default to 0
+     * 
+     * @param tFileDir the starting (parent) directory for searching for files
+     * @param sampleFileName the full file name of one of the files in the collection
+     * @param tHttpGetRequiredVariables
+     * @param tHttpGetDirectoryStructure
+     * @param tHttpGetKeys
+     * @param tInfoUrl       or "" if in externalAddGlobalAttributes or if not available
+     * @param tInstitution   or "" if in externalAddGlobalAttributes or if not available
+     * @param tSummary       or "" if in externalAddGlobalAttributes or if not available
+     * @param tTitle         or "" if in externalAddGlobalAttributes or if not available
+     * @param externalAddGlobalAttributes  These attributes are given priority.  Use null in none available.
+     * @return a suggested chunk of xml for this dataset for use in datasets.xml 
+     * @throws Throwable if trouble, e.g., if no Grid or Array variables are found.
+     *    If no trouble, then a valid dataset.xml chunk has been returned.
+     */
+    public static String generateDatasetsXml(
+        String tFileDir, String sampleFileName,
+        String tHttpGetRequiredVariables, String tHttpGetDirectoryStructure,
+        String tHttpGetKeys,
+        String tInfoUrl, String tInstitution, String tSummary, String tTitle,
+        Attributes externalAddGlobalAttributes) throws Throwable{
 
+            return generateDatasetsXml(tFileDir, sampleFileName, tHttpGetRequiredVariables, tHttpGetDirectoryStructure,
+                tHttpGetKeys, tInfoUrl, tInstitution, tSummary, tTitle, externalAddGlobalAttributes, 0);
+        }
 
 
     /** 
@@ -1788,7 +1820,7 @@ public class EDDTableFromHttpGet extends EDDTableFromFiles {
         String tHttpGetRequiredVariables, String tHttpGetDirectoryStructure,
         String tHttpGetKeys,
         String tInfoUrl, String tInstitution, String tSummary, String tTitle,
-        Attributes externalAddGlobalAttributes) throws Throwable {
+        Attributes externalAddGlobalAttributes, int currLang) throws Throwable {
 
         String2.log("\n*** EDDTableFromHttpGet.generateDatasetsXml" +
             "\nfileDir=" + tFileDir + 
@@ -1860,17 +1892,17 @@ public class EDDTableFromHttpGet extends EDDTableFromFiles {
                 destPA = new DoubleArray(sourcePA);
             } else if (colName.equals("timestamp")) {
                 destAtts.add("comment", 
-                    EDStatic.EDDTableFromHttpGetTimestampDescription + " " + EDStatic.note + " " + 
-                    EDStatic.EDDTableFromHttpGetDatasetDescription);
+                    EDStatic.EDDTableFromHttpGetTimestampDescription_s[currLang] + " " + EDStatic.note_s[currLang] + " " + 
+                    EDStatic.EDDTableFromHttpGetDatasetDescription_s[currLang]);
                 destAtts.add("units", Calendar2.SECONDS_SINCE_1970);
                 destAtts.add("time_precision", "1970-01-01T00:00:00.000Z");
                 destPA = new DoubleArray(sourcePA);
             } else if (colName.equals("author")) {
-                destAtts.add("comment", EDStatic.EDDTableFromHttpGetAuthorDescription);
+                destAtts.add("comment", EDStatic.EDDTableFromHttpGetAuthorDescription_s[currLang]);
                 destAtts.add("ioos_category", "Identifier");
                 destPA = new StringArray(sourcePA);
             } else if (colName.equals("command")) {
-                destAtts.add("comment", EDStatic.EDDTableFromHttpGetDatasetDescription);
+                destAtts.add("comment", EDStatic.EDDTableFromHttpGetDatasetDescription_s[currLang]);
                 destAtts.add("flag_values", new byte[]{0, 1});
                 destAtts.add("flag_meanings", "insert delete");
                 destAtts.add("ioos_category", "Other");
@@ -1931,7 +1963,7 @@ public class EDDTableFromHttpGet extends EDDTableFromFiles {
         String ttSummary = getAddOrSourceAtt(addGlobalAtts, dataSourceTable.globalAttributes(), 
             "summary", "");
         addGlobalAtts.set("summary", String2.ifSomethingConcat(
-            ttSummary, "\n\n", EDStatic.note + " " + EDStatic.EDDTableFromHttpGetDatasetDescription));
+            ttSummary, "\n\n", EDStatic.note_s[currLang] + " " + EDStatic.EDDTableFromHttpGetDatasetDescription_s[currLang]));
         if (String2.isSomething(tHttpGetRequiredVariables))  {
             StringArray sa = StringArray.fromCSV(tHttpGetRequiredVariables);
             if (sa.size() > 0)
@@ -2184,7 +2216,7 @@ String expected =
 
     /**
      * This does basic tests of this class.
-     * Note that ü in utf-8 is \xC3\xBC or [195][188]
+     * Note that ï¿½ in utf-8 is \xC3\xBC or [195][188]
      * Note that Euro is \\u20ac (and low byte is #172 is \\u00ac -- I worked to encode as '?')
      *
      * @throws Throwable if trouble

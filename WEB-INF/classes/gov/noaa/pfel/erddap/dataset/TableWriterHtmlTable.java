@@ -114,8 +114,8 @@ public class TableWriterHtmlTable extends TableWriter {
         encode = tEncode;
         writeUnits = tWriteUnits;
         showFirstNRows = tShowFirstNRows >= 0? tShowFirstNRows : Integer.MAX_VALUE;
-        tErddapUrl = EDStatic.erddapUrl(loggedInAs);
-        externalLinkHtml = EDStatic.externalLinkHtml(tErddapUrl);
+        tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
+        externalLinkHtml = EDStatic.externalLinkHtml(tErddapUrl, 0);
         questionMarkImageUrl = tQuestionMarkImageUrl;
     }
 
@@ -238,9 +238,9 @@ public class TableWriterHtmlTable extends TableWriter {
                         "</head>\n" +
                         "<body>\n");
                 else {
-                    writer.write(EDStatic.startHeadHtml(tErddapUrl, fileNameNoExt));
+                    writer.write(EDStatic.startHeadHtml(tErddapUrl, fileNameNoExt, 0));
                     writer.write("\n</head>\n");
-                    writer.write(EDStatic.startBodyHtml(loggedInAs));
+                    writer.write(EDStatic.startBodyHtml(loggedInAs, 0));
                     //writer.write(HtmlWidgets.BACK_BUTTON);
                     writer.write("&nbsp;<br>");
                 }
@@ -447,7 +447,7 @@ public class TableWriterHtmlTable extends TableWriter {
         //  isMBLimited and !allDataDisplayed
         if (isMBLimited &&  !allDataDisplayed) 
             writer.write("<span class=\"warningColor\">" + 
-                EDStatic.htmlTableMaxMessage + "</span>" +
+                EDStatic.htmlTableMaxMessage_s[0] + "</span>" +
                 (xhtmlMode? "<br />" : "<br>") +
                 "\n");  
 
@@ -459,7 +459,7 @@ public class TableWriterHtmlTable extends TableWriter {
                     "</body>\n" +
                     "</html>\n");
             else writer.write(
-                EDStatic.endBodyHtml(EDStatic.erddapUrl(loggedInAs)) +
+                EDStatic.endBodyHtml(EDStatic.erddapUrl(loggedInAs, 0), 0) +
                 "\n</html>\n");
 
         writer.flush(); //essential

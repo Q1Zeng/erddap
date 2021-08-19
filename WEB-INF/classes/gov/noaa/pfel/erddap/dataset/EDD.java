@@ -685,7 +685,7 @@ public abstract class EDD {
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
 
         dataVariables = tDataVariables;
@@ -734,7 +734,7 @@ public abstract class EDD {
         }
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense == null)
-            combinedGlobalAttributes.set("license", EDStatic.standardLicense);
+            combinedGlobalAttributes.set("license", EDStatic.standardLicense_s[0]);
         Test.ensureSomethingUnicode(cdmDataType(),           errorInMethod + "cdm_data_type");
         Test.ensureSomethingUnicode(className(),             errorInMethod + "className");
         if (defaultDataQuery == null || defaultDataQuery.length() == 0) {
@@ -858,7 +858,19 @@ public abstract class EDD {
             sb.append("dataVariables[" + i + "]=" + dataVariables[i]);
         return sb.toString();
     }
-
+    /**
+     * This tests if the dataVariables of the other dataset are similar 
+     *     (same destination data var names, same sourceDataType, same units, 
+     *     same missing values).
+     * currLang not specified, default to 0
+     *
+     * @param other
+     * @return "" if similar (same axis and data var names,
+     *    same units, same sourceDataType, same missing values) or a message if not.
+     */
+    public String similar(EDD other) {
+        return similar(other, 0);
+    }
     /**
      * This tests if the dataVariables of the other dataset are similar 
      *     (same destination data var names, same sourceDataType, same units, 
@@ -868,15 +880,15 @@ public abstract class EDD {
      * @return "" if similar (same axis and data var names,
      *    same units, same sourceDataType, same missing values) or a message if not.
      */
-    public String similar(EDD other) {
+    public String similar(EDD other, int currLang) {
 
         try {
             if (other == null) 
-                return "EDSimilar: " + EDStatic.EDDChangedWasnt;
+                return "EDSimilar: " + EDStatic.EDDChangedWasnt_s[currLang];
 
             int nDv = dataVariables.length;
             if (nDv != other.dataVariables.length)
-                return EDStatic.EDDSimilarDifferentNVar + 
+                return EDStatic.EDDSimilarDifferentNVar_s[currLang] + 
                     " (" + nDv + " != " + other.dataVariables.length + ")";
 
             for (int dv = 0; dv < nDv; dv++) {
@@ -888,42 +900,42 @@ public abstract class EDD {
                 String s2 = dv2.destinationName();
                 String msg2 = "#" + dv + "=" + s1;
                 if (!s1.equals(s2))
-                    return MessageFormat.format(EDStatic.EDDSimilarDifferent,
+                    return MessageFormat.format(EDStatic.EDDSimilarDifferent_s[currLang],
                         "destinationName", msg2, "(" + s1 + " != " + s2 + ")");
 
                 //sourceDataType
                 s1 = dv1.sourceDataType();
                 s2 = dv2.sourceDataType();
                 if (!s1.equals(s2))
-                    return MessageFormat.format(EDStatic.EDDSimilarDifferent,
+                    return MessageFormat.format(EDStatic.EDDSimilarDifferent_s[currLang],
                         "sourceDataType", msg2, "(" + s1 + " != " + s2 + ")");
 
                 //destinationDataType
                 s1 = dv1.destinationDataType();
                 s2 = dv2.destinationDataType();
                 if (!s1.equals(s2))
-                    return MessageFormat.format(EDStatic.EDDSimilarDifferent,
+                    return MessageFormat.format(EDStatic.EDDSimilarDifferent_s[currLang],
                         "destinationDataType", msg2, "(" + s1 + " != " + s2 + ")");
 
                 //units
                 s1 = dv1.units();
                 s2 = dv2.units();
                 if (!Test.equal(s1, s2)) //may be null 
-                    return MessageFormat.format(EDStatic.EDDSimilarDifferent,
+                    return MessageFormat.format(EDStatic.EDDSimilarDifferent_s[currLang],
                         "units", msg2, "(" + s1 + " != " + s2 + ")");
 
                 //sourceMissingValue
                 double d1 = dv1.sourceMissingValue();
                 double d2 = dv2.sourceMissingValue();
                 if (!Test.equal(d1, d2)) //says NaN==NaN is true
-                    return MessageFormat.format(EDStatic.EDDSimilarDifferent,
+                    return MessageFormat.format(EDStatic.EDDSimilarDifferent_s[currLang],
                         "sourceMissingValue", msg2, "(" + d1 + " != " + d2 + ")");
 
                 //sourceFillValue
                 d1 = dv1.sourceFillValue();
                 d2 = dv2.sourceFillValue();
                 if (!Test.equal(d1, d2)) //says NaN==NaN is true
-                    return MessageFormat.format(EDStatic.EDDSimilarDifferent,
+                    return MessageFormat.format(EDStatic.EDDSimilarDifferent_s[currLang],
                         "sourceFillValue", msg2, "(" + d1 + " != " + d2 + ")");
             }
 
@@ -954,16 +966,33 @@ public abstract class EDD {
      * <br>This only lists the first change found.
      *
      * <p>EDDGrid overwrites this to also check the axis variables.
+     * 
+     * If currLang is not specified, default to 0
      *
      * @param old
      * @return "" if same or message if not.
      */
     public String changed(EDD old) {
+        return changed(old, 0);
+    }
+    /**
+     * This tests if 'old' is different from this in any way.
+     * <br>This test is from the view of a subscriber who wants to know
+     *    when a dataset has changed in any way.
+     * <br>So some things like onChange and reloadEveryNMinutes are not checked.
+     * <br>This only lists the first change found.
+     *
+     * <p>EDDGrid overwrites this to also check the axis variables.
+     *
+     * @param old
+     * @return "" if same or message if not.
+     */
+    public String changed(EDD old, int currLang) {
         //FUTURE: perhaps it would be nice if EDDTable changed showed new data.
         //  so it would appear in email subscription and rss.
         //  but for many datasets (e.g., ndbc met) there are huge number of buoys. so not practical.
         if (old == null)
-            return EDStatic.EDDChangedWasnt;
+            return EDStatic.EDDChangedWasnt_s[currLang];
 
         //check most important things first
         int nDv = dataVariables.length;
@@ -971,7 +1000,7 @@ public abstract class EDD {
         String oldS = "" + old.dataVariables.length;
         String newS = "" + nDv;
         if (!oldS.equals(newS)) {
-            diff.append(MessageFormat.format(EDStatic.EDDChangedDifferentNVar,
+            diff.append(MessageFormat.format(EDStatic.EDDChangedDifferentNVar_s[currLang],
                 oldS, newS));
             return diff.toString(); //because tests below assume nDv are same
         }
@@ -985,20 +1014,20 @@ public abstract class EDD {
             oldS = oldDV.destinationName();
             newS = newName;
             if (!oldS.equals(newS))
-                diff.append(MessageFormat.format(EDStatic.EDDChanged2Different,
+                diff.append(MessageFormat.format(EDStatic.EDDChanged2Different_s[currLang],
                     "destinationName", msg2, oldS, newS) + "\n");
 
             oldS = oldDV.destinationDataType(); 
             newS = newDV.destinationDataType();
             if (!oldS.equals(newS))
-                diff.append(MessageFormat.format(EDStatic.EDDChanged2Different,
+                diff.append(MessageFormat.format(EDStatic.EDDChanged2Different_s[currLang],
                     "destinationDataType", msg2, oldS, newS) + "\n");
 
             String s = String2.differentLine(
                 oldDV.combinedAttributes().toString(), 
                 newDV.combinedAttributes().toString());
             if (s.length() > 0)
-                diff.append(MessageFormat.format(EDStatic.EDDChanged1Different,
+                diff.append(MessageFormat.format(EDStatic.EDDChanged1Different_s[currLang],
                     "combinedAttribute", msg2, s) + "\n");
         }
 
@@ -1007,7 +1036,7 @@ public abstract class EDD {
             old.combinedGlobalAttributes().toString(), 
                 combinedGlobalAttributes().toString());
         if (s.length() > 0)
-            diff.append(MessageFormat.format(EDStatic.EDDChangedCGADifferent,
+            diff.append(MessageFormat.format(EDStatic.EDDChangedCGADifferent_s[currLang],
                 s) + "\n");
 
         return diff.toString();    
@@ -1099,17 +1128,17 @@ public abstract class EDD {
             String keepUpToDate = 
                 "If you want to keep this dataset up-to-date, use a small reloadEveryNMinutes.";
             if (!tryToSubscribe) {
-                String2.log(EDStatic.warning + 
+                String2.log(EDStatic.warning_s[0] + 
                     " <tryToSubscribeToRemoteErddapDataset> is false. If that is permanent, then:\n" +
                     keepUpToDate);
             } else if (EDStatic.urlIsLocalhost(thisErddapUrl)) {
-                String2.log(EDStatic.warning + 
+                String2.log(EDStatic.warning_s[0] + 
                     " This ERDDAP won't try to subscribe to the dataset on the remote\n" +
                     "ERDDAP because this ERDDAP isn't publicly accessible.\n" +
                     keepUpToDate);
             } else if (!String2.isSomething(EDStatic.emailSubscriptionsFrom)) { 
                 //this erddap's subscription system isn't active
-                String2.log(EDStatic.warning +
+                String2.log(EDStatic.warning_s[0] +
                     " Subscribing to the remote ERDDAP dataset failed because\n" +
                     "emailEverythingTo wasn't specified in this ERDDAP's setup.xml.\n" +
                     keepUpToDate);
@@ -1340,13 +1369,13 @@ public abstract class EDD {
     /** 
      * This returns the a/href tag which advertises the RSS feed for this dataset.
      */
-    public String rssHref(String loggedInAs) {
+    public String rssHref(String loggedInAs, int currLang) {
         return 
             "<a rel=\"alternate\" type=\"application/rss+xml\" " +
             "  href=\"" + EDStatic.preferredErddapUrl + //prefer the https link
             "/rss/" + datasetID+ ".rss\" \n" +
             "  title=\"\"><img alt=\"RSS\"\n" +
-            "    title=\"" + EDStatic.subscriptionRSS + "\" \n" +
+            "    title=\"" + EDStatic.subscriptionRSS_s[currLang] + "\" \n" +
             "    src=\"" + EDStatic.imageDirUrl(loggedInAs) + "rss.gif\" ></a>"; //no img end tag 
     }
 
@@ -1355,7 +1384,7 @@ public abstract class EDD {
      * (or "" if !EDStatic.subscriptionSystemActive).
      *
      */
-    public String emailHref(String loggedInAs) {
+    public String emailHref(String loggedInAs, int currLang) {
         if (EDStatic.subscriptionSystemActive) 
             return 
             "<a rel=\"alternate\" \n" +
@@ -1363,7 +1392,7 @@ public abstract class EDD {
                 "/" + Subscriptions.ADD_HTML + 
                 "?datasetID=" + datasetID+ "&amp;showErrors=false&amp;email=\" \n" +
             "  title=\"\"><img alt=\"Subscribe\"\n" +
-            "    title=\"" + XML.encodeAsHTMLAttribute(EDStatic.subscriptionEmail) + "\" \n" +
+            "    title=\"" + XML.encodeAsHTMLAttribute(EDStatic.subscriptionEmail_s[currLang]) + "\" \n" +
             "    src=\"" + EDStatic.imageDirUrl(loggedInAs) + "envelope.gif\" ></a>";
         return "&nbsp;";
     }
@@ -1805,8 +1834,16 @@ public abstract class EDD {
     /** 
      * This indicates why the dataset isn't accessible via the FGDC service
      * (or "" if it is).
+     * currLang not specified, default to 0
      */
     public String accessibleViaFGDC() {
+        return accessibleViaFGDC(0);
+    }
+    /** 
+     * This indicates why the dataset isn't accessible via the FGDC service
+     * (or "" if it is).
+     */
+    public String accessibleViaFGDC(int currLang) {
 
         if (accessibleViaFGDC == null) {
 
@@ -1824,7 +1861,7 @@ public abstract class EDD {
                     if (fgdcFile == null) {  
                         //No.  Write fgdc to temp file
                         StringWriter writer = new StringWriter(65536);  //most are ~40KB
-                        writeFGDC(writer);
+                        writeFGDC(writer, 0);
                         accessibleViaFGDC = String2.canonical(
                             String2.writeToFile(
                                 tName + tmp, writer.toString(), String2.UTF_8));
@@ -1852,12 +1889,12 @@ public abstract class EDD {
                             
                     } else {
                         accessibleViaFGDC = MessageFormat.format(
-                            EDStatic.noXxx, "FGDC"); 
+                            EDStatic.noXxx_s[currLang], "FGDC"); 
                     }
                     
                 } catch (Throwable t) {
                     String2.log(MessageFormat.format(
-                        EDStatic.noXxxBecause2,
+                        EDStatic.noXxxBecause2_s[currLang],
                         "FGDC", 
                         (t instanceof SimpleException?
                             MustBe.getShortErrorMessage(t) :
@@ -1869,8 +1906,8 @@ public abstract class EDD {
                 }  
             } else {
                 accessibleViaFGDC = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause2,      "FGDC",
-                        MessageFormat.format(EDStatic.noXxxNotActive, "FGDC")));
+                    MessageFormat.format(EDStatic.noXxxBecause2_s[currLang],      "FGDC",
+                        MessageFormat.format(EDStatic.noXxxNotActive_s[currLang], "FGDC")));
             }
         }
         return accessibleViaFGDC;
@@ -1925,12 +1962,12 @@ public abstract class EDD {
                             
                     } else {
                         accessibleViaISO19115 = MessageFormat.format(
-                            EDStatic.noXxx, "ISO 19115-2/19139"); 
+                            EDStatic.noXxx_s[0], "ISO 19115-2/19139"); 
                     }
 
                 } catch (Throwable t) {
                     String2.log(MessageFormat.format(
-                        EDStatic.noXxxBecause2,
+                        EDStatic.noXxxBecause2_s[0],
                         "ISO 19115-2/19139", 
                         (t instanceof SimpleException?
                             MustBe.getShortErrorMessage(t) :
@@ -1943,8 +1980,8 @@ public abstract class EDD {
                 }
             } else {
                 accessibleViaISO19115 = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause2,      "ISO 19115-2/19139",
-                        MessageFormat.format(EDStatic.noXxxNotActive, "ISO 19115-2/19139")));
+                    MessageFormat.format(EDStatic.noXxxBecause2_s[0],      "ISO 19115-2/19139",
+                        MessageFormat.format(EDStatic.noXxxNotActive_s[0], "ISO 19115-2/19139")));
             }
         }
         return accessibleViaISO19115;
@@ -1964,7 +2001,7 @@ public abstract class EDD {
      * @param writer a UTF-8 writer
      * @throws Throwable if trouble
      */
-    protected abstract void writeFGDC(Writer writer) throws Throwable;
+    protected abstract void writeFGDC(Writer writer, int currLang) throws Throwable;
 
     /** 
      * This writes the dataset's ISO 19115-2/19139 XML to the writer.
@@ -2339,7 +2376,7 @@ public abstract class EDD {
 
         int which = String2.indexOf(dataVariableSourceNames(), tSourceName);
         if (which < 0) throw new SimpleException(
-            MessageFormat.format(EDStatic.errorNotFound, 
+            MessageFormat.format(EDStatic.errorNotFound_s[0], 
                 "sourceVariableName=" + tSourceName + " in datasetID=" + datasetID));
         return dataVariables[which];
     }
@@ -2354,7 +2391,7 @@ public abstract class EDD {
 
         int which = String2.indexOf(dataVariableDestinationNames(), tDestinationName.split("/")[0]);  //why split? why would there be a '/'
         if (which < 0) throw new SimpleException(
-            MessageFormat.format(EDStatic.errorNotFoundIn, 
+            MessageFormat.format(EDStatic.errorNotFoundIn_s[0], 
                 "destinationVariableName=" + tDestinationName, "datasetID=" + datasetID));
         return dataVariables[which];
     }
@@ -2772,12 +2809,12 @@ public abstract class EDD {
     public abstract String[] dataFileTypeExtensions();
 
     /**
-     * This returns descriptions (up to 80 characters long, suitable for a tooltip)
+     * This returns a 2-dimensional array ([fileType][langauge]) of descriptions (up to 80 characters long, suitable for a tooltip)
      * corresponding to the dataFileTypes. 
      *
      * @return descriptions corresponding to the dataFileTypes.
      */
-    public abstract String[] dataFileTypeDescriptions();
+    public abstract String[][] dataFileTypeDescriptions();
 
     /**
      * This returns an info URL corresponding to the dataFileTypes. 
@@ -2811,7 +2848,7 @@ public abstract class EDD {
      *
      * @return descriptions corresponding to the imageFileTypes.
      */
-    public abstract String[] imageFileTypeDescriptions();
+    public abstract String[][] imageFileTypeDescriptions();
 
     /**
      * This returns an info URL corresponding to the imageFileTypes. 
@@ -2825,7 +2862,7 @@ public abstract class EDD {
      *
      * @return the "[name] - [description]" for all dataFileTypes and imageFileTypes.
      */
-    public abstract String[] allFileTypeOptions();
+    public abstract String[][] allFileTypeOptions();
      
     /** 
      * This returns the file extension corresponding to a dataFileType
@@ -2863,7 +2900,7 @@ public abstract class EDD {
             return ".json";
 
         throw new SimpleException(Table.QUERY_ERROR +  
-            MessageFormat.format(EDStatic.queryErrorFileType, fileTypeName));
+            MessageFormat.format(EDStatic.queryErrorFileType_s[0], fileTypeName));
     }
 
     /**
@@ -3171,7 +3208,8 @@ public abstract class EDD {
     /**
      * This writes the dataset info (id, title, institution, infoUrl, summary)
      * to an html document (e.g., the top of a Data Access Form).
-     *
+     * if currLang is not specified, default to 0
+     * 
      * @param loggedInAs  the name of the logged in user (or null if not logged in).
      *   Normally, this is not used to test if this edd is accessibleTo loggedInAs, 
      *   but it unusual cases (EDDTableFromPost?) it could be.
@@ -3193,13 +3231,42 @@ public abstract class EDD {
         boolean showSubsetLink, boolean showDafLink, boolean showFilesLink, boolean showGraphLink,
         String userDapQuery, String otherRows) 
         throws Throwable {
+        
+        writeHtmlDatasetInfo(loggedInAs, writer, showSubsetLink, showDafLink, showFilesLink, showGraphLink, userDapQuery, otherRows, 0);
+    }
+
+    /**
+     * This writes the dataset info (id, title, institution, infoUrl, summary)
+     * to an html document (e.g., the top of a Data Access Form).
+     *
+     * @param loggedInAs  the name of the logged in user (or null if not logged in).
+     *   Normally, this is not used to test if this edd is accessibleTo loggedInAs, 
+     *   but it unusual cases (EDDTableFromPost?) it could be.
+     *   Normally, this is just used to determine which erddapUrl to use (http vs https).
+     * @param writer
+     * @param showDafLink if true, a link is shown to this dataset's Data Access Form
+     * @param showSubsetLink if true, a link is shown to this dataset's .subset form
+     *    (if accessibleViaSubset() is "").
+     * @param showFilesLink if true, a link is shown to this dataset's /files/ page
+     *    (if accessibleViaFiles() is true).
+     * @param showGraphLink if true, a link is shown to this dataset's Make A Graph form
+     *    (if accessibleViaMAG() is "").
+     * @param userDapQuery  the part of the user's request after the '?', still percentEncoded, may be null.
+     * @param otherRows  additional html content
+     * @throws Throwable if trouble
+     */
+    public void writeHtmlDatasetInfo(
+        String loggedInAs, Writer writer, 
+        boolean showSubsetLink, boolean showDafLink, boolean showFilesLink, boolean showGraphLink,
+        String userDapQuery, String otherRows, int currLang) 
+        throws Throwable {
         //String type = this instanceof EDDGrid? "Gridded" :
         //   this instanceof EDDTable? "Tabular" : "(type???)";
         
         boolean isLoggedIn = loggedInAs != null && !loggedInAs.equals(EDStatic.loggedInAsHttps);
         boolean isAccessible =  isAccessibleTo(EDStatic.getRoles(loggedInAs));
         boolean graphsAccessible = isAccessible || graphsAccessibleToPublic();
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String tQuery = userDapQuery == null || userDapQuery.length() == 0? "" :
             //since this may be direct from user, I need to XML encode it 
             //to prevent HTML insertion security vulnerability
@@ -3211,41 +3278,41 @@ public abstract class EDD {
         if (isAccessible && showDafLink) 
             dafLink = 
                 "     | <a rel=\"alternate\" " +  
-                    "title=\"" + EDStatic.clickAccess + "\" \n" +
+                    "title=\"" + EDStatic.clickAccess_s[currLang] + "\" \n" +
                 "         href=\"" + dapUrl + ".html" + 
-                    tQuery + "\">" + EDStatic.daf + "</a>\n";
+                    tQuery + "\">" + EDStatic.daf_s[currLang] + "</a>\n";
         if (isAccessible && showSubsetLink && accessibleViaSubset().length() == 0) 
             subsetLink = 
                 "     | <a rel=\"alternate\" " +
-                    "title=\"" + EDStatic.dtSubset + "\" \n" +
+                    "title=\"" + EDStatic.dtSubset_s[currLang] + "\" \n" +
                 "         href=\"" + dapUrl + ".subset" + 
                     tQuery + 
                     (tQuery.length() == 0? "" : XML.encodeAsHTMLAttribute(EDDTable.DEFAULT_SUBSET_VIEWS)) + 
-                    "\">" + EDStatic.subset + "</a>\n";
+                    "\">" + EDStatic.subset_s[currLang] + "</a>\n";
         if (isAccessible && showFilesLink && accessibleViaFiles) //> because it has sourceDir
             filesLink = 
                 "     | <a rel=\"alternate\" " +
                     "title=\"" + 
-                    XML.encodeAsHTMLAttribute(EDStatic.filesDescription +
+                    XML.encodeAsHTMLAttribute(EDStatic.filesDescription_s[currLang] +
                         (this instanceof EDDTableFromFileNames? "" : 
-                            "\n" + EDStatic.warning + " " + 
-                            String2.replaceAll(EDStatic.filesWarning, "<br>", ""))) +
+                            "\n" + EDStatic.warning_s[currLang] + " " + 
+                            String2.replaceAll(EDStatic.filesWarning_s[currLang], "<br>", ""))) +
                     "\" \n" +
                 "         href=\"" + tErddapUrl + "/files/" + datasetID + "/\">" + 
-                EDStatic.EDDFiles + "</a>\n";
+                EDStatic.EDDFiles_s[currLang] + "</a>\n";
         if (graphsAccessible && showGraphLink && accessibleViaMAG().length() == 0) 
             graphLink = 
                 "     | <a rel=\"alternate\" " +
-                    "title=\"" + EDStatic.dtMAG + "\" \n" +
+                    "title=\"" + EDStatic.dtMAG_s[currLang] + "\" \n" +
                 "         href=\"" + dapUrl + ".graph" + 
-                    tQuery + "\">" + EDStatic.EDDMakeAGraph + "</a>\n";
+                    tQuery + "\">" + EDStatic.EDDMakeAGraph_s[currLang] + "</a>\n";
         String tSummary = extendedSummary(); 
         String tLicense = combinedGlobalAttributes().getString("license");
-        boolean nonStandardLicense = tLicense != null && !tLicense.equals(EDStatic.standardLicense);
+        boolean nonStandardLicense = tLicense != null && !tLicense.equals(EDStatic.standardLicense_s[0]);
         tLicense = tLicense == null? "" :
             "    | " +
             (nonStandardLicense? "<span class=\"warningColor\">" : "") + 
-            EDStatic.license + " " + 
+            EDStatic.license_s[currLang] + " " + 
             (nonStandardLicense? "</span>" : "") +
             //link below should have rel=\"license\"
             EDStatic.htmlTooltipImage(loggedInAs, 
@@ -3258,23 +3325,23 @@ public abstract class EDD {
             //"<p><strong>" + type + " Dataset:</strong>\n" +
             "<table class=\"compact nowrap\">\n" +
             "  <tr>\n" +    
-            "    <td>" + EDStatic.EDDDatasetTitle + ":&nbsp;</td>\n" +
+            "    <td>" + EDStatic.EDDDatasetTitle_s[currLang] + ":&nbsp;</td>\n" +
             "    <td style=\"vertical-align:middle\"><span class=\"standoutColor\" style=\"font-size:130%; line-height:130%;\"><strong>" + 
                 encTitle + "</strong>\n" +
-            (graphsAccessible? "      " + emailHref(loggedInAs) + "\n" +
-                               "      " + rssHref(loggedInAs) + "\n" : "") + 
+            (graphsAccessible? "      " + emailHref(loggedInAs, currLang) + "\n" +
+                               "      " + rssHref(loggedInAs, currLang) + "\n" : "") + 
             "      </span>\n" +
             "    </td>\n" +
             "  </tr>\n" +
             "  <tr>\n" +
-            "    <td>" + EDStatic.EDDInstitution + ":&nbsp;</td>\n" +
+            "    <td>" + EDStatic.EDDInstitution_s[currLang] + ":&nbsp;</td>\n" +
             "    <td>" + XML.encodeAsHTML(institution()) + "&nbsp;&nbsp;\n" +
-            "    (" + EDStatic.EDDDatasetID + ": " + XML.encodeAsHTML(datasetID) + ")</td>\n" +
+            "    (" + EDStatic.EDDDatasetID_s[currLang] + ": " + XML.encodeAsHTML(datasetID) + ")</td>\n" +
             "  </tr>\n" +
             otherRows + "\n" +
             "  <tr>\n" +
-            "    <td>" + EDStatic.EDDInformation + ":&nbsp;</td>\n" +
-            "    <td>" + EDStatic.EDDSummary + " " + 
+            "    <td>" + EDStatic.EDDInformation_s[currLang] + ":&nbsp;</td>\n" +
+            "    <td>" + EDStatic.EDDSummary_s[currLang] + " " + 
                 EDStatic.htmlTooltipImage(loggedInAs, 
                     "<div class=\"standard_max_width\">" + XML.encodeAsPreHTML(tSummary) +
                     "</div>") + 
@@ -3282,21 +3349,21 @@ public abstract class EDD {
             tLicense +
             (accessibleViaFGDC.length() > 0? "" : 
                 "     | <a rel=\"alternate\" \n" +
-                "          title=\"" + EDStatic.EDDFgdcMetadata + "\" \n" +
-                "          href=\"" + dapUrl + ".fgdc\">" + EDStatic.EDDFgdc + "</a>\n") +
+                "          title=\"" + EDStatic.EDDFgdcMetadata_s[currLang] + "\" \n" +
+                "          href=\"" + dapUrl + ".fgdc\">" + EDStatic.EDDFgdc_s[currLang] + "</a>\n") +
             (accessibleViaISO19115().length() > 0? "" : 
                 "     | <a rel=\"alternate\" \n" +
-                "          title=\"" + EDStatic.EDDIso19115Metadata + "\" \n" +
+                "          title=\"" + EDStatic.EDDIso19115Metadata_s[currLang] + "\" \n" +
                 "          href=\"" + dapUrl + ".iso19115\">" + EDStatic.EDDIso19115 + "</a>\n") +
             "     | <a rel=\"alternate\" \n" +
-            "          title=\"" + EDStatic.clickInfo + "\" \n" +
+            "          title=\"" + EDStatic.clickInfo_s[currLang] + "\" \n" +
             "          href=\"" + tErddapUrl + "/info/" + datasetID + "/index.html\">" + 
-                EDStatic.EDDMetadata + "</a>\n" +
+                EDStatic.EDDMetadata_s[currLang] + "</a>\n" +
             "     | <a rel=\"bookmark\" \n" +
-            "          title=\"" + EDStatic.clickBackgroundInfo + "\" \n" +
+            "          title=\"" + EDStatic.clickBackgroundInfo_s[currLang] + "\" \n" +
             "          href=\"" + XML.encodeAsHTMLAttribute(infoUrl()) + "\">" + 
-                EDStatic.EDDBackground + 
-                (infoUrl().startsWith(EDStatic.baseUrl)? "" : EDStatic.externalLinkHtml(tErddapUrl)) + 
+                EDStatic.EDDBackground_s[currLang] + 
+                (infoUrl().startsWith(EDStatic.baseUrl)? "" : EDStatic.externalLinkHtml(tErddapUrl, currLang)) + 
                 "</a>\n" +
                 subsetLink + "\n" +
                 dafLink + "\n" +
@@ -5314,7 +5381,7 @@ public abstract class EDD {
             }
 
             //botched degree symbol
-            value = String2.replaceAll(value, "\u00ef\u00bf\u00bd", "°"); 
+            value = String2.replaceAll(value, "\u00ef\u00bf\u00bd", "ï¿½"); 
         }
 
         String tSummary = String2.isSomething2(value)? value : "";
@@ -7361,7 +7428,7 @@ public abstract class EDD {
                 tUnitsLC.equals("mg o2/min")? "mg O2/min" :   //???
                 //tUnits.equals("mi")? "" :  mL???
                 tUnitsLC.equals("micormoles per kilogram")? "micromoles/kilogram" : //or
-                tUnitsLC.equals("micro atmospheres")? "µatmospheres" :
+                tUnitsLC.equals("micro atmospheres")? "ï¿½atmospheres" :
                 tUnitsLC.equals("microgram/kilogram")? "microgram/kilogram" :
                 tUnitsLC.equals("micromolar")? "micromoles/liter" : //case
                 tUnitsLC.equals("microsiemens per centimeter")? "microSiemens per centimeter" : //case
@@ -7403,11 +7470,11 @@ public abstract class EDD {
                 tUnitsLC.equals("text")? "" :
                 tUnitsLC.equals("this quantity is unitless")? "" :
                 tUnitsLC.equals("time")? "" :  //??  HHmm?
-                tUnitsLC.equals("ug/l as n")? "µg/L as N" :
-                tUnitsLC.equals("umole")? "µmole" :
-                tUnits.equals(  "um")? "µm" :  
-                tUnits.equals(  "uM")? "µmole/liter" :  //not meters
-                tUnitsLC.equals("umol/kg")? "µmole/kg" :
+                tUnitsLC.equals("ug/l as n")? "ï¿½g/L as N" :
+                tUnitsLC.equals("umole")? "ï¿½mole" :
+                tUnits.equals(  "um")? "ï¿½m" :  
+                tUnits.equals(  "uM")? "ï¿½mole/liter" :  //not meters
+                tUnitsLC.equals("umol/kg")? "ï¿½mole/kg" :
                 tUnitsLC.equals("unitless")? "" :
                 tUnitsLC.equals("volts")? "volts" :
                 tUnitsLC.equals("whole number")? "count" :
@@ -7688,7 +7755,7 @@ public abstract class EDD {
             tUnits = "degree_C";
         else if (tUnitsLC.equals("kelvins")) 
             tUnits = "degree_K";
-        else if (tUnitsLC.equals("°k")) 
+        else if (tUnitsLC.equals("ï¿½k")) 
             tUnits = "degree_K";
         else if (tUnits.equals("u M") || tUnits.equals("uM")) 
             tUnits = "umoles L-1";
@@ -7815,7 +7882,7 @@ public abstract class EDD {
 
         //isDegreesC
         boolean isDegreesC = 
-            testUnits.equals("°c")                  ||
+            testUnits.equals("ï¿½c")                  ||
             testUnits.equals("celsius")             ||
             testUnits.equals("degree|centigrade")   ||
             testUnits.equals("degree|celsius")      ||
@@ -7834,7 +7901,7 @@ public abstract class EDD {
 
         //isDegreesF
         boolean isDegreesF = 
-            testUnits.equals("°f")                  ||
+            testUnits.equals("ï¿½f")                  ||
             testUnits.equals("fahrenheit")          ||
             testUnits.equals("degree|fahrenheit")   ||
             testUnits.equals("degrees|fahrenheit")  ||

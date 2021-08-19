@@ -542,25 +542,42 @@ public class EDVGridAxis extends EDV {
 
     /**
      * This returns a human-oriented description of the spacing of this EDVGridAxis. (May be negative.)
+     * currLang is not specified, default to 0
      */
     public String spacingDescription() {
+        return spacingDescription(0);
+    }
+
+    /**
+     * This returns a human-oriented description of the spacing of this EDVGridAxis. (May be negative.)
+     */
+    public String spacingDescription(int currLang) {
         boolean isTimeStamp = this instanceof EDVTimeStampGridAxis;
         if (sourceValues().size() == 1) 
-            return "(" + EDStatic.EDDGridJustOneValue + ")";
+            return "(" + EDStatic.EDDGridJustOneValue_s[currLang] + ")";
         String s = isTimeStamp? 
             Calendar2.elapsedTimeString(Math.rint(averageSpacing()) * 1000) : 
             "" + Math2.floatToDouble(averageSpacing());
         return s + " (" +
-            (isEvenlySpaced()? EDStatic.EDDGridEven : EDStatic.EDDGridUneven) +
+            (isEvenlySpaced()? EDStatic.EDDGridEven_s[currLang] : EDStatic.EDDGridUneven_s[currLang]) +
             ")";
     }
-
+    
+    /**
+     * This returns HTML suitable for a tooltip for this dimension.
+     * The range will be from firstDestinationValue to lastDestinationValue 
+     * (which is different from min to max if !ascending).
+     * currLang is not specified, defualt to 0
+     */
+    public String htmlRangeTooltip() {
+        return htmlRangeTooltip(0);
+    }
     /**
      * This returns HTML suitable for a tooltip for this dimension.
      * The range will be from firstDestinationValue to lastDestinationValue 
      * (which is different from min to max if !ascending).
      */
-    public String htmlRangeTooltip() {
+    public String htmlRangeTooltip(int currLang) {
         String tUnits = units();
         PrimitiveArray tSourceValues = sourceValues(); //work with stable local reference
         boolean isTimeStamp = this instanceof EDVTimeStampGridAxis;
@@ -578,7 +595,7 @@ public class EDVGridAxis extends EDV {
             "ranging from " + destinationToString(firstDestinationValue()) + 
                      " to " + destinationToString(lastDestinationValue()) + " " + tUnits + "<br>" +
             "with " + 
-                (isEvenlySpaced()? EDStatic.EDDGridEven : EDStatic.EDDGridUneven) + 
+                (isEvenlySpaced()? EDStatic.EDDGridEven_s[currLang] : EDStatic.EDDGridUneven_s[currLang]) + 
                 " spacing " + (isEvenlySpaced()? "" : "~") +
                 "= " + tSpacing;
     }

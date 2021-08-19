@@ -192,47 +192,47 @@ public abstract class EDDTable extends EDD {
         ".txt", ".html", ".tsv", ".tsv", ".tsv", 
         ".wav", ".xhtml"};
     //These all used to have " (It may take a while. Please be patient.)" at the end.
-    public static String[] dataFileTypeDescriptions = {
-        EDStatic.fileHelp_asc,
-        EDStatic.fileHelp_csv,
-        EDStatic.fileHelp_csvp,
-        EDStatic.fileHelp_csv0,
-        EDStatic.fileHelp_dataTable,
-        EDStatic.fileHelp_das,
-        EDStatic.fileHelp_dds,
-        EDStatic.fileHelp_dods,
-        EDStatic.fileHelpTable_esriCsv,
-        EDStatic.fileHelp_fgdc,
-        EDStatic.fileHelp_geoJson,
-        EDStatic.fileHelp_graph,
-        EDStatic.fileHelpTable_help,
-        EDStatic.fileHelp_html,
-        EDStatic.fileHelp_htmlTable,
-        EDStatic.fileHelp_iso19115,
-        EDStatic.fileHelp_itxTable,
-        EDStatic.fileHelp_json,
-        EDStatic.fileHelp_jsonlCSV1,
-        EDStatic.fileHelp_jsonlCSV,
-        EDStatic.fileHelp_jsonlKVP,
-        EDStatic.fileHelp_mat,
-        EDStatic.fileHelpTable_nc3,
-        EDStatic.fileHelp_nc3Header,
-        EDStatic.fileHelp_ncCF,
-        EDStatic.fileHelp_ncCFHeader,
-        EDStatic.fileHelp_ncCFMA,
-        EDStatic.fileHelp_ncCFMAHeader,
+    public static String[][] dataFileTypeDescriptions = {
+        EDStatic.fileHelp_asc_s,
+        EDStatic.fileHelp_csv_s,
+        EDStatic.fileHelp_csvp_s,
+        EDStatic.fileHelp_csv0_s,
+        EDStatic.fileHelp_dataTable_s,
+        EDStatic.fileHelp_das_s,
+        EDStatic.fileHelp_dds_s,
+        EDStatic.fileHelp_dods_s,
+        EDStatic.fileHelpTable_esriCsv_s,
+        EDStatic.fileHelp_fgdc_s,
+        EDStatic.fileHelp_geoJson_s,
+        EDStatic.fileHelp_graph_s,
+        EDStatic.fileHelpTable_help_s,
+        EDStatic.fileHelp_html_s,
+        EDStatic.fileHelp_htmlTable_s,
+        EDStatic.fileHelp_iso19115_s,
+        EDStatic.fileHelp_itxTable_s,
+        EDStatic.fileHelp_json_s,
+        EDStatic.fileHelp_jsonlCSV1_s,
+        EDStatic.fileHelp_jsonlCSV_s,
+        EDStatic.fileHelp_jsonlKVP_s,
+        EDStatic.fileHelp_mat_s,
+        EDStatic.fileHelpTable_nc3_s,
+        EDStatic.fileHelp_nc3Header_s,
+        EDStatic.fileHelp_ncCF_s,
+        EDStatic.fileHelp_ncCFHeader_s,
+        EDStatic.fileHelp_ncCFMA_s,
+        EDStatic.fileHelp_ncCFMAHeader_s,
 //        EDStatic.fileHelpTable_nc4,
 //        EDStatic.fileHelp_nc4Header,
-        EDStatic.fileHelp_nccsv,
-        EDStatic.fileHelp_nccsvMetadata,
-        EDStatic.fileHelp_ncoJson,
-        EDStatic.fileHelpTable_odvTxt,
-        EDStatic.fileHelp_subset,
-        EDStatic.fileHelp_tsv,
-        EDStatic.fileHelp_tsvp,
-        EDStatic.fileHelp_tsv0,
-        EDStatic.fileHelp_wav,
-        EDStatic.fileHelp_xhtml
+        EDStatic.fileHelp_nccsv_s,
+        EDStatic.fileHelp_nccsvMetadata_s,
+        EDStatic.fileHelp_ncoJson_s,
+        EDStatic.fileHelpTable_odvTxt_s,
+        EDStatic.fileHelp_subset_s,
+        EDStatic.fileHelp_tsv_s,
+        EDStatic.fileHelp_tsvp_s,
+        EDStatic.fileHelp_tsv0_s,
+        EDStatic.fileHelp_wav_s,
+        EDStatic.fileHelp_xhtml_s
     };
     //These are encoded for use as HTML attributes (href)
     public static String[] dataFileTypeInfo = {  //"" if not available
@@ -282,15 +282,15 @@ public abstract class EDDTable extends EDD {
         ".kml", ".smallPdf", ".pdf", ".largePdf", ".smallPng", ".png", ".largePng", ".transparentPng"};  
     public final static String[] imageFileTypeExtensions = {
         ".kml", ".pdf", ".pdf", ".pdf", ".png", ".png", ".png", ".png"};
-    public static String[] imageFileTypeDescriptions = {
-        EDStatic.fileHelpTable_kml,
-        EDStatic.fileHelp_smallPdf,
-        EDStatic.fileHelp_pdf,
-        EDStatic.fileHelp_largePdf,
-        EDStatic.fileHelp_smallPng,
-        EDStatic.fileHelp_png,
-        EDStatic.fileHelp_largePng,
-        EDStatic.fileHelp_transparentPng
+    public static String[][] imageFileTypeDescriptions = {
+        EDStatic.fileHelpTable_kml_s,
+        EDStatic.fileHelp_smallPdf_s,
+        EDStatic.fileHelp_pdf_s,
+        EDStatic.fileHelp_largePdf_s,
+        EDStatic.fileHelp_smallPng_s,
+        EDStatic.fileHelp_png_s,
+        EDStatic.fileHelp_largePng_s,
+        EDStatic.fileHelp_transparentPng_s
     };
     public static String[] imageFileTypeInfo = {
         "https://developers.google.com/kml/", //kml
@@ -303,7 +303,8 @@ public abstract class EDDTable extends EDD {
         "http://www.libpng.org/pub/png/" //png
     };
 
-    private static String[] allFileTypeOptions, allFileTypeNames;
+    private static String[][] allFileTypeOptions;
+    private static String[] allFileTypeNames;
     private static String[] publicGraphFileTypeNames;
     private static int defaultFileTypeOption, defaultPublicGraphFileTypeOption;
 
@@ -403,7 +404,7 @@ public abstract class EDDTable extends EDD {
         defaultFileTypeOption = String2.indexOf(dataFileTypeNames, ".htmlTable");
 
         //construct allFileTypeOptions
-        allFileTypeOptions = new String[nDFTN + nIFTN];
+        allFileTypeOptions = new String[nDFTN + nIFTN][EDStatic.languageList.length];
         allFileTypeNames = new String[nDFTN + nIFTN];
         graphsAccessibleTo_fileTypeNames = new HashSet(); //read only, so needn't be thread-safe
 
@@ -417,11 +418,15 @@ public abstract class EDDTable extends EDD {
         publicGraphFileTypeNames[5] = ".iso19115";
 
         for (int i = 0; i < nDFTN; i++) {
-            allFileTypeOptions[i] = dataFileTypeNames[i] + " - " + dataFileTypeDescriptions[i];
+            for (int j = 0; j < EDStatic.languageList.length; j++) {
+                allFileTypeOptions[i][j] = dataFileTypeNames[i] + " - " + dataFileTypeDescriptions[i][j];
+            }
             allFileTypeNames[i] = dataFileTypeNames[i];
         }
         for (int i = 0; i < nIFTN; i++) {
-            allFileTypeOptions[nDFTN + i] = imageFileTypeNames[i] + " - " + imageFileTypeDescriptions[i];
+            for (int j = 0; j < EDStatic.languageList.length; j++) {
+                allFileTypeOptions[nDFTN + i][j] = imageFileTypeNames[i] + " - " + imageFileTypeDescriptions[i][j];
+            }
             allFileTypeNames[nDFTN + i] = imageFileTypeNames[i];
             publicGraphFileTypeNames[tExtra + i] = imageFileTypeNames[i];  
         }
@@ -604,18 +609,35 @@ public abstract class EDDTable extends EDD {
 
     /**
      * This returns the dapDescription 
+     * currLang not specified, default to 0
+     * @return the dapDescription
+     */
+    public String dapDescription() {return EDStatic.EDDTableDapDescription_s[0]; }
+
+    /**
+     * This returns the dapDescription 
      *
      * @return the dapDescription
      */
-    public String dapDescription() {return EDStatic.EDDTableDapDescription; }
+    public String dapDescription(int currLang) {return EDStatic.EDDTableDapDescription_s[currLang]; }
+
+    /**
+     * This returns the longDapDescription 
+     * currLang not specified, default to 0
+     * 
+     * @return the longDapDescription
+     */
+    public static String longDapDescription(String tErddapUrl) {
+        return longDapDescription(tErddapUrl, 0);
+    }
 
     /**
      * This returns the longDapDescription 
      *
      * @return the longDapDescription
      */
-    public static String longDapDescription(String tErddapUrl) {
-        return String2.replaceAll(EDStatic.EDDTableDapLongDescription, "&erddapUrl;", tErddapUrl); 
+    public static String longDapDescription(String tErddapUrl, int currLang) {
+        return String2.replaceAll(EDStatic.EDDTableDapLongDescription_s[currLang], "&erddapUrl;", tErddapUrl); 
     }
 
     /** 
@@ -1086,7 +1108,7 @@ public abstract class EDDTable extends EDD {
                     //not an error
                 } else {
                     throw new SimpleException(EDStatic.queryError +
-                        MessageFormat.format(EDStatic.queryErrorConstraintNaN, constraintValue));
+                        MessageFormat.format(EDStatic.queryErrorConstraintNaN_s[0], constraintValue));
                 }
             }
             if (reallyVerbose) String2.log("  Looking at constraint#" + cv + ": " + constraintVariable + 
@@ -1110,7 +1132,7 @@ public abstract class EDDTable extends EDD {
 
                 if (!tPassed)
                     throw new SimpleException(MustBe.THERE_IS_NO_DATA + " " +
-                        MessageFormat.format(EDStatic.noDataFixedValue, edv.destinationName(), 
+                        MessageFormat.format(EDStatic.noDataFixedValue_s[0], edv.destinationName(), 
                             edv.fixedValue() + constraintOp + constraintValueD));
 
                 //It passed, so remove the constraint from list passed to source.
@@ -1222,7 +1244,7 @@ public abstract class EDDTable extends EDD {
             //is this test impossible by itself?
             if (isNaN1 && (op1.equals("<") || op1.equals(">")))
                 throw new SimpleException(EDStatic.queryError +
-                    MessageFormat.format(EDStatic.queryErrorNeverTrue, 
+                    MessageFormat.format(EDStatic.queryErrorNeverTrue_s[0], 
                         edv1.destinationName() + op1 + val1));
 
             for (int cv2 = cv1 + 1; cv2 < constraintVariables.size(); cv2++) { 
@@ -1300,7 +1322,7 @@ public abstract class EDDTable extends EDD {
                     }
                 }
                 if (!possible) throw new SimpleException(EDStatic.queryError + 
-                    MessageFormat.format(EDStatic.queryErrorNeverBothTrue,
+                    MessageFormat.format(EDStatic.queryErrorNeverBothTrue_s[0],
                         edv1.destinationName() + op1 + val1,
                         edv2.destinationName() + op2 + val2));
             }
@@ -1817,7 +1839,7 @@ public abstract class EDDTable extends EDD {
      *
      * @return descriptions corresponding to the dataFileTypes.
      */
-    public String[] dataFileTypeDescriptions() {return dataFileTypeDescriptions; }
+    public String[][] dataFileTypeDescriptions() {return dataFileTypeDescriptions; }
 
     /**
      * This returns an info URL corresponding to the dataFileTypes. 
@@ -1849,7 +1871,7 @@ public abstract class EDDTable extends EDD {
      *
      * @return descriptions corresponding to the imageFileTypes.
      */
-    public String[] imageFileTypeDescriptions() {return imageFileTypeDescriptions; }
+    public String[][] imageFileTypeDescriptions() {return imageFileTypeDescriptions; }
 
     /**
      * This returns an info URL corresponding to the imageFileTypes. 
@@ -1870,7 +1892,7 @@ public abstract class EDDTable extends EDD {
      *
      * @return the "[name] - [description]" for all dataFileTypes and imageFileTypes.
      */
-    public String[] allFileTypeOptions() {return allFileTypeOptions; }
+    public String[][] allFileTypeOptions() {return allFileTypeOptions; }
      
     /**
      * This returns the number of the .htmlTable option 
@@ -2041,7 +2063,7 @@ public abstract class EDDTable extends EDD {
                         if (resultsVariables.indexOf(obv.get(obvi)) < 0)
                             throw new SimpleException(EDStatic.queryError +
                                 MessageFormat.format(
-                                       EDStatic.queryErrorOrderByVariable, obv.get(obvi)));
+                                       EDStatic.queryErrorOrderByVariable_s[0], obv.get(obvi)));
                     }
                 }
                 continue;
@@ -2067,7 +2089,7 @@ public abstract class EDDTable extends EDD {
                         if (item.length() > 0 && resultsVariables.indexOf(item) < 0)
                             throw new SimpleException(EDStatic.queryError +
                                 MessageFormat.format(
-                                    EDStatic.queryErrorOrderByVariable, obv.get(obvi)));
+                                    EDStatic.queryErrorOrderByVariable_s[0], obv.get(obvi)));
                     }
                 }
                 continue;
@@ -2469,7 +2491,7 @@ public abstract class EDDTable extends EDD {
                     String tv = conEdvIsTimeStamp?
                         ((EDVTimeStamp)conEdv).destinationToString(conValueD) : //show times as ISO strings
                         tValue;
-                    String msg = MessageFormat.format(EDStatic.queryErrorActualRange,  
+                    String msg = MessageFormat.format(EDStatic.queryErrorActualRange_s[0],  
                         tName + constraintOp + tv, 
                         Double.isFinite(destMin)? conEdv.destinationMinString() : "NaN", 
                         Double.isFinite(destMax)? conEdv.destinationMaxString() : "NaN");
@@ -2714,7 +2736,46 @@ public abstract class EDDTable extends EDD {
         OutputStreamSource outputStreamSource, String fileTypeName) throws Throwable {
 
         throw new SimpleException(EDStatic.queryError +
-            MessageFormat.format(EDStatic.queryErrorFileType, fileTypeName));
+            MessageFormat.format(EDStatic.queryErrorFileType_s[0], fileTypeName));
+    }
+
+
+    /**
+     * This responds to an OPeNDAP-style query.
+     * currLang not speicified, default to 0
+     * 
+     * @param request may be null. Currently, it isn't used.
+     *   (It is passed to respondToGraphQuery, but not used).
+     * @param response may be used by .subset to redirect the response
+     *   (if not .subset request, it may be null).
+     * @param ipAddress The IP address of the user (for statistics).
+     * @param loggedInAs  the name of the logged in user (or null if not logged in).
+     *   Normally, this is not used to test if this edd is accessibleTo loggedInAs, 
+     *   but in unusual cases (EDDTableFromPost?) it could be.
+     *   Normally, this is just used to determine which erddapUrl to use (http vs https).
+     * @param requestUrl the part of the user's request, after EDStatic.baseUrl, before '?'.
+     *   I think it's currently just used to add to "history" metadata.
+     * @param userDapQuery the part of the user's request after the '?', 
+     *   still percentEncoded (shouldn't be null).
+     * @param outputStreamSource  the source of an outputStream that receives the 
+     *     results, usually already buffered.
+     *    Now, this usually does call out.close() at the end if all goes well,
+     *    but still assumes caller will close it (notably if trouble).
+     * @param dir the directory (on this computer's hard drive) to use for temporary/cache files
+     * @param fileName the name for the 'file' (no dir, no extension),
+     *    which is used to write the suggested name for the file to the response 
+     *    header.
+     * @param fileTypeName the fileTypeName for the new file  (e.g., .largePng)
+     * @throws Throwable if trouble
+     */
+    public void respondToDapQuery(HttpServletRequest request, 
+        HttpServletResponse response,
+        String ipAddress, String loggedInAs,
+        String requestUrl, String userDapQuery, 
+        OutputStreamSource outputStreamSource,
+        String dir, String fileName, String fileTypeName) throws Throwable {
+
+            respondToDapQuery(request, response, ipAddress, loggedInAs, requestUrl, userDapQuery, outputStreamSource, dir, fileName, fileTypeName, 0);
     }
 
     /**
@@ -2749,7 +2810,7 @@ public abstract class EDDTable extends EDD {
         String ipAddress, String loggedInAs,
         String requestUrl, String userDapQuery, 
         OutputStreamSource outputStreamSource,
-        String dir, String fileName, String fileTypeName) throws Throwable {
+        String dir, String fileName, String fileTypeName, int currLang) throws Throwable {
 
         if (reallyVerbose) String2.log("\n//** EDDTable.respondToDapQuery..." +
             "\n  datasetID=" + datasetID +
@@ -2758,7 +2819,7 @@ public abstract class EDDTable extends EDD {
             "\n  fileName=" + fileName +
             "\n  fileTypeName=" + fileTypeName);
         long makeTime = System.currentTimeMillis();
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
 
         //.das, .dds, and .html requests can be handled without getting data 
         if (fileTypeName.equals(".das")) {
@@ -2836,10 +2897,10 @@ public abstract class EDDTable extends EDD {
             Writer writer = String2.getBufferedOutputStreamWriterUtf8(out); 
             try {
                 writer.write(EDStatic.startHeadHtml(tErddapUrl,  
-                    title() + " - " + EDStatic.daf));
+                    title() + " - " + EDStatic.daf_s[currLang], currLang));
                 writer.write("\n" + rssHeadLink());
                 writer.write("\n</head>\n");
-                writer.write(EDStatic.startBodyHtml(loggedInAs));
+                writer.write(EDStatic.startBodyHtml(loggedInAs, currLang));
                 writer.write("\n");
                 writer.write(HtmlWidgets.htmlTooltipScript(EDStatic.imageDirUrl(loggedInAs)));   //this is a link to a script
                 writer.write(HtmlWidgets.dragDropScript(EDStatic.imageDirUrl(loggedInAs)));      //this is a link to a script
@@ -2847,13 +2908,13 @@ public abstract class EDDTable extends EDD {
                 writer.write(
                     "<div class=\"standard_width\">\n");
                 writer.write(EDStatic.youAreHereWithHelp(loggedInAs, dapProtocol, 
-                    EDStatic.daf, 
+                    EDStatic.daf_s[currLang], 
                     "<div class=\"standard_max_width\">" + 
-                    EDStatic.dafTableTooltip + 
-                    "<p>" + EDStatic.EDDTableDownloadDataTooltip +
+                    EDStatic.dafTableTooltip_s[currLang] + 
+                    "<p>" + EDStatic.EDDTableDownloadDataTooltip_s[currLang] +
                     "</ol>\n" +
-                    EDStatic.dafTableBypassTooltip + 
-                    "</div>"));
+                    EDStatic.dafTableBypassTooltip_s[currLang] + 
+                    "</div>", currLang));
                 writeHtmlDatasetInfo(loggedInAs, writer, true, false, true, true, 
                     userDapQuery, "");
                 if (userDapQuery.length() == 0) 
@@ -2865,7 +2926,7 @@ public abstract class EDDTable extends EDD {
                 //then das (with info about this dataset
                 writer.write("<hr>\n");
                 writer.write("<h2><a class=\"selfLink\" id=\"DAS\" href=\"#DAS\" rel=\"bookmark\">" + 
-                    EDStatic.dasTitle + "</a></h2>\n" +
+                    EDStatic.dasTitle_s[currLang] + "</a></h2>\n" +
                     "<pre style=\"white-space:pre-wrap;\">\n");
                 table.writeDAS(writer, SEQUENCE_NAME, true); //useful so search engines find all relevant words
                 writer.write("</pre>\n");
@@ -2873,14 +2934,14 @@ public abstract class EDDTable extends EDD {
                 //then dap instructions
                 writer.write("<br>&nbsp;\n");
                 writer.write("<hr>\n");
-                writeGeneralDapHtmlInstructions(tErddapUrl, writer, false); 
+                writeGeneralDapHtmlInstructions(tErddapUrl, writer, false, currLang); 
                 writer.write("</div>\n");
             } catch (Exception e) {
                 EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-                writer.write(EDStatic.htmlForException(e));
+                writer.write(EDStatic.htmlForException(e, currLang));
                 throw e;
             } finally {
-                writer.write(EDStatic.endBodyHtml(tErddapUrl));
+                writer.write(EDStatic.endBodyHtml(tErddapUrl, currLang));
                 writer.write("\n</html>\n");
                 writer.flush(); //essential
                 return;
@@ -2899,7 +2960,7 @@ public abstract class EDDTable extends EDD {
             String imageFileType = fileTypeName.substring(0, fileTypeName.length() - 4);
             Object[] pngInfo = readPngInfo(loggedInAs, userDapQuery, imageFileType);
             if (pngInfo == null) 
-                throw new SimpleException(EDStatic.queryError + EDStatic.errorFileNotFoundImage);
+                throw new SimpleException(EDStatic.queryError + EDStatic.errorFileNotFoundImage_s[currLang]);
 
             //ok, copy it  (and don't close the outputStream)
             OutputStream out = outputStreamSource.outputStream(String2.UTF_8);
@@ -2962,7 +3023,7 @@ public abstract class EDDTable extends EDD {
         if (fileTypeName.equals(".subset")) {
             respondToSubsetQuery(request, response, loggedInAs, 
                 requestUrl, userDapQuery, outputStreamSource,
-                dir, fileName, fileTypeName);
+                dir, fileName, fileTypeName, currLang);
             return;
         }
         
@@ -2997,7 +3058,7 @@ public abstract class EDDTable extends EDD {
             if (jsonp != null) {
                 jsonp = jsonp.substring(7);
                 if (!String2.isJsonpNameSafe(jsonp))
-                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName);
+                    throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName_s[currLang]);
             }
             if (fileTypeName.equals(".geoJson"))
                 tableWriter = new TableWriterGeoJson(this, tNewHistory, outputStreamSource, jsonp);
@@ -3037,7 +3098,7 @@ public abstract class EDDTable extends EDD {
             if (resultsVariables.indexOf(EDV.LON_NAME)  < 0 ||
                 resultsVariables.indexOf(EDV.LAT_NAME)  < 0 ||
                 resultsVariables.indexOf(EDV.TIME_NAME) < 0)
-                throw new SimpleException(EDStatic.queryError + EDStatic.errorOdvLLTTable);
+                throw new SimpleException(EDStatic.queryError + EDStatic.errorOdvLLTTable_s[currLang]);
             twawm = new TableWriterAllWithMetadata(this, tNewHistory, dir, fileName);  //used after getDataForDapQuery below...
             tableWriter = twawm;
         } else if (fileTypeName.equals(".tsv")) 
@@ -3235,7 +3296,7 @@ public abstract class EDDTable extends EDD {
                         fos = null;
                         File2.delete(cacheFullName + random);
                         throw new SimpleException(EDStatic.queryError +
-                            MessageFormat.format(EDStatic.queryErrorFileType, fileTypeName));
+                            MessageFormat.format(EDStatic.queryErrorFileType_s[currLang], fileTypeName));
                     }
                 } finally {
                     if (fos != null) try {fos.close();} catch (Exception e) {}
@@ -3646,7 +3707,7 @@ public abstract class EDDTable extends EDD {
 
         //before any work is done, 
         //  ensure LON_NAME and LAT_NAME are among resultsVariables
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         StringArray resultsVariables    = new StringArray();
         StringArray constraintVariables = new StringArray();
         StringArray constraintOps       = new StringArray();
@@ -3657,7 +3718,7 @@ public abstract class EDDTable extends EDD {
         if (resultsVariables.indexOf(EDV.LON_NAME) < 0 ||
             resultsVariables.indexOf(EDV.LAT_NAME) < 0)
             throw new SimpleException(EDStatic.queryError +
-                MessageFormat.format(EDStatic.queryErrorLL, ".kml"));
+                MessageFormat.format(EDStatic.queryErrorLL_s[0], ".kml"));
 
         //get the table with all the data
         TableWriterAllWithMetadata twawm = getTwawmForDapQuery(
@@ -3674,7 +3735,7 @@ public abstract class EDDTable extends EDD {
         EDVTime edvTime = timeIndex < 0? null : (EDVTime)dataVariables[timeIndex];
         if (lonCol < 0 || latCol < 0)
             throw new SimpleException(EDStatic.queryError +
-                MessageFormat.format(EDStatic.queryErrorLL, ".kml"));
+                MessageFormat.format(EDStatic.queryErrorLL_s[0], ".kml"));
 
         //remember this may be many stations one time, or one station many times, or many/many
         //sort table by lat, lon, depth, then time (if possible)
@@ -3702,7 +3763,7 @@ public abstract class EDDTable extends EDD {
         }
         if (Double.isNaN(minLon) || Double.isNaN(minLat))
             throw new SimpleException(MustBe.THERE_IS_NO_DATA + " " +
-                EDStatic.noDataNoLL);
+                EDStatic.noDataNoLL_s[0]);
         double lonRange = maxLon - minLon;
         double latRange = maxLat - minLat;
         double maxRange = Math.max(lonRange, latRange);
@@ -3777,7 +3838,7 @@ public abstract class EDDTable extends EDD {
         //CDATA is necessary for url's with queries
         //kml/description docs recommend \n<br />
         String courtesy = institution().length() == 0? "" : 
-            MessageFormat.format(EDStatic.imageDataCourtesyOf, institution());
+            MessageFormat.format(EDStatic.imageDataCourtesyOf_s[0], institution());
         double iconSize = maxRange > 90? 1.2 : maxRange > 45? 1.0 : maxRange > 20? .8 : 
             maxRange > 10? .6 : maxRange > 5 ? .5 : .4;
         writer.write(  //KML
@@ -3990,7 +4051,7 @@ public abstract class EDDTable extends EDD {
         boolean png = fileTypeName.toLowerCase().endsWith("png");
         boolean transparentPng = fileTypeName.equals(".transparentPng");
         if (!pdf && !png) 
-            throw new SimpleException(EDStatic.errorInternal +
+            throw new SimpleException(EDStatic.errorInternal_s[0] +
                 "Unexpected image type=" + fileTypeName);
         Object pdfInfo[] = null;
         BufferedImage bufferedImage = null;
@@ -4025,7 +4086,7 @@ public abstract class EDDTable extends EDD {
 
             if (resultsVariables.size() < 2)
                 throw new SimpleException(EDStatic.queryError +
-                    MessageFormat.format(EDStatic.queryError2Var, fileTypeName));
+                    MessageFormat.format(EDStatic.queryError2Var_s[0], fileTypeName));
             //xVar,yVar are 1st and 2nd request variables
             EDV xVar = findVariableByDestinationName(resultsVariables.get(0)); 
             EDV yVar = findVariableByDestinationName(resultsVariables.get(1)); 
@@ -4471,7 +4532,7 @@ public abstract class EDDTable extends EDD {
                 varTitle.length() > 0? varTitle : title,             
                 varTitle.length() > 0? title : "",
                 constraintTitle.toString(), //title2.toString(), 
-                MessageFormat.format(EDStatic.imageDataCourtesyOf, institution()), 
+                MessageFormat.format(EDStatic.imageDataCourtesyOf_s[0], institution()), 
                 table, null, null,
                 colorMap, color,
                 markerType, markerSize,
@@ -4511,7 +4572,7 @@ public abstract class EDDTable extends EDD {
                     double yStats[] = table.getColumn(yColN).calculateStats();
                     if (xStats[PrimitiveArray.STATS_N] == 0 ||
                         yStats[PrimitiveArray.STATS_N] == 0) 
-                        throw new SimpleException(EDStatic.queryError + EDStatic.noDataNoLL);
+                        throw new SimpleException(EDStatic.queryError + EDStatic.noDataNoLL_s[0]);
 
                     //old way  (too tied to big round numbers like 100, 200, 300) 
                     //often had big gap on one side
@@ -4802,8 +4863,8 @@ public abstract class EDDTable extends EDD {
             throw new SimpleException(MustBe.THERE_IS_NO_DATA + " (at start of saveAsMatlab)");
         if (tnRows >= Integer.MAX_VALUE)
             throw new SimpleException(Math2.memoryTooMuchData + "  " +
-                MessageFormat.format(EDStatic.errorMoreThan2GB,
-                    ".mat", tnRows + " " + EDStatic.rows));
+                MessageFormat.format(EDStatic.errorMoreThan2GB_s[0],
+                    ".mat", tnRows + " " + EDStatic.rows_s[0]));
         int nCols = twawm.nColumns();
         int nRows = (int)tnRows; //safe since checked above
 
@@ -4831,7 +4892,7 @@ public abstract class EDDTable extends EDD {
 
         if (cumSize >= Integer.MAX_VALUE - 1000)
             throw new SimpleException(Math2.memoryTooMuchData + "  " +
-                MessageFormat.format(EDStatic.errorMoreThan2GB,
+                MessageFormat.format(EDStatic.errorMoreThan2GB_s[0],
                     ".mat", (cumSize / Math2.BytesPerMB) + " MB"));
 
         //open a dataOutputStream 
@@ -5155,8 +5216,8 @@ public abstract class EDDTable extends EDD {
         //test for too much data   //??? true for nc4?
         if (twawm.nRows() >= Integer.MAX_VALUE)
             throw new SimpleException(Math2.memoryTooMuchData + "  " +
-                MessageFormat.format(EDStatic.errorMoreThan2GB,
-                    ".nc", twawm.nRows() + " " + EDStatic.rows));
+                MessageFormat.format(EDStatic.errorMoreThan2GB_s[0],
+                    ".nc", twawm.nRows() + " " + EDStatic.rows_s[0]));
         int nRows = (int)twawm.nRows(); //safe since checked above
         int nColumns = twawm.nColumns();
         if (nRows == 0) 
@@ -6315,13 +6376,13 @@ public abstract class EDDTable extends EDD {
             throw new SimpleException(MustBe.THERE_IS_NO_DATA + " (at start of saveAsODV)");
         //the other params are all required by EDD, so it's a programming error if they are missing
         if (!String2.isSomething(tDatasetID))
-            throw new SimpleException(EDStatic.errorInternal + 
+            throw new SimpleException(EDStatic.errorInternal_s[0] + 
                 "saveAsODV error: datasetID wasn't specified.");
         if (!String2.isSomething(tPublicSourceUrl))
-            throw new SimpleException(EDStatic.errorInternal + 
+            throw new SimpleException(EDStatic.errorInternal_s[0] + 
                 "saveAsODV error: publicSourceUrl wasn't specified.");
         if (!String2.isSomething(tInfoUrl))
-            throw new SimpleException(EDStatic.errorInternal + 
+            throw new SimpleException(EDStatic.errorInternal_s[0] + 
                 "saveAsODV error: infoUrl wasn't specified.");
 
         //make sure there isn't too much data before getting outputStream
@@ -6338,7 +6399,7 @@ public abstract class EDDTable extends EDD {
             table.findColumnNumber(EDV.LAT_NAME)  < 0 || 
             table.findColumnNumber(EDV.TIME_NAME) < 0)
             throw new SimpleException(EDStatic.queryError +
-                MessageFormat.format(EDStatic.queryErrorLLT, ".odvTxt"));
+                MessageFormat.format(EDStatic.queryErrorLLT_s[0], ".odvTxt"));
 
         //Move columns into preferred order, see table 3-1, 3-2, 3-3, 3-4
         //This would be very complicated if you worked forwards, because some vars are in a couple of categories.
@@ -6532,7 +6593,7 @@ public abstract class EDDTable extends EDD {
             else if (paType == PAType.FLOAT)  odvType = "FLOAT";
             else if (paType == PAType.DOUBLE) odvType = "DOUBLE";
             else if (paType == PAType.STRING) odvType = "INDEXED_TEXT";
-            else throw new SimpleException(EDStatic.errorInternal + 
+            else throw new SimpleException(EDStatic.errorInternal_s[0] + 
                 "No odvDataType specified for type=" + pas[col].elementTypeString() + ".");
 
             writer.write("//<" + tag + ">label=" + String2.toJson65536(colName) +  
@@ -6694,6 +6755,24 @@ public abstract class EDDTable extends EDD {
         dataVariables[timeIndex].setActualRangeFromDestinationMinMax();
     }
 
+    /**
+     * This writes an HTML form requesting info from this dataset 
+     * (like the OPeNDAP Data Access Forms, DAF).
+     * if currLang is not specified, it's default to be 0
+     * 
+     * @param loggedInAs  the name of the logged in user (or null if not logged in).
+     *   Normally, this is not used to test if this edd is accessibleTo loggedInAs, 
+     *   but it unusual cases (EDDTableFromPost?) it could be.
+     *   Normally, this is just used to determine which erddapUrl to use (http vs https).
+     * @param userDapQuery the part after the '?', still percentEncoded (shouldn't be null).
+     * @param writer
+     * @throws Throwable if trouble
+     */
+    public void writeDapHtmlForm(String loggedInAs,
+        String userDapQuery, Writer writer) throws Throwable {
+            writeDapHtmlForm(loggedInAs, userDapQuery, writer, 0);
+    }
+
 
     /**
      * This writes an HTML form requesting info from this dataset 
@@ -6708,12 +6787,12 @@ public abstract class EDDTable extends EDD {
      * @throws Throwable if trouble
      */
     public void writeDapHtmlForm(String loggedInAs,
-        String userDapQuery, Writer writer) throws Throwable {
+        String userDapQuery, Writer writer, int currLang) throws Throwable {
 
         HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs));
 
         //parse userDapQuery 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         if (userDapQuery == null)
             userDapQuery = "";
         userDapQuery = userDapQuery.trim();
@@ -6741,7 +6820,7 @@ public abstract class EDDTable extends EDD {
 
         //beginning of form
         String liClickSubmit = "\n" +
-            "  <li> " + EDStatic.EDDClickOnSubmitHtml + "\n" +
+            "  <li> " + EDStatic.EDDClickOnSubmitHtml_s[currLang] + "\n" +
             "  </ol>\n";
         writer.write("&nbsp;\n"); //necessary for the blank line before the form (not <p>)
         String formName = "form1";
@@ -6757,9 +6836,9 @@ public abstract class EDDTable extends EDD {
         String gap = "&nbsp;&nbsp;&nbsp;";
         writer.write(
             "<tr>\n" +
-            "  <th class=\"L\">" + EDStatic.EDDTableVariable + " " +
+            "  <th class=\"L\">" + EDStatic.EDDTableVariable_s[currLang] + " " +
             EDStatic.htmlTooltipImage(loggedInAs, 
-                "<div class=\"narrow_max_width\">" + EDStatic.EDDTableTabularDatasetTooltip +
+                "<div class=\"narrow_max_width\">" + EDStatic.EDDTableTabularDatasetTooltip_s[currLang] +
                 "</div>"));
         
         StringBuilder checkAll = new StringBuilder();
@@ -6769,34 +6848,34 @@ public abstract class EDDTable extends EDD {
             checkAll.append(  formName + ".varch" + dv + ".checked=true;");
             uncheckAll.append(formName + ".varch" + dv + ".checked=false;");
         }
-        writer.write(widgets.button("button", "CheckAll", EDStatic.EDDTableCheckAllTooltip,
-            EDStatic.EDDTableCheckAll,   "onclick=\"" + checkAll.toString() + "\""));
-        writer.write(widgets.button("button", "UncheckAll", EDStatic.EDDTableUncheckAllTooltip,
-            EDStatic.EDDTableUncheckAll, "onclick=\"" + uncheckAll.toString() + "\""));
+        writer.write(widgets.button("button", "CheckAll", EDStatic.EDDTableCheckAllTooltip_s[currLang],
+            EDStatic.EDDTableCheckAll_s[currLang],   "onclick=\"" + checkAll.toString() + "\""));
+        writer.write(widgets.button("button", "UncheckAll", EDStatic.EDDTableUncheckAllTooltip_s[currLang],
+            EDStatic.EDDTableUncheckAll_s[currLang], "onclick=\"" + uncheckAll.toString() + "\""));
 
         writer.write(
             "  &nbsp;</th>\n" +
-            "  <th colspan=\"2\">" + EDStatic.EDDTableOptConstraint1Html + " " + 
+            "  <th colspan=\"2\">" + EDStatic.EDDTableOptConstraint1Html_s[currLang] + " " + 
                 EDStatic.htmlTooltipImage(loggedInAs, 
-                    "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip +
+                    "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip_s[currLang] +
                     "</div>") + 
                 "</th>\n" +
-            "  <th colspan=\"2\">" + EDStatic.EDDTableOptConstraint2Html + " " + 
+            "  <th colspan=\"2\">" + EDStatic.EDDTableOptConstraint2Html_s[currLang] + " " + 
                 EDStatic.htmlTooltipImage(loggedInAs, 
-                    "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip +
+                    "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip_s[currLang] +
                     "</div>") + 
                 "</th>\n" +
 
-            "  <th>" + gap + EDStatic.EDDMinimum + " " + 
-                EDStatic.htmlTooltipImage(loggedInAs, EDStatic.EDDTableMinimumTooltip) + 
+            "  <th>" + gap + EDStatic.EDDMinimum_s[currLang] + " " + 
+                EDStatic.htmlTooltipImage(loggedInAs, EDStatic.EDDTableMinimumTooltip_s[currLang]) + 
                 (distinctOptions == null? "<br>&nbsp;" :
                     "<br>" + gap + "or a List of Values " + //2014-07-17 was Distinct Values
                     EDStatic.htmlTooltipImage(loggedInAs, 
-                        "<div class=\"narrow_max_width\">" + EDStatic.distinctValuesTooltip +
+                        "<div class=\"narrow_max_width\">" + EDStatic.distinctValuesTooltip_s[currLang] +
                         "</div>")) +
                 "</th>\n" +
-            "  <th>" + gap + EDStatic.EDDMaximum + " " + 
-                EDStatic.htmlTooltipImage(loggedInAs, EDStatic.EDDTableMaximumTooltip) + 
+            "  <th>" + gap + EDStatic.EDDMaximum_s[currLang] + " " + 
+                EDStatic.htmlTooltipImage(loggedInAs, EDStatic.EDDTableMaximumTooltip_s[currLang]) + 
                 "<br>&nbsp;" +
                 "</th>\n" +
             "</tr>\n");
@@ -6834,7 +6913,7 @@ public abstract class EDDTable extends EDD {
 
             //variables: checkbox varname (longName, units)
             writer.write("  <td>");
-            writer.write(widgets.checkbox("varch" + dv, EDStatic.EDDTableCheckTheVariables, 
+            writer.write(widgets.checkbox("varch" + dv, EDStatic.EDDTableCheckTheVariables_s[currLang], 
                 userDapQuery.length() == 0? true : (resultsVariables.indexOf(edv.destinationName()) >= 0), 
                 edv.destinationName(), 
                 edv.destinationName() + extra + " " +
@@ -6888,13 +6967,13 @@ public abstract class EDDTable extends EDD {
             //write constraints html 
             String valueWidgetName = "val" + dv + "_";
             String tTooltip = 
-                isTimeStamp? EDStatic.EDDTableTimeConstraintTooltip :
+                isTimeStamp? EDStatic.EDDTableTimeConstraintTooltip_s[currLang] :
                 isString ||
-                isChar?      EDStatic.EDDTableStringConstraintTooltip :
-                             EDStatic.EDDTableNumericConstraintTooltip;
+                isChar?      EDStatic.EDDTableStringConstraintTooltip_s[currLang] :
+                             EDStatic.EDDTableNumericConstraintTooltip_s[currLang];
             if (edv.destinationMinString().length() > 0)
                 tTooltip += "<br>&nbsp;<br>" + 
-                    MessageFormat.format(EDStatic.rangesFromTo, 
+                    MessageFormat.format(EDStatic.rangesFromTo_s[currLang], 
                         edv.destinationName(),
                         edv.destinationMinString(),
                         edv.destinationMaxString().length() > 0? 
@@ -6902,7 +6981,7 @@ public abstract class EDDTable extends EDD {
             for (int con = 0; con < 2; con++) {
                 writer.write("  <td>" + (con == 0? "" : gap));
                 writer.write(widgets.select("op" + dv + "_" + con, 
-                    EDStatic.EDDTableSelectAnOperator, 1, OPERATORS, PPE_OPERATORS, 
+                    EDStatic.EDDTableSelectAnOperator_s[currLang], 1, OPERATORS, PPE_OPERATORS, 
                     String2.indexOf(OPERATORS, tOp[con]), "", false, ""));
                 writer.write("  </td>\n");
                 writer.write("  <td>");
@@ -6953,7 +7032,7 @@ public abstract class EDDTable extends EDD {
                 writer.write(
                     "  <td class=\"B\">" + //vertical-align: 'b'ottom
                     "<img class=\"B\" src=\"" + widgets.imageDirUrl + "minus.gif\"" + //vertical-align: 'b'ottom
-                    "  " + widgets.completeTooltip(EDStatic.selectPrevious) +
+                    "  " + widgets.completeTooltip(EDStatic.selectPrevious_s[currLang]) +
                         " alt=\"-\"\n" + 
                     //onMouseUp works much better than onClick and onDblClick
                     "  onMouseUp=\"var dis=" + docFormName + ".dis" + dv + ";\n" +
@@ -6967,7 +7046,7 @@ public abstract class EDDTable extends EDD {
                     "  </td>\n" +
                     "  <td class=\"B\">" + //vertical-align: 'b'ottom
                     "<img class=\"B\" src=\"" + widgets.imageDirUrl + "plus.gif\"" + //vertical-align: 'b'ottom
-                    "  " + widgets.completeTooltip(EDStatic.selectNext) +
+                    "  " + widgets.completeTooltip(EDStatic.selectNext_s[currLang]) +
                         " alt=\"+\"\n" + 
                     //onMouseUp works much better than onClick and onDblClick
                     "  onMouseUp=\"var dis=" + docFormName + ".dis" + dv + ";\n" +
@@ -6981,7 +7060,7 @@ public abstract class EDDTable extends EDD {
                     "  </td>\n" +
                     "  <td>&nbsp;" +
                     EDStatic.htmlTooltipImage(loggedInAs, 
-                        "<div class=\"narrow_max_width\">" + EDStatic.EDDTableSelectConstraintTooltip +
+                        "<div class=\"narrow_max_width\">" + EDStatic.EDDTableSelectConstraintTooltip_s[currLang] +
                         "</div>") + 
                     "  </tr>\n" +
                     "  </table>\n" +
@@ -7085,10 +7164,10 @@ public abstract class EDDTable extends EDD {
                         widgets.hidden("avwan" + attNamei, attName) +
                     "<td>&nbsp;=&nbsp;" + 
                         //make the Select widget
-                        widgets.select("avwav" + attNamei, EDStatic.addVarWhereAttValue, 1,
+                        widgets.select("avwav" + attNamei, EDStatic.addVarWhereAttValue_s[currLang], 1,
                             addVariablesWhereAttValues.get(attNamei).toArray(), attValuei, "") +
                         "\n" +
-                        EDStatic.htmlTooltipImage(loggedInAs, EDStatic.addVarWhere) +
+                        EDStatic.htmlTooltipImage(loggedInAs, EDStatic.addVarWhere_s[currLang]) +
                     "</tr>\n");
             }
             writer.write(widgets.endTable());            
@@ -7096,13 +7175,13 @@ public abstract class EDDTable extends EDD {
 
         //functions
         int nOrderByComboBox = 5;
-        writeFunctionHtml(loggedInAs, queryParts, writer, widgets, formName, nOrderByComboBox);
+        writeFunctionHtml(loggedInAs, queryParts, writer, widgets, formName, nOrderByComboBox, currLang);
 
         //fileType
-        writer.write("<p><strong>" + EDStatic.EDDFileType + "</strong>\n" + 
+        writer.write("<p><strong>" + EDStatic.EDDFileType_s[currLang] + "</strong>\n" + 
             " (<a rel=\"help\" href=\"" + tErddapUrl + "/tabledap/documentation.html#fileType\">more&nbsp;info</a>)\n");
-        writer.write(widgets.select("fileType", EDStatic.EDDSelectFileType, 1,
-            allFileTypeOptions, defaultFileTypeOption, ""));
+        writer.write(widgets.select("fileType", EDStatic.EDDSelectFileType_s[currLang], 1,
+            allFileTypeOptions[currLang], defaultFileTypeOption, ""));
 
 
         //generate the javaScript
@@ -7139,14 +7218,14 @@ public abstract class EDDTable extends EDD {
         //just generate URL
         writer.write("<br>"); 
         String genViewHtml = "<div class=\"standard_max_width\">" + 
-            String2.replaceAll(EDStatic.justGenerateAndViewTooltip, "&protocolName;", dapProtocol) +
+            String2.replaceAll(EDStatic.justGenerateAndViewTooltip_s[currLang], "&protocolName;", dapProtocol) +
             "</div>";
         writer.write(widgets.button("button", "getUrl", genViewHtml, 
-            EDStatic.justGenerateAndView, 
+            EDStatic.justGenerateAndView_s[currLang], 
             //"class=\"skinny\" " + //only IE needs it but only IE ignores it
             "onclick='" + javaScript + "'"));
         writer.write(widgets.textField("tUrl", 
-            EDStatic.justGenerateAndViewUrl,
+            EDStatic.justGenerateAndViewUrl_s[currLang],
             60, 1000, "", ""));
         writer.write(
             "\n<br>(<a rel=\"help\" href=\"" + tErddapUrl + "/tabledap/documentation.html\" " +
@@ -7159,11 +7238,11 @@ public abstract class EDDTable extends EDD {
             "<br>&nbsp;\n" +
             "<br>" +
             widgets.htmlButton("button", "submit1", 
-                "", EDStatic.submitTooltip, "<span style=\"font-size:large;\"><strong>" + EDStatic.submit + "</strong></span>", 
+                "", EDStatic.submitTooltip_s[currLang], "<span style=\"font-size:large;\"><strong>" + EDStatic.submit_s[currLang] + "</strong></span>", 
                 "onclick='" + javaScript +
                 "if (result.length > 0) window.location=result;\n" + //or open a new window: window.open(result);\n" +
                 "'") +
-            " " + EDStatic.patientData + "\n");
+            " " + EDStatic.patientData_s[currLang] + "\n");
 
         //end of form
         writer.write(widgets.endForm());
@@ -7186,24 +7265,24 @@ public abstract class EDDTable extends EDD {
      * @param narrow if false, it will be standard
      */
     void writeFunctionHtml(String loggedInAs, String[] queryParts, Writer writer, 
-        HtmlWidgets widgets, String formName, int nOrderByComboBox) throws Throwable {
+        HtmlWidgets widgets, String formName, int nOrderByComboBox, int currLang) throws Throwable {
 
         writer.write("\n&nbsp;\n"); //necessary for the blank line before the table (not <p>)
         writer.write(widgets.beginTable("class=\"compact W\"")); //not nowrap
-        writer.write("<tr><td><strong>" + EDStatic.functions + "</strong> " + 
+        writer.write("<tr><td><strong>" + EDStatic.functions_s[currLang] + "</strong> " + 
             EDStatic.htmlTooltipImage(loggedInAs, 
-            "<div class=\"narrow_max_width\">" + EDStatic.functionTooltip + "</div>") +
+            "<div class=\"narrow_max_width\">" + EDStatic.functionTooltip_s[currLang] + "</div>") +
             "</td></tr>\n");
 
         //distinct function
         writer.write("<tr><td>");
         writer.write( 
             widgets.checkbox("distinct", 
-                EDStatic.functionDistinctCheck,
+                EDStatic.functionDistinctCheck_s[currLang],
                 String2.indexOf(queryParts, "distinct()") >= 0, 
                 "true", "distinct()", ""));
         writer.write(EDStatic.htmlTooltipImage(loggedInAs, 
-            "<div class=\"narrow_max_width\">" + EDStatic.functionDistinctTooltip +
+            "<div class=\"narrow_max_width\">" + EDStatic.functionDistinctTooltip_s[currLang] +
             "</div>"));
         writer.write("</td></tr>\n");
 
@@ -7213,15 +7292,17 @@ public abstract class EDDTable extends EDD {
         String dvList0[] = dvNames0.toArray();
         String important[]= nOrderByComboBox == 4?
             //"most", "second most", "third most", ["fourth most",] "least"};
-            new String[]{EDStatic.functionOrderBySort1, 
-                         EDStatic.functionOrderBySort2, 
-                         EDStatic.functionOrderBySort3, 
-                         EDStatic.functionOrderBySortLeast} :
-            new String[]{EDStatic.functionOrderBySort1, 
-                         EDStatic.functionOrderBySort2, 
-                         EDStatic.functionOrderBySort3, 
-                         EDStatic.functionOrderBySort4, 
-                         EDStatic.functionOrderBySortLeast};
+            new String[]{EDStatic.functionOrderBySort1_s[currLang], 
+                         EDStatic.functionOrderBySort2_s[currLang], 
+                         EDStatic.functionOrderBySort3_s[currLang], 
+                         EDStatic.functionOrderBySortLeast_s[currLang]
+                        } :
+            new String[]{EDStatic.functionOrderBySort1_s[currLang], 
+                         EDStatic.functionOrderBySort2_s[currLang], 
+                         EDStatic.functionOrderBySort3_s[currLang], 
+                         EDStatic.functionOrderBySort4_s[currLang], 
+                         EDStatic.functionOrderBySortLeast_s[currLang]
+                        };
         //find first part that uses orderBy...
         String obPart = null;
         int whichOb = 0;
@@ -7245,11 +7326,11 @@ public abstract class EDDTable extends EDD {
 
         writer.write("\n<tr><td>"); //not nowrap.  allow wrapping if varNames are long
         writer.write(widgets.select("orderBy", "", 1, orderByOptions, whichOb, ""));
-        writer.write(EDStatic.htmlTooltipImage(loggedInAs, EDStatic.functionOrderByTooltip));
+        writer.write(EDStatic.htmlTooltipImage(loggedInAs, EDStatic.functionOrderByTooltip_s[currLang]));
         writer.write("(\"");
         for (int ob = 0; ob < nOrderByComboBox; ob++) {
             //if (ob > 0) writer.write(",\n"); 
-            String tooltip =  MessageFormat.format(EDStatic.functionOrderBySort, important[ob]);
+            String tooltip =  MessageFormat.format(EDStatic.functionOrderBySort_s[currLang], important[ob]);
             writer.write(widgets.comboBox(formName, "orderByComboBox" + ob,
                 tooltip, 18, 120, ob < obsa.size()? obsa.get(ob) : "",
                 dvList0, "", null));
@@ -7303,7 +7384,7 @@ public abstract class EDDTable extends EDD {
      * @throws Throwable if trouble
      */
     public static void writeGeneralDapHtmlInstructions(String tErddapUrl,
-        Writer writer, boolean complete) throws Throwable {
+        Writer writer, boolean complete, int currLang) throws Throwable {
 
         String dapBase = EDStatic.EDDTableErddapUrlExample + dapProtocol + "/";
         String datasetBase = dapBase + EDStatic.EDDTableIdExample;
@@ -7409,11 +7490,11 @@ public abstract class EDDTable extends EDD {
                 "    <tr>\n" +
                 "      <td><a class=\"selfLink\" id=\"fileType_" + ft1 + 
                     "\" href=\"#fileType_" + ft1 + "\" rel=\"bookmark\">" + ft + "</a></td>\n" +
-                "      <td>" + dataFileTypeDescriptions[i] + "</td>\n" +
+                "      <td>" + dataFileTypeDescriptions[i][currLang] + "</td>\n" +
                 "      <td class=\"N\">" + (dataFileTypeInfo[i].equals("")? 
                     "&nbsp;" : 
                     "<a rel=\"help\" href=\"" + XML.encodeAsHTMLAttribute(dataFileTypeInfo[i]) + "\">info" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>") + 
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>") + 
                 "</td>\n" +
                 "      <td class=\"N\"><a rel=\"bookmark\" href=\"" +  datasetBase + dataFileTypeNames[i] + "?" + 
                     EDStatic.EDDTableDataTimeExampleHA + "\">example</a></td>\n" +
@@ -7428,9 +7509,9 @@ public abstract class EDDTable extends EDD {
 
             //ArcGIS
             "<p><strong><a rel=\"bookmark\" href=\"https://www.esri.com/en-us/arcgis/about-arcgis/overview\">ArcGIS" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "  <a rel=\"help\" href=\"https://desktop.arcgis.com/en/arcmap/latest/manage-data/tables/adding-an-ascii-or-text-file-table.htm\">.esriCsv" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong>\n" +
             "  - <a class=\"selfLink\" id=\"ArcGIS\" href=\"#ArcGIS\" rel=\"bookmark\">ArcGIS</a>\n" +
             "      is a family of Geographical Information Systems (GIS) products from ESRI:\n" +
             "  ArcView, ArcEditor, and ArcInfo.  To get data from ERDDAP into your ArcGIS program (version 9.x and below):\n" +
@@ -7461,11 +7542,11 @@ public abstract class EDDTable extends EDD {
             "  (These instructions are a modified version of\n" +
             "    <a rel=\"help\" href=\"https://desktop.arcgis.com/en/arcmap/latest/manage-data/tables/adding-an-ascii-or-text-file-table.htm\"\n" +
             "      >ESRI's instructions" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.)\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.)\n" +
             "\n" +
             //Ferret
             "  <p><strong><a rel=\"bookmark\" href=\"https://ferret.pmel.noaa.gov/Ferret/\">Ferret" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong> \n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong> \n" +
             "    <a class=\"selfLink\" id=\"Ferret\" href=\"#Ferret\" rel=\"bookmark\">is</a>\n" +
             "    a free program for visualizing and analyzing large and complex\n" +
             "  <strong>gridded</strong> datasets.  Because tabledap's <strong>tabular</strong> datasets are very different\n" +
@@ -7485,18 +7566,18 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //IDL
             "  <p><strong><a rel=\"bookmark\" href=\"https://www.harrisgeospatial.com/Software-Technology/IDL/\">IDL" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong> - \n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong> - \n" +
             "    <a class=\"selfLink\" id=\"IDL\" href=\"#IDL\" rel=\"bookmark\">IDL</a>\n" +
             "    is a commercial scientific data visualization program. To get data from\n" +
             "  ERDDAP into IDL, first use ERDDAP to select a subset of data and download a .nc file.\n" +
             "  Then, use these\n" +
             "    <a rel=\"help\" href=\"https://northstar-www.dartmouth.edu/doc/idl/html_6.2/Using_Macros_to_Import_HDF_Files.html\">instructions" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "    to import the data from the .nc file into IDL.\n" +
             "\n" +
             //json
             "  <p><strong><a rel=\"help\" href=\"https://www.json.org/\">JSON .json" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong>\n" +
             "    <a class=\"selfLink\" id=\"json\" href=\"#json\" rel=\"bookmark\">files</a>\n" +
             "    are widely used to transfer data to JavaScript scripts running on web pages.\n" +
             "  All .json responses from ERDDAP (metadata, gridded data, and tabular/in-situ data) use the\n" +
@@ -7532,11 +7613,11 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //jsonp
             "  <p><strong><a rel=\"help\" href=\"https://niryariv.wordpress.com/2009/05/05/jsonp-quickly/\">JSONP" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "    (from <a href=\"https://www.json.org/\">.json" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> and\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> and\n" +
             "    <a rel=\"help\" href=\"http://wiki.geojson.org/Main_Page\">.geoJson" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>)</strong> -\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>)</strong> -\n" +
             "  <a class=\"selfLink\" id=\"jsonp\" href=\"#jsonp\" rel=\"bookmark\">Jsonp</a>\n" +
             "       is an easy way for a JavaScript script on a web\n" +
             "  page to import and access data from ERDDAP.  Requests for .geoJson, .json, and .ncoJson files may\n" +
@@ -7553,14 +7634,14 @@ public abstract class EDDTable extends EDD {
             "  script via that JavaScript function.\n" +
             "  Here is an example using \n" +
             "  <a rel=\"bookmark\" href=\"https://jsfiddle.net/jpatterson/0ycu1zjy/\">jsonp and Javascript with ERDDAP" +
-                EDStatic.externalLinkHtml(tErddapUrl) + 
+                EDStatic.externalLinkHtml(tErddapUrl, currLang) + 
                 "</a> (thanks to Jenn Patterson Sevadjian of PolarWatch).\n" +
             "\n" +
             //matlab
             "  <p><strong><a rel=\"bookmark\" href=\"https://www.mathworks.com/products/matlab/\">MATLAB" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "     <a rel=\"help\" href=\"https://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf\">.mat" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong>\n" +
             "   - <a class=\"selfLink\" id=\"matlab\" href=\"#matlab\" rel=\"bookmark\">Matlab</a>\n" +
             "      users can use tabledap's .mat file type to download data from within\n" +
             "  MATLAB.  Here is a one line example:<pre>\n" +
@@ -7589,9 +7670,9 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //nc
             "  <p><strong><a rel=\"bookmark\" href=\"https://www.unidata.ucar.edu/software/netcdf/\">NetCDF" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "    <a rel=\"help\" href=\"https://github.com/Unidata/netcdf-c/blob/master/docs/file_format_specifications.md\">.nc" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong>\n" +
             "     - <a class=\"selfLink\" id=\"nc\" href=\"#nc\" rel=\"bookmark\">Requests</a>\n" +
             "      for .nc files will always return the data in a table-like, NetCDF-3,\n" +
             "  32-bit, .nc file:\n" +
@@ -7649,15 +7730,15 @@ public abstract class EDDTable extends EDD {
             "  <p><a class=\"selfLink\" id=\"ncCF\" href=\"#ncCF\" rel=\"bookmark\"><strong>.ncCF</strong></a>\n" +
             "     - Requests for a .ncCF file will return a version 3, 32-bit,\n" +
             "  <a rel=\"bookmark\" href=\"https://www.unidata.ucar.edu/software/netcdf/\">NetCDF .nc" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "  file with the\n" +
             "  Contiguous Ragged Array Representation associated with the dataset's cdm_data_type,\n" +
             "  as defined in the\n" +
             "    <a rel=\"help\" href=\"https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html\">CF" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "    <a rel=\"help\" href=\"https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#discrete-sampling-geometries\"\n" +
             "      >Discrete Geometries" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> conventions\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> conventions\n" +
             "  (which were previously named \"CF Point Observation Conventions\").\n" +
             "  <ul>\n" +
             "  <li>Point - Appendix H.1 Point Data\n" +
@@ -7679,24 +7760,24 @@ public abstract class EDDTable extends EDD {
             "      for .ncCFHeader files will return the header information (text) that\n" +
             "  would be generated if you used\n" +
             "    <a rel=\"help\" href=\"https://linux.die.net/man/1/ncdump\">ncdump -h <i>fileName</i>" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "    on the corresponding .ncCF file.\n" +
             "\n" +
             //ncCFMA
             "  <p><a class=\"selfLink\" id=\"ncCFMA\" href=\"#ncCFMA\" rel=\"bookmark\"><strong>.ncCFMA</strong></a>\n" +
             "     - Requests for a .ncCFMA file will return a version 3, 32-bit,\n" +
             "    <a rel=\"bookmark\" href=\"https://www.unidata.ucar.edu/software/netcdf/\">NetCDF .nc" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> file\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> file\n" +
             "   with the Complete or Incomplete, depending on the data, Multidimensional Array Representation\n" +
             "   associated with the dataset's cdm_data_type, as defined in the\n" +
             "     <a rel=\"help\" href=\"https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html\">CF" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "     <a rel=\"help\" href=\"https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#discrete-sampling-geometries\"\n" +
             "      >Discrete Sampling Geometries" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "   conventions, which were previously named \"CF Point Observation Conventions\".\n" +
             "   This is the file type used by the <a rel=\"help\" href=\"https://www.ncei.noaa.gov/netcdf-templates\">NODC Templates" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "   A request will succeed only if the dataset has a cdm_data_type other than \"Other\"\n" +
             "   and if the request includes at least one data variable (not just the outer, descriptive variables).\n" +
             "   The file will include longitude, latitude, time, and other required descriptive variables, even if\n" +
@@ -7708,13 +7789,13 @@ public abstract class EDDTable extends EDD {
             "      for .ncCFMAHeader files will return the header information (text) that\n" +
             "  would be generated if you used\n" +
             "    <a rel=\"help\" href=\"https://linux.die.net/man/1/ncdump\">ncdump -h <i>fileName</i>" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "    on the corresponding .ncCFMA file.\n" +
             "\n" +
             //netcdfjava
             "  <p><strong><a rel=\"bookmark\" href=\"https://www.unidata.ucar.edu/software/netcdf/\"\n" +
             "      >NetCDF-Java, NetCDF-C, NetCDF-Fortran, and NetCDF-Perl" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong>\n" +
             "  <a class=\"selfLink\" id=\"netcdfjava\" href=\"#netcdfjava\" rel=\"bookmark\">-</a>\n" +
             "  Don't try to access an ERDDAP tabledap dataset URL directly with a NetCDF library or tool\n" +
             "  (by treating the tabledap dataset as an OPeNDAP dataset or by creating a URL with the .nc file extension).\n" +
@@ -7745,10 +7826,10 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //odv
             "  <p><strong><a rel=\"bookmark\" href=\"https://odv.awi.de/\">Ocean Data View" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> .odvTxt</strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> .odvTxt</strong>\n" +
             "   - <a class=\"selfLink\" id=\"ODV\" href=\"#ODV\" rel=\"bookmark\">ODV</a> users can download data in a\n" +
             "    <a rel=\"help\" href=\"https://odv.awi.de/en/documentation/\">ODV Generic Spreadsheet Format .txt file" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "  by requesting tabledap's .odvTxt fileType.\n" +
             "  The selected data MUST include longitude, latitude, and time variables.\n" +
             "  Any longitude values (0 to 360, or -180 to 180) are fine.\n" +
@@ -7768,22 +7849,22 @@ public abstract class EDDTable extends EDD {
             "  <p><strong><a class=\"selfLink\" id=\"opendapLibraries\" href=\"#opendapLibraries\" rel=\"bookmark\"\n" +
             "      >OPeNDAP Libraries</a></strong> - Although ERDDAP is an\n" +
             "    <a rel=\"bookmark\" href=\"https://www.opendap.org/\">OPeNDAP" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>-compatible data server,\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>-compatible data server,\n" +
             "    you can't use\n" +
             "  most OPeNDAP client libraries, including\n" +
             "  <a rel=\"bookmark\" href=\"https://www.unidata.ucar.edu/software/netcdf/\"\n" +
             "      >NetCDF-Java, NetCDF-C, NetCDF-Fortran, NetCDF-Perl" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>,\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>,\n" +
             "  or\n" +
             "  <a rel=\"bookmark\" href=\"https://ferret.pmel.noaa.gov/Ferret/\">Ferret" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>,\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>,\n" +
             "  to get data directly from an ERDDAP tabledap dataset because those libraries don't\n" +
             "  support the OPeNDAP Selection constraints that tabledap datasets use for requesting\n" +
             "  subsets of the dataset, nor do they support the sequence data structure in the response.\n" +
             "  (But see this <a href=\"#netcdfjava\">other approach</a> that works with NetCDF libraries.)\n" + 
             "  But you can use the <a href=\"#PydapClient\">Pydap Client</a> or\n" +
             "  <a rel=\"bookmark\" href=\"https://www.opendap.org/deprecated-software/java-dap\">Java-DAP2" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>,\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>,\n" +
             "  because they both support Selection\n" +
             "  constraints.  With both the Pydap Client and Java-DAP2, when creating the initial\n" +
             "  connection to an ERDDAP table dataset, use the tabledap dataset's base URL, e.g.,\n" +
@@ -7798,13 +7879,13 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //Pydap Client
             "  <p><strong><a rel=\"bookmark\" href=\"https://www.pydap.org/en/latest/client.html\">Pydap Client" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong>\n" +
             "    <a class=\"selfLink\" id=\"PydapClient\" href=\"#PydapClient\" rel=\"bookmark\">users</a>\n" +
             "    can access tabledap datasets via ERDDAP's standard OPeNDAP services.\n" +
             "  See the\n" + 
             "    <a rel=\"help\" href=\"https://www.pydap.org/en/latest/client.html#accessing-sequential-data\"\n" +
             "      >Pydap Client instructions for accessing sequential data" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "  Note that the name of a dataset in tabledap will always be a single word, e.g.,\n" +
                 EDStatic.EDDTableIdExample + "\n" +
             "  in the OPeNDAP dataset URL\n" +
@@ -7816,7 +7897,7 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //Python
             "  <p><strong><a rel=\"bookmark\" href=\"https://www.python.org\">Python" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong>\n" +
             "    <a class=\"selfLink\" id=\"Python\" href=\"#Python\" rel=\"bookmark\">is</a>\n" +
             "    a widely-used computer language that is very popular among scientists.\n" +
             "    In addition to the <a rel=\"help\" href=\"#PydapClient\">Pydap Client</a>,\n" +
@@ -7833,18 +7914,18 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //erddapy
             "  <p><a rel=\"bookmark\" href=\"https://github.com/ioos/erddapy#--erddapy\">erddapy" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "    <a class=\"selfLink\" id=\"erddapy\" href=\"#erddapy\" rel=\"bookmark\">(ERDDAP + Python, by Filipe Pires Alvarenga Fernandes)</a> and\n" +
             "  <br><a rel=\"bookmark\" href=\"https://github.com/hmedrano/erddap-python\">erddap-python" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> (by Favio Medrano)\n" +
-            "  <br>are Python libraries that \"take advantage of ERDDAP’s RESTful web services and create the\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> (by Favio Medrano)\n" +
+            "  <br>are Python libraries that \"take advantage of ERDDAPï¿½s RESTful web services and create the\n" +
             "    ERDDAP URL for any request like searching for datasets, acquiring metadata, downloading data, etc.\"\n" +
             "    They have somewhat different programming styles and slightly different feature sets,\n" +
             "    so it might be good to experiment with both to see which you prefer.\n" +
             //
             //Python/Jupyter Notebook
             "  <p>\"<a rel=\"bookmark\" href=\"https://jupyter.org/\">Jupyter Notebook" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "      <a class=\"selfLink\" id=\"JupyterNotebook\" href=\"#JupyterNotebook\" rel=\"bookmark\">is</a>\n" +
             "      an open-source web application that\n" +
             "      allows you to create and\n" +
@@ -7853,14 +7934,14 @@ public abstract class EDDTable extends EDD {
             "    Here are two sample Jupyter Notebooks that access ERDDAP using Python:\n" +
             "    <a rel=\"bookmark\"\n" +
             "      href=\"https://github.com/rsignell-usgs/notebook/blob/master/ERDDAP/ERDDAP_advanced_search_test.ipynb/\"\n" +
-            "      >ERDDAP Advanced Search Test" + EDStatic.externalLinkHtml(tErddapUrl) + "</a> and\n" +
+            "      >ERDDAP Advanced Search Test" + EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> and\n" +
             "    <a rel=\"bookmark\" \n" +
             "      href=\"https://github.com/rsignell-usgs/notebook/blob/master/ERDDAP/ERDDAP_timing.ipynb\"\n" +
-            "      >ERDDAP Timing" + EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+            "      >ERDDAP Timing" + EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "    Thanks to Rich Signell.\n" +
             //R
             "  <p><strong><a rel=\"bookmark\" href=\"https://www.r-project.org/\">R Statistical Package" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong> -\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong> -\n" +
             "    <a class=\"selfLink\" id=\"R\" href=\"#R\" rel=\"bookmark\">R</a>\n" +
             "    is an open source statistical package for many operating systems.\n" +
             "  In R, you can download a .csv file from ERDDAP\n" +
@@ -7871,11 +7952,11 @@ public abstract class EDDTable extends EDD {
             "  (You may need to <a rel=\"help\" href=\"#PercentEncoded\">percent encode</a> the query part of the URL.)\n" +
             "  <p>There are third-party R packages designed to make it easier to work with ERDDAP from within R:\n" +
             "    <a rel=\"bookmark\" href=\"https://cran.r-project.org/web/packages/rerddap/index.html\">rerddap" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>,\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>,\n" +
             "    <a rel=\"bookmark\" href=\"https://cran.r-project.org/web/packages/rerddapXtracto/index.html\">rerddapXtracto" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>, and\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>, and\n" +
             "    <a rel=\"bookmark\" href=\"https://cran.r-project.org/web/packages/plotdap/index.html\">plotdap" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "  Thanks to \n" +
             "  <a rel=\"bookmark\" href=\"https://ropensci.org/\">rOpenSci<img \n" +
             "    src=\"../images/external.png\" alt=\" (external link)\" \n" +
@@ -7885,13 +7966,13 @@ public abstract class EDDTable extends EDD {
             "\n" +
             //.wav
             "  <p><strong><a rel=\"bookmark\" href=\"https://en.wikipedia.org/wiki/WAV\">.wav" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></strong> -\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></strong> -\n" +
             "    <a class=\"selfLink\" id=\"wav\" href=\"#wav\" rel=\"bookmark\">ERDDAP can return data in .wav files,</a>\n" +
             "    which are uncompressed audio files.\n" +
             "  <ul>\n" +
             "  <li>You can save any numeric data in .wav files, but this file format is clearly intended to be used\n" +
             "    with <a rel=\"bookmark\" href=\"https://en.wikipedia.org/wiki/Pulse-code_modulation\">PCM" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> digitized sound waves.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> digitized sound waves.\n" +
             "    We do not recommend saving other types of data in .wav files.\n" +
             "  <li>All of the data variables you select to save in a .wav file must have the same data type, e.g., int.\n" +
             "    Currently, because of a bug in Java 8, ERDDAP can't save float or double data in .wav files. That should\n" +
@@ -7942,11 +8023,11 @@ public abstract class EDDTable extends EDD {
                 "    <tr>\n" +
                 "      <td><a class=\"selfLink\" id=\"fileType_" + ft1 + 
                     "\" href=\"#fileType_" + ft1 + "\" rel=\"bookmark\">" + ft + "</a></td>\n" +
-                "      <td>" + imageFileTypeDescriptions[i] + "</td>\n" +
+                "      <td>" + imageFileTypeDescriptions[i][currLang] + "</td>\n" +
                 "      <td class=\"N\">" + 
                       (imageFileTypeInfo[i] == null || imageFileTypeInfo[i].equals("")? 
                           "&nbsp;" : "<a rel=\"help\" href=\"" +  imageFileTypeInfo[i] + "\">info" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>") + 
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>") + 
                       "</td>\n" + //must be mapExample below because kml doesn't work with graphExample
                 "      <td class=\"N\"><a rel=\"bookmark\" href=\"" +  datasetBase + imageFileTypeNames[i] + "?" + 
                     EDStatic.EDDTableMapExampleHA + "\">example</a></td>\n" +
@@ -7993,7 +8074,7 @@ public abstract class EDDTable extends EDD {
             "Or, if you are comfortable running command line programs\n" +
             "(from a Linux or Windows command line, or a Mac OS Terminal), you can use curl (or a similar program like\n" +
             "  <a rel=\"bookmark\" href=\"https://www.gnu.org/software/wget/\">wget" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>)\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>)\n" +
             "to save results files from ERDDAP into files on your hard drive,\n" +
             "without using a browser or writing a computer program or script.\n" +
             "<p>ERDDAP + curl is amazingly powerful and allows you to use ERDDAP in many new ways.\n" +
@@ -8001,7 +8082,7 @@ public abstract class EDDTable extends EDD {
             "<br>On Mac OS X, to get to a command line, use \"Finder : Go : Utilities : Terminal\".\n" +              
             "<br>On Windows, you need to\n" +
             "  <a rel=\"bookmark\" href=\"https://curl.haxx.se/download.html\">download curl" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "  (the \"Windows 64 - binary, the curl project\" variant worked for me on Windows 10)\n" +            
             "  and install it.\n" +
             "<br>On Windows, to get to a command line, click on \"Start\" and type\n" + 
@@ -8009,9 +8090,9 @@ public abstract class EDDTable extends EDD {
             "<br><strong>Please be kind to other ERDDAP users: run just one script or curl command at a time.</strong>\n" +
             "<br>Instructions for using curl are on the \n" +
                 "<a rel=\"help\" href=\"https://curl.haxx.se/download.html\">curl man page" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> and in this\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> and in this\n" +
                 "<a rel=\"help\" href=\"https://curl.haxx.se/docs/httpscripting.html\">curl tutorial" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "<br>But here is a quick tutorial related to using curl with ERDDAP:\n" +
             "<ul>\n" +
             "<li>To download and save one file, use\n" +
@@ -8025,7 +8106,7 @@ public abstract class EDDTable extends EDD {
             "  <a class=\"N selfLink\" id=\"PercentEncoded\" href=\"#PercentEncoded\" rel=\"bookmark\"\n" +
             "  >In curl, as in many other programs, the query part of the erddapUrl must be</a>\n" +
             "  <a rel=\"help\" href=\"https://en.wikipedia.org/wiki/Percent-encoding\">percent encoded" +
-                EDStatic.externalLinkHtml(tErddapUrl) + "</a>.  To do this, you need to convert\n" +
+                EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.  To do this, you need to convert\n" +
             "  special characters (other than the initial '&amp;' and the main '=') in all constraints\n" +
             "  into the form %HH, where HH is the 2 digit hexadecimal value of the character.\n" +
             "  Usually, you just need to convert a few of the punctuation characters: % into %25,\n" +
@@ -8042,19 +8123,19 @@ public abstract class EDDTable extends EDD {
             "  Programming languages have tools to do this (for example, see Java's\n" +
             "  <a rel=\"help\" href=\"https://docs.oracle.com/javase/8/docs/api/index.html?java/net/URLEncoder.html\"\n" +
             "      >java.net.URLEncoder" +
-                     EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                     EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "     and JavaScript's\n" +
                      "<a rel=\"help\" href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent\"\n" +
             "      >encodeURIComponent()" +
-                     EDStatic.externalLinkHtml(tErddapUrl) + "</a>) and there are\n" +
+                     EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>) and there are\n" +
             "  <a class=\"N\" rel=\"help\" href=\"https://www.url-encode-decode.com\">websites that percent encode/decode for you" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "  <br>&nbsp;\n" +
             "<li>To download and save many files in one step, use curl with the globbing feature enabled:\n" +
             "  <br><kbd>curl --compressed \"<i>erddapUrl</i>\" -o <i>fileDir/fileName#1.ext</i></kbd>\n" +
             "  <br>Since the globbing feature treats the characters [, ], {, and } as special, you must also\n" +
             "  <br><a class=\"N\" rel=\"help\" href=\"https://en.wikipedia.org/wiki/Percent-encoding\">percent encode" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> \n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> \n" +
               "them in the erddapURL as &#37;5B, &#37;5D, &#37;7B, &#37;7D, respectively.\n" +
             "  Fortunately, these are rare in tabledap URLs.\n" +
             "  Then, in the erddapUrl, replace a zero-padded number (for example <kbd>01</kbd>) with a range\n" +
@@ -8091,12 +8172,12 @@ public abstract class EDDTable extends EDD {
             "  It specifies the subset of data that you want to receive.\n" +
             "  In tabledap, it is an \n" +
             "  <a rel=\"bookmark\" href=\"https://www.opendap.org/\">OPeNDAP" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> " +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> " +
             "  <a rel=\"help\" href=\"https://www.opendap.org/pdf/ESE-RFC-004v1.2.pdf\">DAP" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "  <a rel=\"help\" href=\"https://docs.opendap.org/index.php/UserGuideOPeNDAPMessages#Constraint_Expressions\"\n" +
             "      >selection constraint" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> query" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> query" +
             "  in the form: <kbd>{<i>resultsVariables</i>}{<i>constraints</i>}</kbd> .\n " +
             "  For example,\n" +
             "  <br><kbd>" + 
@@ -8131,12 +8212,12 @@ public abstract class EDDTable extends EDD {
             "      may result in a very large results table.\n" + 
             "    <li>tabledap constraints are consistent with \n" +
             "      <a rel=\"bookmark\" href=\"https://www.opendap.org/\">OPeNDAP" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> " +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> " +
             "      <a rel=\"help\" href=\"https://www.opendap.org/pdf/ESE-RFC-004v1.2.pdf\">DAP" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "      <a rel=\"help\" href=\"https://docs.opendap.org/index.php/UserGuideOPeNDAPMessages#Constraint_Expressions\"\n" +
             "      >selection constraints" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>,\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>,\n" +
             "      but with a few additional features.\n" +
             "    <li>Each constraint is in the form <kbd><i>VariableOperatorValue</i></kbd>\n" +
             "      (for example, <kbd>latitude&gt;45</kbd>).\n" +
@@ -8160,7 +8241,7 @@ public abstract class EDDTable extends EDD {
             "    <li><a class=\"selfLink\" id=\"PercentEncode\" href=\"#PercentEncode\" rel=\"bookmark\">For</a>\n" +
             "         all constraints, the value part of the <kbd><i>VariableOperatorValue</i></kbd>\n" +
             "        MUST be <a class=\"N\" rel=\"help\" href=\"https://en.wikipedia.org/wiki/Percent-encoding\">percent encoded" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>:\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>:\n" +
             "        special characters in the query values (the parts after the '=' signs) are encoded as %HH, where\n" +
             "        HH is the 2 digit hexadecimal value of the character (for example, ' ' is replaced with \"%20\").\n" +
             "        Characters above #127 must be converted to UTF-8 bytes, then each UTF-8 byte must be\n" +
@@ -8169,12 +8250,12 @@ public abstract class EDDTable extends EDD {
             "        percent encoding itself.  If so, you need to encode all characters other than A-Za-z0-9_-!.~'()*\n" +
             "        in all query values. Programming languages have tools to do this (for example, see Java's\n" +
                     "<a rel=\"help\" href=\"https://docs.oracle.com/javase/8/docs/api/index.html?java/net/URLEncoder.html\">java.net.URLEncoder" +
-                     EDStatic.externalLinkHtml(tErddapUrl) + "</a> and JavaScript's\n" +
+                     EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> and JavaScript's\n" +
                      "<a rel=\"help\" href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent\"\n" +
             "        >encodeURIComponent()" +
-                     EDStatic.externalLinkHtml(tErddapUrl) + "</a>) and there are\n" +
+                     EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>) and there are\n" +
             "       <a class=\"N\" rel=\"help\" href=\"https://www.url-encode-decode.com\">websites that percent encode/decode for you" +
-                     EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                     EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "      <li><a class=\"selfLink\" id=\"comparingFloats\" href=\"#comparingFloats\" rel=\"bookmark\">WARNING:</a>\n" +
             "          Numeric queries involving =, !=, &lt;=, or &gt;= may not work as desired with\n" +
             "          floating point numbers. For example, a search for <kbd>longitude=220.2</kbd> may\n" +
@@ -8182,12 +8263,12 @@ public abstract class EDDTable extends EDD {
             "          floating point numbers are " +
             "          <a rel=\"help\" href=\"https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/\"\n" +
             "          >not represented exactly within computers" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "          When ERDDAP performs these tests, it allows for minor variations and tries\n" +
             "          to avoid the problem. But it is possible that some datasets will still\n" +
             "          have problems with these queries and return unexpected and incorrect results.\n" +
             "      <li><a rel=\"help\" href=\"https://en.wikipedia.org/wiki/NaN\">NaN (Not-a-Number)" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> -\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> -\n" +
             "          <a class=\"selfLink\" id=\"NaN\" href=\"#NaN\" rel=\"bookmark\">Many</a>\n" +
             "          numeric variables have an attribute which identifies a\n" +
             "          number (e.g., -99) as a missing_value or a _FillValue. When ERDDAP tests\n" +
@@ -8214,15 +8295,15 @@ public abstract class EDDTable extends EDD {
             "          tests if the value from the variable on the left matches the \n" +
             "          <a rel=\"help\" href=\"https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html\"\n" +
             "          >regular expression" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "         on the right.\n" +
             "        <ul>\n" +
             "        <li>tabledap uses the same \n" +
             "          <a rel=\"help\" href=\"https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html\"\n" +
             "          >regular expression syntax" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "             (<a rel=\"help\" href=\"https://www.vogella.com/tutorials/JavaRegularExpressions/article.html\">tutorial" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>) as is used by Java.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>) as is used by Java.\n" +
             "        <li>A common use of regular expressions is to provide the equivalent of an OR constraint,\n" +
             "          which DAP doesn't support.\n" +
             "          For example, if you want to request data from station=\"Able\" OR station=\"Baker\" OR station=\"Charlie\",\n" +
@@ -8269,7 +8350,7 @@ public abstract class EDDTable extends EDD {
             "      <br>The more human-oriented fileTypes (notably, .csv, .tsv, .htmlTable, .odvTxt, and .xhtml)\n" +
             "      display date/time values as \n" +
             "        <a rel=\"help\" href=\"https://en.wikipedia.org/wiki/ISO_8601\">ISO 8601:2004 \"extended\" date/time strings" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "      (e.g., <kbd>2002-08-03T12:30:00Z</kbd>, but some time variables in some datasets include\n" +
             "      milliseconds, e.g., <kbd>2002-08-03T12:30:00.123Z</kbd>).\n" +
             (EDStatic.convertersActive? 
@@ -8584,11 +8665,11 @@ public abstract class EDDTable extends EDD {
             "      <br>If you add <kbd>&amp;units(\"UDUNITS\")</kbd> to the end of a query, the units will be described\n" +
             "      via the\n" +
             "        <a rel=\"help\" href=\"https://www.unidata.ucar.edu/software/udunits/\">UDUNITS" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> standard (for example, <kbd>degree_C</kbd>).\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> standard (for example, <kbd>degree_C</kbd>).\n" +
             "      <br>If you add <kbd>&amp;units(\"UCUM\")</kbd> to the end of a query, the units will be described\n" +
             "      via the\n" +
             "        <a rel=\"help\" href=\"https://unitsofmeasure.org/ucum.html\">UCUM" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a> standard (for example, <kbd>Cel</kbd>).\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a> standard (for example, <kbd>Cel</kbd>).\n" +
             "      <br>On this ERDDAP, the default for most/all datasets is " + EDStatic.units_standard + ".\n" +
             (EDStatic.convertersActive? 
             "      <br>See also ERDDAP's <a rel=\"bookmark\" href=\"" + tErddapUrl + "/convert/units.html\"\n" +
@@ -8850,7 +8931,7 @@ public abstract class EDDTable extends EDD {
             "    <br>&nbsp;\n" +
             "  </ul>\n" +
 
-            "<li>" + EDStatic.acceptEncodingHtml("h3", tErddapUrl) +
+            "<li>" + EDStatic.acceptEncodingHtml("h3", tErddapUrl, currLang) +
             "    <br>&nbsp;\n" +
 "<li><a class=\"selfLink\" id=\"citeDataset\" href=\"#citeDataset\" rel=\"bookmark\"\n" +
 "      ><strong>How to Cite a Dataset in a Paper</strong></a>\n" +
@@ -8966,7 +9047,38 @@ public abstract class EDDTable extends EDD {
         writer.flush(); 
 
     }                   
+    /**
+     * This deals with requests for a Make A Graph (MakeAGraph, MAG) web page for this dataset. 
+     * currLang not specified, default to 0
+     * 
+     * @param request may be null. Currently, it isn't used.
+     * @param loggedInAs  the name of the logged in user (or null if not logged in).
+     *   Normally, this is not used to test if this edd is accessibleTo loggedInAs, 
+     *   but it unusual cases (EDDTableFromPost?) it could be.
+     *   Normally, this is just used to determine which erddapUrl to use (http vs https).
+     * @param requestUrl the part of the user's request, after EDStatic.baseUrl, before '?'.
+     *   I think it's currently just used to add to "history" metadata.
+     * @param userDapQuery    after the '?', still percentEncoded (shouldn't be null).
+     *    If the query has missing or invalid parameters, defaults will be used.
+     *    If the query has irrelevant parameters, they will be ignored.
+     * @param outputStreamSource  the source of an outputStream that receives the results,
+     *    usually already buffered.  This doesn't call out.close at the end. The caller must!
+     * @param dir the directory to use for temporary/cache files [currently, not used]
+     * @param fileName the name for the 'file' (no dir, no extension),
+     *    which is used to write the suggested name for the file to the response 
+     *    header.  [currently, not used]
+     * @param fileTypeName must be .graph [currently, not used]
+     * @throws Throwable if trouble
+     */
+    public void respondToGraphQuery(HttpServletRequest request, String loggedInAs,
+        String requestUrl, String userDapQuery, 
+        OutputStreamSource outputStreamSource,
+        String dir, String fileName, String fileTypeName) throws Throwable {
+            
+            respondToGraphQuery(request, loggedInAs, requestUrl, userDapQuery, outputStreamSource,
+                dir, fileName, fileTypeName, 0);
 
+        }
 
     /**
      * This deals with requests for a Make A Graph (MakeAGraph, MAG) web page for this dataset. 
@@ -8993,12 +9105,12 @@ public abstract class EDDTable extends EDD {
     public void respondToGraphQuery(HttpServletRequest request, String loggedInAs,
         String requestUrl, String userDapQuery, 
         OutputStreamSource outputStreamSource,
-        String dir, String fileName, String fileTypeName) throws Throwable {
+        String dir, String fileName, String fileTypeName, int currLang) throws Throwable {
 
         if (accessibleViaMAG().length() > 0)
             throw new SimpleException(EDStatic.queryError + accessibleViaMAG());
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         if (userDapQuery == null)
             userDapQuery = "";
         if (reallyVerbose)
@@ -9067,7 +9179,7 @@ public abstract class EDDTable extends EDD {
                     llati == 3? edv.destinationMaxString() : 
                         ""+((float)edv.destinationMaxDouble());
                 llatRange.append(edv.destinationName() + "&nbsp;=&nbsp;" + 
-                    tMin + "&nbsp;" + EDStatic.magRangeTo +"&nbsp;" + tMax + 
+                    tMin + "&nbsp;" + EDStatic.magRangeTo_s[currLang] +"&nbsp;" + tMax + 
                     (llati == 0? "&deg;E" : llati == 1? "&deg;N" : llati == 2? "m" : "") +
                     ", ");
             }
@@ -9075,7 +9187,7 @@ public abstract class EDDTable extends EDD {
         String otherRows = "";
         if (llatRange.length() > 0) {
             llatRange.setLength(llatRange.length() - 2); //remove last ", "
-            otherRows = "  <tr><td>" + EDStatic.magRange + ":&nbsp;</td>" +
+            otherRows = "  <tr><td>" + EDStatic.magRange_s[currLang] + ":&nbsp;</td>" +
                               "<td>" + llatRange + "</td></tr>\n";
         }
 
@@ -9086,18 +9198,18 @@ public abstract class EDDTable extends EDD {
         try {
             HtmlWidgets widgets = new HtmlWidgets(true, EDStatic.imageDirUrl(loggedInAs));
             writer.write(EDStatic.startHeadHtml(tErddapUrl,  
-                title() + " - " + EDStatic.mag));
+                title() + " - " + EDStatic.mag_s[currLang], currLang));
             writer.write("\n" + rssHeadLink());
             writer.write("\n</head>\n");
-            writer.write(EDStatic.startBodyHtml(loggedInAs));
+            writer.write(EDStatic.startBodyHtml(loggedInAs, currLang));
             writer.write("\n");
             writer.write(HtmlWidgets.htmlTooltipScript(EDStatic.imageDirUrl(loggedInAs))); //this is a link to a script
             writer.flush(); //Steve Souder says: the sooner you can send some html to user, the better
             writer.write(
                 "<div class=\"standard_width\">\n");
             writer.write(EDStatic.youAreHereWithHelp(loggedInAs, "tabledap", 
-                EDStatic.mag, 
-                "<div class=\"standard_max_width\">" + EDStatic.magTableTooltip + "</div>"));
+                EDStatic.mag_s[currLang], 
+                "<div class=\"standard_max_width\">" + EDStatic.magTableTooltip_s[currLang] + "</div>", currLang));
             writeHtmlDatasetInfo(loggedInAs, writer, true, true, true, false, 
                 userDapQuery, otherRows);
             if (userDapQuery.length() == 0) 
@@ -9524,7 +9636,7 @@ public abstract class EDDTable extends EDD {
             paramName = "draw";
             writer.write(
                 "<tr>\n" +
-                "  <td><strong>" + EDStatic.magGraphType + ":&nbsp;</strong>" + 
+                "  <td><strong>" + EDStatic.magGraphType_s[currLang] + ":&nbsp;</strong>" + 
                 "  </td>\n" +
                 "  <td>\n");
             writer.write(widgets.select(paramName, "", 
@@ -9535,7 +9647,7 @@ public abstract class EDDTable extends EDD {
                 ");'")); 
             writer.write(
                 EDStatic.htmlTooltipImage(loggedInAs, 
-                    "<div class=\"standard_max_width\">" + EDStatic.magGraphTypeTooltipTable +
+                    "<div class=\"standard_max_width\">" + EDStatic.magGraphTypeTooltipTable_s[currLang] +
                     "</div>") +
                 "  </td>\n" +
                 "</tr>\n");
@@ -9570,9 +9682,9 @@ public abstract class EDDTable extends EDD {
             if (drawLines) {
                 nVars = 2;
                 variablesShowPM = 1;
-                varLabel = new String[]{EDStatic.magAxisX + ":", EDStatic.magAxisY + ":"};
+                varLabel = new String[]{EDStatic.magAxisX_s[currLang] + ":", EDStatic.magAxisY_s[currLang] + ":"};
                 varHelp  = new String[]{
-                    EDStatic.magAxisHelpGraphX, EDStatic.magAxisHelpGraphY};
+                    EDStatic.magAxisHelpGraphX_s[currLang], EDStatic.magAxisHelpGraphY_s[currLang]};
                 varOptions = new String[][]{numDvNames, numDvNames};
                 if (useDefaultVars || resultsVariables.size() < 2) {
                     resultsVariables.clear();
@@ -9593,11 +9705,11 @@ public abstract class EDDTable extends EDD {
             } else if (drawLinesAndMarkers || drawMarkers) {
                 nVars = 3;
                 variablesShowPM = 2;
-                varLabel = new String[]{EDStatic.magAxisX + ":", EDStatic.magAxisY + ":", 
-                    EDStatic.magAxisColor + ":"};
+                varLabel = new String[]{EDStatic.magAxisX_s[currLang] + ":", EDStatic.magAxisY_s[currLang] + ":", 
+                    EDStatic.magAxisColor_s[currLang] + ":"};
                 varHelp  = new String[]{
-                    EDStatic.magAxisHelpGraphX, EDStatic.magAxisHelpGraphY,
-                    EDStatic.magAxisHelpMarkerColor};
+                    EDStatic.magAxisHelpGraphX_s[currLang], EDStatic.magAxisHelpGraphY_s[currLang],
+                    EDStatic.magAxisHelpMarkerColor_s[currLang]};
                 varOptions = new String[][]{numDvNames, numDvNames, numDvNames0};
                 if (useDefaultVars || resultsVariables.size() < 2) {
                     resultsVariables.clear();
@@ -9620,11 +9732,11 @@ public abstract class EDDTable extends EDD {
             } else if (drawSticks) {
                 nVars = 3;
                 variablesShowPM = 1;
-                varLabel = new String[]{EDStatic.magAxisX + ":", EDStatic.magAxisStickX + ":",
-                    EDStatic.magAxisStickY + ":"};
+                varLabel = new String[]{EDStatic.magAxisX_s[currLang] + ":", EDStatic.magAxisStickX_s[currLang] + ":",
+                    EDStatic.magAxisStickY_s[currLang] + ":"};
                 varHelp  = new String[]{
-                    EDStatic.magAxisHelpGraphX, 
-                    EDStatic.magAxisHelpStickX, EDStatic.magAxisHelpStickY};
+                    EDStatic.magAxisHelpGraphX_s[currLang], 
+                    EDStatic.magAxisHelpStickX_s[currLang], EDStatic.magAxisHelpStickY_s[currLang]};
                 varOptions = new String[][]{numDvNames, numDvNames, numDvNames};
                 if (useDefaultVars || resultsVariables.size() < 3) {
                     //x var is an axis (prefer: time)
@@ -9636,11 +9748,11 @@ public abstract class EDDTable extends EDD {
             } else if (drawVectors) {
                 nVars = 4;
                 variablesShowPM = 100;
-                varLabel = new String[]{EDStatic.magAxisX + ":", EDStatic.magAxisY + ":", 
-                    EDStatic.magAxisVectorX + ":", EDStatic.magAxisVectorY + ":"};
+                varLabel = new String[]{EDStatic.magAxisX_s[currLang] + ":", EDStatic.magAxisY_s[currLang] + ":", 
+                    EDStatic.magAxisVectorX_s[currLang] + ":", EDStatic.magAxisVectorY_s[currLang] + ":"};
                 varHelp  = new String[]{
-                    EDStatic.magAxisHelpMapX, EDStatic.magAxisHelpMapY,
-                    EDStatic.magAxisHelpVectorX, EDStatic.magAxisHelpVectorY};
+                    EDStatic.magAxisHelpMapX_s[currLang], EDStatic.magAxisHelpMapY_s[currLang],
+                    EDStatic.magAxisHelpVectorX_s[currLang], EDStatic.magAxisHelpVectorY_s[currLang]};
                 varOptions = new String[][]{new String[]{EDV.LON_NAME}, new String[]{EDV.LAT_NAME}, nonAxis, nonAxis};
                 if (useDefaultVars || resultsVariables.size() < 4) {
                     resultsVariables.clear();
@@ -9649,7 +9761,7 @@ public abstract class EDDTable extends EDD {
                     resultsVariables.add(nonAxis[sameUnits1]);
                     resultsVariables.add(nonAxis[sameUnits1 + 1]);
                 }
-            } else throw new SimpleException(EDStatic.errorInternal +
+            } else throw new SimpleException(EDStatic.errorInternal_s[currLang] +
                 "No drawXxx value was set.");
             if (debugMode) String2.log("respondToGraphQuery 4");
             if (reallyVerbose)
@@ -9678,7 +9790,7 @@ public abstract class EDDTable extends EDD {
                     "  </td>\n" +
                     "  <td>\n");
                 writer.write(widgets.select(paramName, 
-                    MessageFormat.format(EDStatic.magAxisVarHelp, varHelp[v]), 
+                    MessageFormat.format(EDStatic.magAxisVarHelp_s[currLang], varHelp[v]), 
                     v >= variablesShowPM? HtmlWidgets.BUTTONS_1 : 1,   //was 1
                     tDvNames, vi, 
                     "", false, "mySubmit(true);"));  //was ""));
@@ -9701,19 +9813,19 @@ public abstract class EDDTable extends EDD {
             writer.write(
                 "<tr>\n" +
                 "  <th>" + 
-                    EDStatic.EDDTableConstraints + " " +
-                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.magConstraintHelp) +
+                    EDStatic.EDDTableConstraints_s[currLang] + " " +
+                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.magConstraintHelp_s[currLang]) +
                     "</th>\n" +
                 "  <th style=\"text-align:center;\" colspan=\"2\">" + 
-                    EDStatic.EDDTableOptConstraint1Html + " " + 
+                    EDStatic.EDDTableOptConstraint1Html_s[currLang] + " " + 
                     EDStatic.htmlTooltipImage(loggedInAs, 
-                        "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip +
+                        "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip_s[currLang] +
                         "</div>") + 
                     "</th>\n" +
                 "  <th style=\"text-align:center;\" colspan=\"2\">" + 
-                    EDStatic.EDDTableOptConstraint2Html + " " + 
+                    EDStatic.EDDTableOptConstraint2Html_s[currLang] + " " + 
                     EDStatic.htmlTooltipImage(loggedInAs, 
-                        "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip +
+                        "<div class=\"narrow_max_width\">" + EDStatic.EDDTableConstraintTooltip_s[currLang] +
                         "</div>") + 
                     "</th>\n" +
                 "</tr>\n");
@@ -9842,18 +9954,18 @@ public abstract class EDDTable extends EDD {
 
                         writer.write("  <td>");
                         writer.write(widgets.select("cVar" + cv, 
-                            EDStatic.EDDTableOptConstraintVar, 
+                            EDStatic.EDDTableOptConstraintVar_s[currLang], 
                             1, dvNames0, conVar[cv], cjs == null? "" : cjs.toString()));
                         writer.write("</td>\n");
                     }
 
                     //make the constraintTooltip
                     //ConstraintHtml below is worded in generic way so works with number and time, too
-                    String constraintTooltip = EDStatic.EDDTableStringConstraintTooltip; 
+                    String constraintTooltip = EDStatic.EDDTableStringConstraintTooltip_s[currLang]; 
                     //String2.log("cv=" + cv + " conVar[cv]=" + conVar[cv]);
                     if (conEdv != null && conEdv.destinationMinString().length() > 0) {
                         constraintTooltip += "<br>&nbsp;<br>" + 
-                            MessageFormat.format(EDStatic.rangesFromTo, 
+                            MessageFormat.format(EDStatic.rangesFromTo_s[currLang], 
                                 conEdv.destinationName(), 
                                 conEdv.destinationMinString(),
                                 conEdv.destinationMaxString().length() > 0? 
@@ -9863,7 +9975,7 @@ public abstract class EDDTable extends EDD {
                     //display the op and value
                     int tOp = conOp[cv][con];
                     writer.write("  <td class=\"R\">" + gap);
-                    writer.write(widgets.select("cOp" + cv + ab, EDStatic.EDDTableSelectAnOperator, 
+                    writer.write(widgets.select("cOp" + cv + ab, EDStatic.EDDTableSelectAnOperator_s[currLang], 
                         1, OPERATORS, PPE_OPERATORS, tOp, "", false, ""));
                     writer.write("</td>\n");
                     String tVal = conVal[cv][con];
@@ -9923,7 +10035,7 @@ public abstract class EDDTable extends EDD {
                         "      <td>");
                     writer.write(
                         widgets.select("dis" + cv, 
-                            "<div class=\"narrow_max_width\">" + EDStatic.EDDTableSelectConstraintTooltip +
+                            "<div class=\"narrow_max_width\">" + EDStatic.EDDTableSelectConstraintTooltip_s[currLang] +
                             "</div>",
                             1, 
                             whichSV < 0? new String[]{""} : distinctOptions[whichSV], 
@@ -9958,7 +10070,7 @@ public abstract class EDDTable extends EDD {
 
                         "      <td class=\"B\">\n" + //vertical-align: 'b'ottom
                         "<img class=\"B\" src=\"" + widgets.imageDirUrl + "minus.gif\" " + //vertical-align: 'b'ottom
-                        widgets.completeTooltip(EDStatic.magItemPrevious) +
+                        widgets.completeTooltip(EDStatic.magItemPrevious_s[currLang]) +
                         "  alt=\"-\"\n" + 
                         //onMouseUp works much better than onClick and onDblClick
                         "  onMouseUp=\"\n" +
@@ -9971,7 +10083,7 @@ public abstract class EDDTable extends EDD {
 
                         "      <td class=\"B\">\n" + //vertical-align: 'b'ottom
                         "<img class=\"B\" src=\"" + widgets.imageDirUrl + "plus.gif\" " + //vertical-align: 'b'ottom
-                        widgets.completeTooltip(EDStatic.magItemNext) +
+                        widgets.completeTooltip(EDStatic.magItemNext_s[currLang]) +
                         "  alt=\"+\"\n" + 
                         //onMouseUp works much better than onClick and onDblClick
                         "  onMouseUp=\"\n" +
@@ -10016,7 +10128,7 @@ public abstract class EDDTable extends EDD {
 
             //*** function options
             int nOrderByComboBox = 4; //to be narrower than Data Access Form
-            writeFunctionHtml(loggedInAs, queryParts, writer, widgets, formName, nOrderByComboBox);
+            writeFunctionHtml(loggedInAs, queryParts, writer, widgets, formName, nOrderByComboBox, currLang);
             if (String2.indexOf(queryParts, "distinct()") >= 0) {
                 graphQuery.append("&distinct()");
                 graphQueryNoLatLon.append("&distinct()");
@@ -10076,7 +10188,7 @@ public abstract class EDDTable extends EDD {
             writer.write("&nbsp;\n"); //necessary for the blank line before the table (not <p>)
             writer.write(widgets.beginTable("class=\"compact nowrap\"")); 
             writer.write("  <tr><th class=\"L\" colspan=\"6\">" +
-                EDStatic.magGS + "</th></tr>\n");
+                EDStatic.magGS_s[currLang] + "</th></tr>\n");
 
             //get Marker settings
             int mType = -1, mSize = -1;
@@ -10101,7 +10213,7 @@ public abstract class EDDTable extends EDD {
                 //    mType = GraphDataLayer.MARKER_TYPE_FILLED_SQUARE; //needs "filled" marker type
                 writer.write(
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.magGSMarkerType + ":&nbsp;</td>\n" +
+                    "    <td>" + EDStatic.magGSMarkerType_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td>" +
                         widgets.select(paramName, "", 1, GraphDataLayer.MARKER_TYPES,
                             mType, "") + "</td>\n");
@@ -10112,7 +10224,7 @@ public abstract class EDDTable extends EDD {
                 if (mSize < 0)
                     mSize = String2.indexOf(mSizes, "" + GraphDataLayer.MARKER_SIZE_SMALL);
                 writer.write(
-                    "    <td>&nbsp;" + EDStatic.magGSSize + ":&nbsp;</td>\n" +
+                    "    <td>&nbsp;" + EDStatic.magGSSize_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td>" +
                         widgets.select(paramName, "", 1, mSizes, mSize, "") + "</td>\n" +
                     "    <td></td>\n" +
@@ -10138,7 +10250,7 @@ public abstract class EDDTable extends EDD {
                 colori = String2.indexOf(colors, "000000");
             writer.write(
                 "  <tr>\n" +
-                "    <td>" + EDStatic.magGSColor + ":&nbsp;</td>\n" +
+                "    <td>" + EDStatic.magGSColor_s[currLang] + ":&nbsp;</td>\n" +
                 "    <td colspan=\"5\">" +
                     widgets.color17("", paramName, "", colori, "") + "</td>\n" +
                 "  </tr>\n");
@@ -10169,27 +10281,27 @@ public abstract class EDDTable extends EDD {
                     String2.indexOf(EDStatic.palettes0, pParts.length > 0? pParts[0] : defaultPalette));
                 writer.write(
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.magGSColorBar + ":&nbsp;</td>" +
+                    "    <td>" + EDStatic.magGSColorBar_s[currLang] + ":&nbsp;</td>" +
                     "    <td>" +
-                    widgets.select(paramName, EDStatic.magGSColorBarTooltip, 
+                    widgets.select(paramName, EDStatic.magGSColorBarTooltip_s[currLang], 
                         1, EDStatic.palettes0, palette, "") + "</td>\n");
 
                 String conDisAr[] = new String[]{"", "Continuous", "Discrete"};
                 paramName = "pc";
                 continuous = pParts.length > 1? (pParts[1].equals("D")? 2 : pParts[1].equals("C")? 1 : 0) : 0;
                 writer.write(
-                    "    <td>&nbsp;" + EDStatic.magGSContinuity + ":&nbsp;</td>" +
+                    "    <td>&nbsp;" + EDStatic.magGSContinuity_s[currLang] + ":&nbsp;</td>" +
                     "    <td>" +
-                    widgets.select(paramName, EDStatic.magGSContinuityTooltip, 
+                    widgets.select(paramName, EDStatic.magGSContinuityTooltip_s[currLang], 
                         1, conDisAr, continuous, "") + "</td>\n");
 
                 paramName = "ps";
                 String defaultScale = "";
                 scale = Math.max(0, String2.indexOf(EDV.VALID_SCALES0, pParts.length > 2? pParts[2] : defaultScale));
                 writer.write(
-                    "    <td>&nbsp;" + EDStatic.magGSScale + ":&nbsp;</td>" +
+                    "    <td>&nbsp;" + EDStatic.magGSScale_s[currLang] + ":&nbsp;</td>" +
                     "    <td>" +
-                    widgets.select(paramName, EDStatic.magGSScaleTooltip, 
+                    widgets.select(paramName, EDStatic.magGSScaleTooltip_s[currLang], 
                         1, EDV.VALID_SCALES0, scale, "") + "</td>\n" +
                     "  </tr>\n");
 
@@ -10199,26 +10311,26 @@ public abstract class EDDTable extends EDD {
                 palMin = pParts.length > 3? pParts[3] : defaultMin;
                 writer.write(
                     "  <tr>\n" +
-                    "    <td>" + gap + EDStatic.magGSMin + ":&nbsp;</td>" +
+                    "    <td>" + gap + EDStatic.magGSMin_s[currLang] + ":&nbsp;</td>" +
                     "    <td>" +
-                    widgets.textField(paramName, EDStatic.magGSMinTooltip, 
+                    widgets.textField(paramName, EDStatic.magGSMinTooltip_s[currLang], 
                        10, 60, palMin, "") + "</td>\n");
 
                 paramName = "pMax";
                 String defaultMax = "";
                 palMax = pParts.length > 4? pParts[4] : defaultMax;
                 writer.write(
-                    "    <td>&nbsp;" + EDStatic.magGSMax + ":&nbsp;</td>" +
+                    "    <td>&nbsp;" + EDStatic.magGSMax_s[currLang] + ":&nbsp;</td>" +
                     "    <td>" +
-                    widgets.textField(paramName, EDStatic.magGSMaxTooltip, 
+                    widgets.textField(paramName, EDStatic.magGSMaxTooltip_s[currLang], 
                        10, 60, palMax, "") + "</td>\n");
 
                 paramName = "pSec";
                 pSections = Math.max(0, String2.indexOf(EDStatic.paletteSections, pParts.length > 5? pParts[5] : ""));
                 writer.write(
-                    "    <td>&nbsp;" + EDStatic.magGSNSections + ":&nbsp;</td>" +
+                    "    <td>&nbsp;" + EDStatic.magGSNSections_s[currLang] + ":&nbsp;</td>" +
                     "    <td>" +
-                    widgets.select(paramName, EDStatic.magGSNSectionsTooltip, 
+                    widgets.select(paramName, EDStatic.magGSNSectionsTooltip_s[currLang], 
                         1, EDStatic.paletteSections, pSections, "") + "</td>\n" +
                     "  </tr>\n");
 
@@ -10249,9 +10361,9 @@ public abstract class EDDTable extends EDD {
                 }
                 writer.write(
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.magGSLandMask + ":&nbsp;</td>\n" +
+                    "    <td>" + EDStatic.magGSLandMask_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td>" +
-                    widgets.select("land", EDStatic.magGSLandMaskTooltipTable, 
+                    widgets.select("land", EDStatic.magGSLandMaskTooltipTable_s[currLang], 
                         1, SgtMap.drawLandMask_OPTIONS, tLand, "") + "</td>\n" +
                     "    <td></td>\n" +
                     "    <td></td>\n" +
@@ -10285,10 +10397,10 @@ public abstract class EDDTable extends EDD {
                 vec = vec == null? "" : vec.substring(partName.length());
                 writer.write(
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.magGSVectorStandard + ":&nbsp;</td>\n" +
+                    "    <td>" + EDStatic.magGSVectorStandard_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td>" +
                     widgets.textField(paramName, 
-                        EDStatic.magGSVectorStandardTooltip, 10, 30, vec, "") + "</td>\n" +
+                        EDStatic.magGSVectorStandardTooltip_s[currLang], 10, 30, vec, "") + "</td>\n" +
                     "    <td></td>\n" +
                     "    <td></td>\n" +
                     "    <td></td>\n" +
@@ -10347,30 +10459,30 @@ public abstract class EDDTable extends EDD {
                 }
                 writer.write(
                     "  <tr>\n" +
-                    "    <td>" + EDStatic.magGSYAxisMin + ":&nbsp;</td>\n" +
+                    "    <td>" + EDStatic.magGSYAxisMin_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td>" +
                     widgets.textField("yRangeMin", 
                         "<div class=\"narrow_max_width\">" + 
-                        EDStatic.magGSYRangeMinTooltip + EDStatic.magGSYRangeTooltip +
+                        EDStatic.magGSYRangeMinTooltip_s[currLang] + EDStatic.magGSYRangeTooltip_s[currLang] +
                         "</div>", 
                         10, 30, yRange[0], "") + "</td>\n" +
 
-                    "    <td>&nbsp;" + EDStatic.magGSYAxisMax + ":&nbsp;</td>\n" +
+                    "    <td>&nbsp;" + EDStatic.magGSYAxisMax_s[currLang] + ":&nbsp;</td>\n" +
                     "    <td>" +
                     widgets.textField("yRangeMax", 
                         "<div class=\"narrow_max_width\">" + 
-                        EDStatic.magGSYRangeMaxTooltip + EDStatic.magGSYRangeTooltip +
+                        EDStatic.magGSYRangeMaxTooltip_s[currLang] + EDStatic.magGSYRangeTooltip_s[currLang] +
                         "</div>", 
                         10, 30, yRange[1], "") + "</td>\n" +
 
                     "    <td>&nbsp;" +
                     widgets.select("yRangeAscending", 
-                        EDStatic.magGSYAscendingTooltip, 
+                        EDStatic.magGSYAscendingTooltip_s[currLang], 
                         1, new String[]{"Ascending", "Descending"}, yAscending? 0 : 1, "") +
                         "</td>\n" +
                     "    <td>" +
                     widgets.select("yScale", 
-                        EDStatic.magGSYScaleTooltip, 
+                        EDStatic.magGSYScaleTooltip_s[currLang], 
                         1, new String[]{"", "Linear", "Log"}, 
                         yAxisScale.equals("Linear")? 1 :
                         yAxisScale.equals("Log")? 2 : 0, "") +
@@ -10480,32 +10592,32 @@ public abstract class EDDTable extends EDD {
             writer.write(
                 "<tr><td>");
             writer.write(widgets.htmlButton("button", "", "",
-                EDStatic.magRedrawTooltip, 
-                "<span style=\"font-size:large;\"><strong>" + EDStatic.magRedraw + "</strong></span>", 
+                EDStatic.magRedrawTooltip_s[currLang], 
+                "<span style=\"font-size:large;\"><strong>" + EDStatic.magRedraw_s[currLang] + "</strong></span>", 
                 "onMouseUp='mySubmit(true);'")); 
             writer.write(
-                " " + EDStatic.patientData + "\n" +
+                " " + EDStatic.patientData_s[currLang] + "\n" +
                 "</td></tr>\n");
 
             //Download the Data
             writer.write(
-                "<tr><td>&nbsp;<br>" + EDStatic.optional + ":" +
-                "<br>" + EDStatic.magFileType + ":\n");
+                "<tr><td>&nbsp;<br>" + EDStatic.optional_s[currLang] + ":" +
+                "<br>" + EDStatic.magFileType_s[currLang] + ":\n");
             paramName = "fType";
             String htmlEncodedGraphQuery = XML.encodeAsHTMLAttribute(graphQuery.toString());
             boolean tAccessibleTo = isAccessibleTo(EDStatic.getRoles(loggedInAs));
-            writer.write(widgets.select(paramName, EDStatic.EDDSelectFileType, 1,
+            writer.write(widgets.select(paramName, EDStatic.EDDSelectFileType_s[currLang], 1,
                 tAccessibleTo? allFileTypeNames      : publicGraphFileTypeNames,
                 tAccessibleTo? defaultFileTypeOption : defaultPublicGraphFileTypeOption, 
                 "onChange='document.f1.tUrl.value=\"" + tErddapUrl + "/tabledap/" + datasetID + 
                     "\" + document.f1.fType.options[document.f1.fType.selectedIndex].text + " +
                     "\"?" + htmlEncodedGraphQuery + "\";'"));
             writer.write(" (<a rel=\"help\" href=\"" + tErddapUrl + "/tabledap/documentation.html#fileType\">" +
-                EDStatic.EDDFileTypeInformation + "</a>)\n");
+                EDStatic.EDDFileTypeInformation_s[currLang] + "</a>)\n");
             writer.write("<br>and\n");
             writer.write(widgets.button("button", "", 
-                EDStatic.magDownloadTooltip + "<br>" + EDStatic.patientData,
-                EDStatic.magDownload, 
+                EDStatic.magDownloadTooltip_s[currLang] + "<br>" + EDStatic.patientData_s[currLang],
+                EDStatic.magDownload_s[currLang], 
                 //"class=\"skinny\" " + //only IE needs it but only IE ignores it
                 "onMouseUp='window.location=\"" + 
                     tErddapUrl + "/tabledap/" + datasetID + 
@@ -10517,10 +10629,10 @@ public abstract class EDDTable extends EDD {
 
             //view the url
             writer.write(
-                "<tr><td>" + EDStatic.magViewUrl + ":\n");
+                "<tr><td>" + EDStatic.magViewUrl_s[currLang] + ":\n");
             String genViewHtml = String2.replaceAll(
                 "<div class=\"standard_max_width\">" + 
-                EDStatic.justGenerateAndViewGraphUrlTooltip +
+                EDStatic.justGenerateAndViewGraphUrlTooltip_s[currLang] +
                 "</div>", 
                 "&protocolName;", dapProtocol);
             writer.write(widgets.textField("tUrl", genViewHtml, 
@@ -10532,7 +10644,7 @@ public abstract class EDDTable extends EDD {
                     "?" + graphQuery.toString(), 
                 ""));
             writer.write("<br>(<a rel=\"help\" href=\"" + tErddapUrl + "/tabledap/documentation.html\" " +
-                "title=\"tabledap documentation\">" + EDStatic.magDocumentation + "</a>\n" +
+                "title=\"tabledap documentation\">" + EDStatic.magDocumentation_s[currLang] + "</a>\n" +
                 EDStatic.htmlTooltipImage(loggedInAs, genViewHtml) + ")\n");
 
             if (debugMode) String2.log("respondToGraphQuery 8");
@@ -10557,9 +10669,9 @@ public abstract class EDDTable extends EDD {
                     datasetID + ".graph?" + XML.encodeAsHTMLAttribute(graphQueryNoLatLon.toString());
 
                 writer.write(
-                    EDStatic.magZoomCenter + "\n" +
-                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.magZoomCenterTooltip) +
-                    "<br><strong>" + EDStatic.magZoom + ":&nbsp;</strong>\n");
+                    EDStatic.magZoomCenter_s[currLang] + "\n" +
+                    EDStatic.htmlTooltipImage(loggedInAs, EDStatic.magZoomCenterTooltip_s[currLang]) +
+                    "<br><strong>" + EDStatic.magZoom_s[currLang] + ":&nbsp;</strong>\n");
 
                 //zoom out?
                 boolean disableZoomOut = 
@@ -10575,49 +10687,49 @@ public abstract class EDDTable extends EDD {
                 //if zoom out, keep ranges intact by moving tCenter to safe place
                 writer.write(
                 widgets.button("button", "",  
-                    MessageFormat.format(EDStatic.magZoomOutTooltip, "8x"),  
-                    MessageFormat.format(EDStatic.magZoomOut, "8x"),  
+                    MessageFormat.format(EDStatic.magZoomOutTooltip_s[currLang], "8x"),  
+                    MessageFormat.format(EDStatic.magZoomOut_s[currLang], "8x"),  
                     "class=\"skinny\" " + 
                     (disableZoomOut? "disabled" : gqz + "out8\";'")));
 
                 writer.write(
                 widgets.button("button", "",  
-                    MessageFormat.format(EDStatic.magZoomOutTooltip, "2x"),  
-                    MessageFormat.format(EDStatic.magZoomOut, "2x"),  
+                    MessageFormat.format(EDStatic.magZoomOutTooltip_s[currLang], "2x"),  
+                    MessageFormat.format(EDStatic.magZoomOut_s[currLang], "2x"),  
                     "class=\"skinny\" " + 
                     (disableZoomOut? "disabled" : gqz + "out2\";'")));
 
                 writer.write(
                 widgets.button("button", "",  
-                    MessageFormat.format(EDStatic.magZoomOutTooltip, EDStatic.magZoomALittle),  
-                    MessageFormat.format(EDStatic.magZoomOut, "").trim(),  
+                    MessageFormat.format(EDStatic.magZoomOutTooltip_s[currLang], EDStatic.magZoomALittle_s[currLang]),  
+                    MessageFormat.format(EDStatic.magZoomOut_s[currLang], "").trim(),  
                     "class=\"skinny\" " + 
                     (disableZoomOut? "disabled" : gqz + "out\";'")));
 
                 //zoom data
                 writer.write(
                 widgets.button("button", "",  
-                    MessageFormat.format(EDStatic.magZoomOutTooltip, EDStatic.magZoomOutData),  
-                    EDStatic.magZoomData,  
+                    MessageFormat.format(EDStatic.magZoomOutTooltip_s[currLang], EDStatic.magZoomOutData_s[currLang]),  
+                    EDStatic.magZoomData_s[currLang],  
                     "class=\"skinny\" " + gqnll + "\";'"));
 
                 //zoom in     
                 writer.write(
                     widgets.button("button", "", 
-                        MessageFormat.format(EDStatic.magZoomInTooltip, EDStatic.magZoomALittle),  
-                        MessageFormat.format(EDStatic.magZoomIn, "").trim(),  
+                        MessageFormat.format(EDStatic.magZoomInTooltip_s[currLang], EDStatic.magZoomALittle_s[currLang]),  
+                        MessageFormat.format(EDStatic.magZoomIn_s[currLang], "").trim(),  
                         "class=\"skinny\" " + gqz + "in\";'"));
 
                 writer.write(
                     widgets.button("button", "", 
-                        MessageFormat.format(EDStatic.magZoomInTooltip, "2x"),  
-                        MessageFormat.format(EDStatic.magZoomIn, "2x"),  
+                        MessageFormat.format(EDStatic.magZoomInTooltip_s[currLang], "2x"),  
+                        MessageFormat.format(EDStatic.magZoomIn_s[currLang], "2x"),  
                         "class=\"skinny\" " + gqz + "in2\";'"));
 
                 writer.write(
                     widgets.button("button", "", 
-                        MessageFormat.format(EDStatic.magZoomInTooltip, "8x"),  
-                        MessageFormat.format(EDStatic.magZoomIn, "8x"),  
+                        MessageFormat.format(EDStatic.magZoomInTooltip_s[currLang], "8x"),  
+                        MessageFormat.format(EDStatic.magZoomIn_s[currLang], "8x"),  
                         "class=\"skinny\" " + gqz + "in8\";'"));
 
                 //trailing <br>
@@ -10656,7 +10768,7 @@ public abstract class EDDTable extends EDD {
                 //zoom in 
                 if (zoomXRange > 1e-10) {
                     writer.write(widgets.htmlButton("button", "zoomXzoomIn", "", //value
-                        EDStatic.zoomIn, EDStatic.zoomIn,   //tooltip, labelHtml 
+                        EDStatic.zoomIn_s[currLang], EDStatic.zoomIn_s[currLang],   //tooltip, labelHtml 
                         "onMouseUp='" + formTextField + "a.value=\"" + (zoomXCenter - zoomXRange4) + "\"; " +
                                         formTextField + "b.value=\"" + (zoomXCenter + zoomXRange4) + "\"; " +
                                    "mySubmit(true);'"));
@@ -10667,7 +10779,7 @@ public abstract class EDDTable extends EDD {
                 //zoom out 
                 {
                     writer.write(widgets.htmlButton("button", "zoomXzoomOut", "", //value
-                        EDStatic.zoomOut, EDStatic.zoomOut,   //tooltip, labelHtml 
+                        EDStatic.zoomOut_s[currLang], EDStatic.zoomOut_s[currLang],   //tooltip, labelHtml 
                         "onMouseUp='" + formTextField + "a.value=\"" + (zoomXCenter - zoomXRange) + "\"; " +
                                         formTextField + "b.value=\"" + (zoomXCenter + zoomXRange) + "\"; " +
                                    "mySubmit(true);'") + 
@@ -10680,7 +10792,7 @@ public abstract class EDDTable extends EDD {
                     //all the way left
                     writer.write(HtmlWidgets.htmlTooltipImage( 
                         EDStatic.imageDirUrl(loggedInAs) + "arrowLL.gif", "|<",
-                        EDStatic.shiftXAllTheWayLeft, 
+                        EDStatic.shiftXAllTheWayLeft_s[currLang], 
                         "class=\"B\" " + //vertical-align: 'b'ottom
                         "onMouseUp='" + formTextField + "a.value=\"" +  zoomXEdvMin                                        + "\"; " +
                                         formTextField + "b.value=\"" + (zoomXEdvMin + Math.min(zoomXEdvRange, zoomXRange)) + "\"; " +
@@ -10695,7 +10807,7 @@ public abstract class EDDTable extends EDD {
                 //left
                 writer.write(HtmlWidgets.htmlTooltipImage( 
                     EDStatic.imageDirUrl(loggedInAs) + "minus.gif", "-",
-                    EDStatic.shiftXLeft, 
+                    EDStatic.shiftXLeft_s[currLang], 
                     "class=\"B\" " + //vertical-align: 'b'ottom
                     "onMouseUp='" + formTextField + "a.value=\"" + (zoomXMin - zoomXRange2) + "\"; " +
                                     formTextField + "b.value=\"" + (zoomXMax - zoomXRange2) + "\"; " +
@@ -10707,7 +10819,7 @@ public abstract class EDDTable extends EDD {
                 //right
                 writer.write(HtmlWidgets.htmlTooltipImage( 
                     EDStatic.imageDirUrl(loggedInAs) + "plus.gif", "+",
-                    EDStatic.shiftXRight, 
+                    EDStatic.shiftXRight_s[currLang], 
                     "class=\"B\" " + //vertical-align: 'b'ottom
                     "onMouseUp='" + formTextField + "a.value=\"" + (zoomXMin + zoomXRange2) + "\"; " +
                                     formTextField + "b.value=\"" + (zoomXMax + zoomXRange2) + "\"; " +
@@ -10720,7 +10832,7 @@ public abstract class EDDTable extends EDD {
                     //all the way right
                     writer.write(HtmlWidgets.htmlTooltipImage( 
                         EDStatic.imageDirUrl(loggedInAs) + "arrowRR.gif", ">|",
-                        EDStatic.shiftXAllTheWayRight, 
+                        EDStatic.shiftXAllTheWayRight_s[currLang], 
                         "class=\"B\" " + //vertical-align: 'b'ottom
                         "onMouseUp='" + formTextField + "a.value=\"" + (zoomXEdvMax - Math.min(zoomXEdvRange, zoomXRange)) + "\"; " +
                                         formTextField + "b.value=\"" +  zoomXEdvMax                                        + "\"; " +
@@ -10793,7 +10905,7 @@ public abstract class EDDTable extends EDD {
                     datasetID + ".graph?" + XML.encodeAsHTML(graphQueryNoTime.toString());
 
                 //beginning of row in controls table
-                writer.write("<tr><td><strong>" + EDStatic.magTimeRange + "</strong>&nbsp;</td>\n" +
+                writer.write("<tr><td><strong>" + EDStatic.magTimeRange_s[currLang] + "</strong>&nbsp;</td>\n" +
                     "<td>");
 
                 String timeRangeString = idealTimeN + " " + Calendar2.IDEAL_UNITS_OPTIONS[idealTimeUnits];
@@ -10803,7 +10915,7 @@ public abstract class EDDTable extends EDD {
                 //n = 1..100
                 writer.write(
                 widgets.select("timeN", //keep using widgets even though this isn't part of f1 form
-                    EDStatic.magTimeRangeTooltip, 
+                    EDStatic.magTimeRangeTooltip_s[currLang], 
                     1, Calendar2.IDEAL_N_OPTIONS, idealTimeN - 1, //-1 so index=0 .. 99
                     "onChange='" + gqnt + 
                     "&amp;time%3E=" + 
@@ -10816,7 +10928,7 @@ public abstract class EDDTable extends EDD {
                 //timeUnits
                 writer.write(
                 widgets.select("timeUnits", //keep using widgets even though this isn't part of f1 form
-                    EDStatic.magTimeRangeTooltip, 
+                    EDStatic.magTimeRangeTooltip_s[currLang], 
                     1, Calendar2.IDEAL_UNITS_OPTIONS, idealTimeUnits, 
                     "onChange='" + gqnt + 
                     "&amp;time%3E=" + 
@@ -10847,7 +10959,7 @@ public abstract class EDDTable extends EDD {
                         writer.write(
                         HtmlWidgets.htmlTooltipImage( 
                             EDStatic.imageDirUrl(loggedInAs) + "arrowLL.gif", "|<",
-                            MessageFormat.format(EDStatic.magTimeRangeFirst, timeRangeString),
+                            MessageFormat.format(EDStatic.magTimeRangeFirst_s[currLang], timeRangeString),
                             "class=\"B\" onMouseUp='" + gqnt + //vertical-align: 'b'ottom
                             "&amp;time%3E=" + 
                             Calendar2.limitedFormatAsISODateTimeT(tTime_precision, tidMinGc) +
@@ -10872,7 +10984,7 @@ public abstract class EDDTable extends EDD {
                     idMaxGc.add(Calendar2.IDEAL_UNITS_FIELD[idealTimeUnits], -idealTimeN);                                 
                     writer.write(HtmlWidgets.htmlTooltipImage( 
                         EDStatic.imageDirUrl(loggedInAs) + "minus.gif", "-",
-                        MessageFormat.format(EDStatic.magTimeRangeBack, timeRangeString),
+                        MessageFormat.format(EDStatic.magTimeRangeBack_s[currLang], timeRangeString),
                         "class=\"B\" onMouseUp='" + gqnt + //vertical-align: 'b'ottom
                         "&amp;time%3E=" + 
                         Calendar2.limitedFormatAsISODateTimeT(tTime_precision, idMinGc) + 
@@ -10900,7 +11012,7 @@ public abstract class EDDTable extends EDD {
                         idMaxGc.getTimeInMillis() >= edvTimeMax * 1000)? "=" : "";
                     writer.write(HtmlWidgets.htmlTooltipImage( 
                         EDStatic.imageDirUrl(loggedInAs) + "plus.gif", "+",
-                        MessageFormat.format(EDStatic.magTimeRangeForward, timeRangeString),
+                        MessageFormat.format(EDStatic.magTimeRangeForward_s[currLang], timeRangeString),
                         "class=\"B\" onMouseUp='" + gqnt + //vertical-align: 'b'ottom
                         "&amp;time%3E=" +          
                         Calendar2.limitedFormatAsISODateTimeT(tTime_precision, idMinGc) + 
@@ -10933,7 +11045,7 @@ public abstract class EDDTable extends EDD {
                     if (timeMax < edvTimeMax || ratio < 0.99 || ratio > 1.01) {
                         writer.write(HtmlWidgets.htmlTooltipImage( 
                             EDStatic.imageDirUrl(loggedInAs) + "arrowRR.gif", ">|",
-                            MessageFormat.format(EDStatic.magTimeRangeLast, timeRangeString),
+                            MessageFormat.format(EDStatic.magTimeRangeLast_s[currLang], timeRangeString),
                             "class=\"B\" onMouseUp='" + gqnt + //vertical-align: 'b'ottom
                             "&amp;time%3E=" + 
                             Calendar2.limitedFormatAsISODateTimeT(tTime_precision, tidMinGc) +
@@ -10966,7 +11078,7 @@ public abstract class EDDTable extends EDD {
             writer.write("<img " + (zoomLatLon? "ismap " : "") + 
                 "width=\"" + EDStatic.imageWidths[1] + 
                 "\" height=\"" + EDStatic.imageHeights[1] + "\" " +
-                "alt=\"" + EDStatic.patientYourGraph + "\" " +
+                "alt=\"" + EDStatic.patientYourGraph_s[currLang] + "\" " +
                 "src=\"" + tErddapUrl + "/tabledap/" + //don't use \n for the following lines
                 datasetID+ ".png?" + htmlEncodedGraphQuery + "\">"); //no img end tag
             if (zoomLatLon) 
@@ -10981,14 +11093,14 @@ public abstract class EDDTable extends EDD {
 
             //do things with graphs
             writer.write(String2.replaceAll(MessageFormat.format(
-                EDStatic.doWithGraphs, tErddapUrl), "&erddapUrl;", tErddapUrl));
+                EDStatic.doWithGraphs_s[currLang], tErddapUrl), "&erddapUrl;", tErddapUrl));
             writer.write("\n\n");
 
             //*** .das   
             writer.write(
                 "<hr>\n" +
                 "<h2><a class=\"selfLink\" id=\"DAS\" href=\"#DAS\" rel=\"bookmark\">" + 
-                    EDStatic.dasTitle + "</a></h2>\n" +
+                    EDStatic.dasTitle_s[currLang] + "</a></h2>\n" +
                 "<pre style=\"white-space:pre-wrap;\">\n");
             Table table = makeEmptyDestinationTable("/tabledap/" + datasetID + ".das", "", true); //as if no constraints
             table.writeDAS(writer, SEQUENCE_NAME, true); //useful so search engines find all relevant words
@@ -10998,16 +11110,16 @@ public abstract class EDDTable extends EDD {
             writer.write(
                 "<br>&nbsp;\n" +
                 "<hr>\n");
-            writeGeneralDapHtmlInstructions(tErddapUrl, writer, false); 
+            writeGeneralDapHtmlInstructions(tErddapUrl, writer, false, currLang); 
 
             writer.write("</div>\n");
             //*** end of document
         } catch (Exception e) {
             EDStatic.rethrowClientAbortException(e);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(e));
+            writer.write(EDStatic.htmlForException(e, currLang));
             throw e;
         } finally {
-            writer.write(EDStatic.endBodyHtml(tErddapUrl));
+            writer.write(EDStatic.endBodyHtml(tErddapUrl, currLang));
             writer.write("\n</html>\n");
 
             //essential
@@ -11081,7 +11193,7 @@ public abstract class EDDTable extends EDD {
         HttpServletResponse response, 
         String loggedInAs, String requestUrl, String userQuery, 
         OutputStreamSource outputStreamSource,
-        String dir, String fileName, String fileTypeName) throws Throwable {
+        String dir, String fileName, String fileTypeName, int currLang) throws Throwable {
 
         //BOB: this is similar to Erddap.doPostSubset()
         //Here, time is like a String variable (not reduced to Year)
@@ -11090,7 +11202,7 @@ public abstract class EDDTable extends EDD {
         String ANY = "(ANY)";
         boolean fixedLLRange = false; //true until 2011-02-08
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);
         String subsetUrl = tErddapUrl + "/tabledap/" + datasetID + ".subset";
         userQuery = userQuery == null? "" :
             String2.replaceAll(userQuery, "|", "%7C"); //crude extra percentEncode insurance
@@ -11418,18 +11530,18 @@ public abstract class EDDTable extends EDD {
         Writer writer = String2.getBufferedOutputStreamWriterUtf8(out); 
         try {
             writer.write(EDStatic.startHeadHtml(tErddapUrl,  
-                title() + " - " + EDStatic.subset));
+                title() + " - " + EDStatic.subset_s[currLang], currLang));
             writer.write("\n" + rssHeadLink());
             writer.write("\n</head>\n");
-            writer.write(EDStatic.startBodyHtml(loggedInAs));
+            writer.write(EDStatic.startBodyHtml(loggedInAs, currLang));
             writer.write("\n");
             writer.write("<div class=\"standard_width\">\n");
             writer.write(HtmlWidgets.htmlTooltipScript(EDStatic.imageDirUrl(loggedInAs)));   //this is a link to a script
             writer.flush(); //Steve Souder says: the sooner you can send some html to user, the better
             writer.write(EDStatic.youAreHereWithHelp(loggedInAs, dapProtocol, 
-                EDStatic.subset, 
-                "<div class=\"narrow_max_width\">" + EDStatic.subsetTooltip +
-                "</div>"));
+                EDStatic.subset_s[currLang], 
+                "<div class=\"narrow_max_width\">" + EDStatic.subsetTooltip_s[currLang] +
+                "</div>", currLang));
 
             StringBuilder diQuery = new StringBuilder();
             for (int qpi = 1; qpi < queryParts.length; qpi++) { //1 because part0 is var names
@@ -11459,7 +11571,7 @@ public abstract class EDDTable extends EDD {
 
                 //error message?
                 writer.write("<span class=\"warningColor\">" + MustBe.THERE_IS_NO_DATA + 
-                    " " + EDStatic.resetTheFormWas + "</span>\n");
+                    " " + EDStatic.resetTheFormWas_s[currLang] + "</span>\n");
 
                 //reset all
                 Arrays.fill(param, ANY);
@@ -11472,12 +11584,12 @@ public abstract class EDDTable extends EDD {
             //Select a subset
             writer.write(
                 widgets.beginForm("f1", "GET", subsetUrl, "") + "\n" +
-                "<p><strong>" + EDStatic.subsetSelect + ":</strong>\n" +
+                "<p><strong>" + EDStatic.subsetSelect_s[currLang] + ":</strong>\n" +
                 "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"subduedColor\">" +
                     "(" + 
-                    MessageFormat.format(EDStatic.subsetNMatching, "" + subsetTable.nRows()) + 
+                    MessageFormat.format(EDStatic.subsetNMatching_s[currLang], "" + subsetTable.nRows()) + 
                     ")</span>\n" +
-                "  <br>" + EDStatic.subsetInstructions + "\n" +
+                "  <br>" + EDStatic.subsetInstructions_s[currLang] + "\n" +
                 widgets.beginTable("class=\"compact nowrap\""));  
 
             StringBuilder countsVariables = new StringBuilder(); 
@@ -11581,7 +11693,7 @@ public abstract class EDDTable extends EDD {
                         "      </td>\n" +
                         "      <td>\n" +
                         "<img class=\"B\" src=\"" + widgets.imageDirUrl + "minus.gif\"\n" + //vertical-align: 'b'ottom
-                        "  " + widgets.completeTooltip(EDStatic.selectPrevious) +
+                        "  " + widgets.completeTooltip(EDStatic.selectPrevious_s[currLang]) +
                         "  alt=\"-\" " + 
                         //onMouseUp works much better than onClick and onDblClick
                         "  onMouseUp='\n" +
@@ -11594,7 +11706,7 @@ public abstract class EDDTable extends EDD {
 
                         "      <td>\n" +
                         "<img class=\"B\" src=\"" + widgets.imageDirUrl + "plus.gif\"\n" + //vertical-align: 'b'ottom
-                        "  " + widgets.completeTooltip(EDStatic.selectNext) +
+                        "  " + widgets.completeTooltip(EDStatic.selectNext_s[currLang]) +
                         "  alt=\"+\" " + 
                         //onMouseUp works much better than onClick and onDblClick
                         "  onMouseUp='\n" +
@@ -11627,10 +11739,10 @@ public abstract class EDDTable extends EDD {
                         "  <td>&nbsp;<span class=\"subduedColor\">" + 
                             (pa.size() - 1) + " " + 
                             (pa.size() == 2? 
-                                EDStatic.subsetOption + ": " + 
+                                EDStatic.subsetOption_s[currLang] + ": " + 
                                 //encodeSpaces so only option displays nicely
                                 XML.minimalEncodeSpaces(XML.encodeAsHTML(pa.getString(1))) : 
-                                EDStatic.subsetOptions) + 
+                                EDStatic.subsetOptions_s[currLang]) + 
                             "</span></td>\n" : 
                         "") + 
 
@@ -11644,7 +11756,7 @@ public abstract class EDDTable extends EDD {
             //View the graph and/or data?
             writer.write(
                 "<p><a class=\"selfLink\" id=\"View\" href=\"#View\" rel=\"bookmark\"><strong>" + 
-                EDStatic.subsetView + ":</strong></a>\n");
+                EDStatic.subsetView_s[currLang] + ":</strong></a>\n");
             //!!! If changing these, change DEFAULT_SUBSET_VIEWS above. 
             String viewParam[] = {
                 "viewDistinctMap",        
@@ -11654,19 +11766,19 @@ public abstract class EDDTable extends EDD {
                 "viewRelatedDataCounts",  
                 "viewRelatedData"};
             String viewTitle[] = {
-                EDStatic.subsetViewDistinctMap,        
-                EDStatic.subsetViewRelatedMap,                                            
-                EDStatic.subsetViewDistinctDataCounts, 
-                EDStatic.subsetViewDistinctData,     
-                EDStatic.subsetViewRelatedDataCounts,  
-                EDStatic.subsetViewRelatedData};
+                EDStatic.subsetViewDistinctMap_s[currLang],        
+                EDStatic.subsetViewRelatedMap_s[currLang],                                            
+                EDStatic.subsetViewDistinctDataCounts_s[currLang], 
+                EDStatic.subsetViewDistinctData_s[currLang],     
+                EDStatic.subsetViewRelatedDataCounts_s[currLang],  
+                EDStatic.subsetViewRelatedData_s[currLang]};
             String viewTooltip[] = {
-                EDStatic.subsetViewDistinctMapTooltip,
-                EDStatic.subsetViewRelatedMapTooltip        + EDStatic.subsetWarn,
-                EDStatic.subsetViewDistinctDataCountsTooltip, 
-                EDStatic.subsetViewDistinctDataTooltip      + EDStatic.subsetWarn10000,     
-                EDStatic.subsetViewRelatedDataCountsTooltip + EDStatic.subsetWarn,  
-                EDStatic.subsetViewRelatedDataTooltip       + EDStatic.subsetWarn10000};
+                EDStatic.subsetViewDistinctMapTooltip_s[currLang],
+                EDStatic.subsetViewRelatedMapTooltip_s[currLang]        + EDStatic.subsetWarn_s[currLang],
+                EDStatic.subsetViewDistinctDataCountsTooltip_s[currLang], 
+                EDStatic.subsetViewDistinctDataTooltip_s[currLang]      + EDStatic.subsetWarn10000_s[currLang],     
+                EDStatic.subsetViewRelatedDataCountsTooltip_s[currLang] + EDStatic.subsetWarn_s[currLang],  
+                EDStatic.subsetViewRelatedDataTooltip_s[currLang]       + EDStatic.subsetWarn10000_s[currLang]};
 
             boolean useCheckbox[] = {true,  true, true,  false, true, false};
             //for checkboxes, viewDefault: 0=false 1=true
@@ -11819,7 +11931,7 @@ public abstract class EDDTable extends EDD {
                     EDStatic.htmlTooltipImage(loggedInAs, viewTooltip[current]) +
                     "&nbsp;&nbsp;(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID + ".graph?" +
                         XML.encodeAsHTML(graphDapQuery) + "\">" +
-                        EDStatic.subsetRefineMapDownload + "</a>)\n" +
+                        EDStatic.subsetRefineMapDownload_s[currLang] + "</a>)\n" +
                     "<br>");
 
                 if (viewValue[current] == 1) {  
@@ -11831,10 +11943,10 @@ public abstract class EDDTable extends EDD {
                                 viewQuery.toString() + //&.view marks end of graphDapQuery
                                 "&distinct()") + 
                             "\">" +
-                            MessageFormat.format(EDStatic.subsetClickResetLL, ANY) + 
+                            MessageFormat.format(EDStatic.subsetClickResetLL_s[currLang], ANY) + 
                             "</a>)\n");
                     else 
-                        writer.write(EDStatic.subsetClickResetClosest + "\n");
+                        writer.write(EDStatic.subsetClickResetClosest_s[currLang] + "\n");
                             //EDStatic.htmlTooltipImage(loggedInAs, 
                             //    "Unfortunately, after you click, some data sources respond with" +
                             //    "<br><kbd>" + MustBe.THERE_IS_NO_DATA + "</kbd>" +
@@ -11857,8 +11969,8 @@ public abstract class EDDTable extends EDD {
                         "</a>\n");
                 } else {
                     writer.write("<p><span class=\"subduedColor\">" +
-                        MessageFormat.format(EDStatic.subsetViewCheck, 
-                            "<kbd>" + EDStatic.subsetView + " : " + viewTitle[current] + "</kbd>") +
+                        MessageFormat.format(EDStatic.subsetViewCheck_s[currLang], 
+                            "<kbd>" + EDStatic.subsetView_s[currLang] + " : " + viewTitle[current] + "</kbd>") +
                         "</span>\n");
                 }
             }
@@ -11879,29 +11991,29 @@ public abstract class EDDTable extends EDD {
                     EDStatic.htmlTooltipImage(loggedInAs, viewTooltip[current]) +
                     "&nbsp;&nbsp;(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID + ".graph?" +
                         XML.encodeAsHTMLAttribute(graphDapQuery) + "\">" +
-                        EDStatic.subsetRefineMapDownload + "</a>)\n");
+                        EDStatic.subsetRefineMapDownload_s[currLang] + "</a>)\n");
 
                 if (viewValue[current] == 1) {  
                     if (allData) {
                         writer.write(
                             "\n<p><span class=\"subduedColor\">" +
-                            MessageFormat.format(EDStatic.subsetViewCheck1,
+                            MessageFormat.format(EDStatic.subsetViewCheck1_s[currLang],
                                 viewTitle[current], ANY) +
                             "</span>\n");
                     } else {
                         writer.write(
                             "<br><img width=\"" + EDStatic.imageWidths[1] + 
                             "\" height=\"" + EDStatic.imageHeights[1] + "\" " +
-                            "alt=\"" + EDStatic.patientYourGraph + "\" " +
+                            "alt=\"" + EDStatic.patientYourGraph_s[currLang] + "\" " +
                             "src=\"" + XML.encodeAsHTMLAttribute(tErddapUrl + "/tabledap/" + 
                                 datasetID + ".png?" + graphDapQuery) + "\">\n"); 
                     }
                 } else {
                     writer.write("<p><span class=\"subduedColor\">" +
-                        MessageFormat.format(EDStatic.subsetViewCheck, 
-                            "<kbd>" + EDStatic.subsetView + " : " + viewTitle[current] + "</kbd>") +
+                        MessageFormat.format(EDStatic.subsetViewCheck_s[currLang], 
+                            "<kbd>" + EDStatic.subsetView_s[currLang] + " : " + viewTitle[current] + "</kbd>") +
                         "</span>\n" +
-                        String2.replaceAll(EDStatic.subsetWarn, "<br>", " ") + 
+                        String2.replaceAll(EDStatic.subsetWarn_s[currLang], "<br>", " ") + 
                         "\n");
                 }
             }
@@ -11919,7 +12031,7 @@ public abstract class EDDTable extends EDD {
                     "(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID + ".html?" +
                     XML.encodeAsHTMLAttribute(countsVariables.toString() + newConstraintsNLP.toString() + 
                         "&distinct()") + 
-                    "\">" + EDStatic.subsetRefineSubsetDownload + "</a>)\n");
+                    "\">" + EDStatic.subsetRefineSubsetDownload_s[currLang] + "</a>)\n");
 
                 try {                    
                     //get the distinct data; work on a copy
@@ -11932,7 +12044,7 @@ public abstract class EDDTable extends EDD {
                     //sort, count, remove duplicates
                     varPA.sortIgnoreCase();
                     IntArray countPA = new IntArray(n, false);
-                    countTable.addColumn(EDStatic.subsetCount, countPA);
+                    countTable.addColumn(EDStatic.subsetCount_s[currLang], countPA);
                     int lastCount = 1;
                     countPA.add(lastCount);
                     keep = new BitSet(n);
@@ -11953,7 +12065,7 @@ public abstract class EDDTable extends EDD {
                     double total = stats[PrimitiveArray.STATS_SUM];
                     n = countPA.size();
                     DoubleArray percentPA = new DoubleArray(n, false);
-                    countTable.addColumn(EDStatic.subsetPercent, percentPA);
+                    countTable.addColumn(EDStatic.subsetPercent_s[currLang], percentPA);
                     for (int i = 0; i < n; i++) 
                         percentPA.add(Math2.roundTo(countPA.get(i) * 100 / total, 2));
 
@@ -11961,11 +12073,11 @@ public abstract class EDDTable extends EDD {
                     String countsCon = newConstraintsNLPHuman.toString();
                     writer.write("<br>" +  
                         (countsCon.length() == 0? 
-                            EDStatic.subsetWhenNoConstraints : 
-                            MessageFormat.format(EDStatic.subsetWhen, XML.encodeAsHTML(countsCon))) + 
+                            EDStatic.subsetWhenNoConstraints_s[currLang] : 
+                            MessageFormat.format(EDStatic.subsetWhen_s[currLang], XML.encodeAsHTML(countsCon))) + 
                         (countsCon.length() < 40? " " : "\n<br>") +
-                        MessageFormat.format(EDStatic.subsetWhenCounts,
-                            EDStatic.subsetViewSelectDistinctCombos,
+                        MessageFormat.format(EDStatic.subsetWhenCounts_s[currLang],
+                            EDStatic.subsetViewSelectDistinctCombos_s[currLang],
                             "" + countTable.nRows(), XML.encodeAsHTML(lastPName)) + 
                         "\n");
                     writer.flush(); //essential, since creating and using another writer to write the countTable
@@ -11974,7 +12086,7 @@ public abstract class EDDTable extends EDD {
                         false, "", false, "", "", 
                         true, false, -1);          
                     writer.write("<p>" + 
-                        MessageFormat.format(EDStatic.subsetTotalCount, 
+                        MessageFormat.format(EDStatic.subsetTotalCount_s[currLang], 
                             "" + Math2.roundToLong(total)) + 
                         "\n");
                 } catch (Throwable t) {
@@ -11990,9 +12102,9 @@ public abstract class EDDTable extends EDD {
             } else {
                 writer.write(
                     "<p><span class=\"subduedColor\">" +
-                    MessageFormat.format(EDStatic.subsetViewSelect,
-                        EDStatic.subsetViewSelectDistinctCombos,
-                        EDStatic.subsetView, viewTitle[current]) +
+                    MessageFormat.format(EDStatic.subsetViewSelect_s[currLang],
+                        EDStatic.subsetViewSelectDistinctCombos_s[currLang],
+                        EDStatic.subsetView_s[currLang], viewTitle[current]) +
                     "</span>\n");
             }
 
@@ -12004,13 +12116,13 @@ public abstract class EDDTable extends EDD {
                     viewTitle[current] + "</strong></a>\n" +
                 EDStatic.htmlTooltipImage(loggedInAs, viewTooltip[current]) +
                 "&nbsp;&nbsp;(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID +
-                    ".das\">" + EDStatic.subsetMetadata + "</a>)\n");
+                    ".das\">" + EDStatic.subsetMetadata_s[currLang] + "</a>)\n");
             writer.write(
                 "&nbsp;&nbsp;\n" +
                 "(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID + ".html?" +
                     XML.encodeAsHTMLAttribute(subsetVariablesCSV + newConstraints.toString() + 
                         "&distinct()") + 
-                    "\">" + EDStatic.subsetRefineSubsetDownload + "</a>)\n");
+                    "\">" + EDStatic.subsetRefineSubsetDownload_s[currLang] + "</a>)\n");
             int onRows = subsetTable.nRows();
             if (viewValue[current] > 0) {  
                 //this is last use of local copy of subsetTable, so okay to remove rows at end
@@ -12024,18 +12136,18 @@ public abstract class EDDTable extends EDD {
             }
 
             writer.write("<p>" +
-                MessageFormat.format(EDStatic.subsetNVariableCombos, "" + onRows) +
+                MessageFormat.format(EDStatic.subsetNVariableCombos_s[currLang], "" + onRows) +
                 "\n");
             if (onRows > viewValue[current])
                 writer.write("<br><span class=\"warningColor\">" +
-                    MessageFormat.format(EDStatic.subsetShowingNRows,
+                    MessageFormat.format(EDStatic.subsetShowingNRows_s[currLang],
                         "" + Math.min(onRows, viewValue[current]),
                         "" + (onRows - viewValue[current])) + 
                     "</span>\n");
-            else writer.write(EDStatic.subsetShowingAllRows + "\n");
+            else writer.write(EDStatic.subsetShowingAllRows_s[currLang] + "\n");
             writer.write("<br>" +
-                MessageFormat.format(EDStatic.subsetChangeShowing, 
-                    "<kbd>" + EDStatic.subsetView + " : " + viewTitle[current] + "</kbd>") +
+                MessageFormat.format(EDStatic.subsetChangeShowing_s[currLang], 
+                    "<kbd>" + EDStatic.subsetView_s[currLang] + " : " + viewTitle[current] + "</kbd>") +
                 "\n");
 
             // 4 = viewRelatedDataCounts
@@ -12050,7 +12162,7 @@ public abstract class EDDTable extends EDD {
                     "&nbsp;&nbsp;\n" +
                     "(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID + ".html?" +
                         XML.encodeAsHTMLAttribute(newConstraintsNLP.toString()) + //no vars, not distinct
-                        "\">" + EDStatic.subsetRefineSubsetDownload + "</a>)\n");
+                        "\">" + EDStatic.subsetRefineSubsetDownload_s[currLang] + "</a>)\n");
 
                 try {                    
                     //get the raw data
@@ -12068,7 +12180,7 @@ public abstract class EDDTable extends EDD {
                     varPA.sortIgnoreCase();
                     int n = varPA.size();
                     IntArray countPA = new IntArray(n, false);
-                    countTable.addColumn(EDStatic.subsetCount, countPA);
+                    countTable.addColumn(EDStatic.subsetCount_s[currLang], countPA);
                     int lastCount = 1;
                     countPA.add(lastCount);
                     keep = new BitSet(n);
@@ -12089,7 +12201,7 @@ public abstract class EDDTable extends EDD {
                     double total = stats[PrimitiveArray.STATS_SUM];
                     n = countPA.size();
                     DoubleArray percentPA = new DoubleArray(n, false);
-                    countTable.addColumn(EDStatic.subsetPercent, percentPA);
+                    countTable.addColumn(EDStatic.subsetPercent_s[currLang], percentPA);
                     for (int i = 0; i < n; i++) 
                         percentPA.add(Math2.roundTo(countPA.get(i) * 100 / total, 2));
 
@@ -12097,12 +12209,12 @@ public abstract class EDDTable extends EDD {
                     String countsConNLP = newConstraintsNLPHuman.toString();
                     writer.write("<br>" +  
                         (countsConNLP.length() == 0? 
-                            EDStatic.subsetWhenNoConstraints : 
-                            MessageFormat.format(EDStatic.subsetWhen, 
+                            EDStatic.subsetWhenNoConstraints_s[currLang] : 
+                            MessageFormat.format(EDStatic.subsetWhen_s[currLang], 
                             XML.encodeAsHTML(countsConNLP))) + 
                         (countsConNLP.length() < 40? " " : "\n<br>") +
-                        MessageFormat.format(EDStatic.subsetWhenCounts,
-                            EDStatic.subsetViewSelectRelatedCounts,
+                        MessageFormat.format(EDStatic.subsetWhenCounts_s[currLang],
+                            EDStatic.subsetViewSelectRelatedCounts_s[currLang],
                             "" + countTable.nRows(), XML.encodeAsHTML(lastPName)) + 
                         "\n");
                     writer.flush(); //essential, since creating and using another writer to write the countTable
@@ -12111,7 +12223,7 @@ public abstract class EDDTable extends EDD {
                         false, "", false, "", "", 
                         true, false, -1);          
                     writer.write("<p>" +
-                        MessageFormat.format(EDStatic.subsetTotalCount,
+                        MessageFormat.format(EDStatic.subsetTotalCount_s[currLang],
                             "" + Math2.roundToLong(total)) + 
                         "\n");
                 } catch (Throwable t) {
@@ -12126,11 +12238,11 @@ public abstract class EDDTable extends EDD {
 
             } else {
                 writer.write("<p><span class=\"subduedColor\">" +
-                    MessageFormat.format(EDStatic.subsetViewSelect,
-                        EDStatic.subsetViewSelectRelatedCounts,
-                        EDStatic.subsetView, viewTitle[current]) + 
+                    MessageFormat.format(EDStatic.subsetViewSelect_s[currLang],
+                        EDStatic.subsetViewSelectRelatedCounts_s[currLang],
+                        EDStatic.subsetView_s[currLang], viewTitle[current]) + 
                     "</span>\n" +
-                    String2.replaceAll(EDStatic.subsetWarn, "<br>", " ") + "\n");
+                    String2.replaceAll(EDStatic.subsetWarn_s[currLang], "<br>", " ") + "\n");
             }
 
             // 5 = viewRelatedData
@@ -12141,18 +12253,18 @@ public abstract class EDDTable extends EDD {
                     viewTitle[current] + "</strong></a>\n" +
                 EDStatic.htmlTooltipImage(loggedInAs, viewTooltip[current]) +
                 "&nbsp;&nbsp;(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID +
-                    ".das\">" + EDStatic.subsetMetadata + "</a>)\n" +
+                    ".das\">" + EDStatic.subsetMetadata_s[currLang] + "</a>)\n" +
                 "&nbsp;&nbsp;\n" +
                 "(<a href=\"" + tErddapUrl + "/tabledap/" + datasetID + ".html" +
                     (newConstraints.length() == 0? "" : 
                         "?" +
                         XML.encodeAsHTMLAttribute(newConstraints.toString())) + //no vars specified, and not distinct()
-                    "\">" + EDStatic.subsetRefineSubsetDownload + "</a>)\n");
+                    "\">" + EDStatic.subsetRefineSubsetDownload_s[currLang] + "</a>)\n");
             if (viewValue[current] > 0) {  
                 if (allData) {
                     writer.write(
                         "\n<p><span class=\"subduedColor\">" +
-                        MessageFormat.format(EDStatic.subsetViewCheck1,
+                        MessageFormat.format(EDStatic.subsetViewCheck1_s[currLang],
                             viewTitle[current], ANY) +
                         "</span>\n");
 
@@ -12175,19 +12287,19 @@ public abstract class EDDTable extends EDD {
 
                         //counts
                         writer.write("<p>" +
-                            MessageFormat.format(EDStatic.subsetNRowsRelatedData,
+                            MessageFormat.format(EDStatic.subsetNRowsRelatedData_s[currLang],
                                 "" + twht.totalRows()) +
                             "\n");
                         if (twht.totalRows() > viewValue[current])
                             writer.write("<br><span class=\"warningColor\">" +
-                                MessageFormat.format(EDStatic.subsetShowingNRows,
+                                MessageFormat.format(EDStatic.subsetShowingNRows_s[currLang],
                                     "" + Math.min(twht.totalRows(), viewValue[current]),
                                     "" + (twht.totalRows() - viewValue[current])) +
                                 "</span>\n");
-                        else writer.write(EDStatic.subsetShowingAllRows + "\n");
+                        else writer.write(EDStatic.subsetShowingAllRows_s[currLang] + "\n");
                         writer.write("<br>" +
-                            MessageFormat.format(EDStatic.subsetChangeShowing,
-                                "<kbd>" + EDStatic.subsetView + " : " + viewTitle[current] + "</kbd>") +
+                            MessageFormat.format(EDStatic.subsetChangeShowing_s[currLang],
+                                "<kbd>" + EDStatic.subsetView_s[currLang] + " : " + viewTitle[current] + "</kbd>") +
                             "\n");
 
                         /*
@@ -12243,20 +12355,20 @@ public abstract class EDDTable extends EDD {
                 }
             } else {
                 writer.write("<p><span class=\"subduedColor\">" +
-                    MessageFormat.format(EDStatic.subsetViewRelatedChange,
-                        "<kbd>" + EDStatic.subsetView + " : " + viewTitle[current] + "</kbd>") +
+                    MessageFormat.format(EDStatic.subsetViewRelatedChange_s[currLang],
+                        "<kbd>" + EDStatic.subsetView_s[currLang] + " : " + viewTitle[current] + "</kbd>") +
                     "</span>\n" +
-                    String2.replaceAll(EDStatic.subsetWarn, "<br>", " ") + "\n");
+                    String2.replaceAll(EDStatic.subsetWarn_s[currLang], "<br>", " ") + "\n");
             }
 
             writer.write("</div>\n");
 
         } catch (Throwable t) {
             EDStatic.rethrowClientAbortException(t);  //first thing in catch{}
-            writer.write(EDStatic.htmlForException(t));
+            writer.write(EDStatic.htmlForException(t, currLang));
             throw t;
         } finally {
-            writer.write(EDStatic.endBodyHtml(tErddapUrl));
+            writer.write(EDStatic.endBodyHtml(tErddapUrl, currLang));
             writer.write("\n</html>\n");
             writer.flush(); //essential
         }
@@ -12693,7 +12805,7 @@ public abstract class EDDTable extends EDD {
                         bitset.set(i, sa.get(i).length() <= maxChar);                    
                     sa.justKeep(bitset);
                     if (bitset.nextClearBit(0) < n)  //if don't keep 1 or more... (nextClearBit returns n if none)
-                        sa.add(EDStatic.subsetLongNotShown);
+                        sa.add(EDStatic.subsetLongNotShown_s[0]);
                     n = sa.size();
                 }
 
@@ -12915,7 +13027,7 @@ public abstract class EDDTable extends EDD {
                 }
             }
             if (tSubsetVariables.length == 0)
-                tAccessibleViaSubset = EDStatic.subsetNotSetUp;
+                tAccessibleViaSubset = EDStatic.subsetNotSetUp_s[0];
 
             if ((className.equals("EDDTableFromDapSequence") ||
                  className.equals("EDDTableFromErddap")) && 
@@ -12999,12 +13111,12 @@ public abstract class EDDTable extends EDD {
             }
             if (nNumeric == 0)
                 accessibleViaMAG = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause2, 
-                        EDStatic.mag, EDStatic.noXxxNoNonString));
+                    MessageFormat.format(EDStatic.noXxxBecause2_s[0], 
+                        EDStatic.mag_s[0], EDStatic.noXxxNoNonString_s[0]));
             else if (nNumeric == 1)
                 accessibleViaMAG = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause2, 
-                        EDStatic.mag, EDStatic.noXxxNo2NonString));
+                    MessageFormat.format(EDStatic.noXxxBecause2_s[0], 
+                        EDStatic.mag_s[0], EDStatic.noXxxNo2NonString_s[0]));
             else accessibleViaMAG = String2.canonical("");
         }
         return accessibleViaMAG;
@@ -13040,23 +13152,23 @@ public abstract class EDDTable extends EDD {
         //easy tests make for a better error message
         if (!EDStatic.sosActive)
             return String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "SOS", 
-                    MessageFormat.format(EDStatic.noXxxNotActive, "SOS")));
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "SOS", 
+                    MessageFormat.format(EDStatic.noXxxNotActive_s[0], "SOS")));
 
         if (lonIndex < 0 || latIndex < 0 || timeIndex < 0)
             return String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "SOS", EDStatic.noXxxNoLLT));
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "SOS", EDStatic.noXxxNoLLT_s[0]));
 
         String cdt = combinedGlobalAttributes().getString("cdm_data_type");
         int type = String2.indexOf(sosCdmDataTypes, cdt);
         if (type < 0) 
             return String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "SOS", 
-                    MessageFormat.format(EDStatic.noXxxNoCdmDataType, cdt)));
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "SOS", 
+                    MessageFormat.format(EDStatic.noXxxNoCdmDataType_s[0], cdt)));
 
         if (!setSosOfferingTypeAndIndex())
             return String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "SOS", EDStatic.noXxxNoStationID));
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "SOS", EDStatic.noXxxNoStationID_s[0]));
 
         //this just doesn't check that sosOfferings, sosMinLat, sosMaxLat, ... were all set.
 
@@ -13100,8 +13212,8 @@ public abstract class EDDTable extends EDD {
         //is there a subsetVariables table?
         if (subsetVariables == null || subsetVariables.length == 0) 
             return String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "SOS", 
-                    EDStatic.noXxxNoSubsetVariables));
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "SOS", 
+                    EDStatic.noXxxNoSubsetVariables_s[0]));
 
         //are sosOfferingIndex, lon, lat in subsetVariablesDataTable?
         //This will only be true if lon and lat are point per offering.
@@ -13110,8 +13222,8 @@ public abstract class EDDTable extends EDD {
             String2.indexOf(subsetVariables, "longitude")         < 0 ||
             String2.indexOf(subsetVariables, "latitude")          < 0)
             return String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "SOS", 
-                    EDStatic.noXxxNoOLLSubsetVariables));
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "SOS", 
+                    EDStatic.noXxxNoOLLSubsetVariables_s[0]));
 
         //Request the distinct() offerings (station names), lon, lat data 
         //  from the subsetVariables data table.
@@ -13129,7 +13241,7 @@ public abstract class EDDTable extends EDD {
         //  (i.e., multiple lat,lon for a given offering)
         if (table.getColumn(0).removeDuplicates() > 0)
             return String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "SOS", 
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "SOS", 
                     "In the subsetVariables table, some offerings (stations) have " +
                     ">1 longitude,latitude."));
 
@@ -13158,11 +13270,11 @@ public abstract class EDDTable extends EDD {
 
             if (!EDStatic.geoServicesRestActive)
                 accessibleViaGeoServicesRest = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause, "GeoServicesRest", 
-                        MessageFormat.format(EDStatic.noXxxNotActive, "GeoServicesRest")));
+                    MessageFormat.format(EDStatic.noXxxBecause_s[0], "GeoServicesRest", 
+                        MessageFormat.format(EDStatic.noXxxNotActive_s[0], "GeoServicesRest")));
             else accessibleViaGeoServicesRest = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause, "GeoServicesRest", 
-                        EDStatic.noXxxItsTabular));
+                    MessageFormat.format(EDStatic.noXxxBecause_s[0], "GeoServicesRest", 
+                        EDStatic.noXxxItsTabular_s[0]));
         }
         return accessibleViaGeoServicesRest;
     }
@@ -13176,11 +13288,11 @@ public abstract class EDDTable extends EDD {
 
             if (!EDStatic.wcsActive)
                 accessibleViaWCS = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause, "WCS", 
-                        MessageFormat.format(EDStatic.noXxxNotActive, "WCS")));
+                    MessageFormat.format(EDStatic.noXxxBecause_s[0], "WCS", 
+                        MessageFormat.format(EDStatic.noXxxNotActive_s[0], "WCS")));
             else accessibleViaWCS = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause, "WCS", 
-                        EDStatic.noXxxItsTabular));
+                    MessageFormat.format(EDStatic.noXxxBecause_s[0], "WCS", 
+                        EDStatic.noXxxItsTabular_s[0]));
         }
         return accessibleViaWCS;
     }
@@ -13193,11 +13305,11 @@ public abstract class EDDTable extends EDD {
         if (accessibleViaWMS == null)
             if (!EDStatic.wmsActive)
                 accessibleViaWMS = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause, "WMS", 
-                        MessageFormat.format(EDStatic.noXxxNotActive, "WMS")));
+                    MessageFormat.format(EDStatic.noXxxBecause_s[0], "WMS", 
+                        MessageFormat.format(EDStatic.noXxxNotActive_s[0], "WMS")));
             else accessibleViaWMS = String2.canonical(
-                MessageFormat.format(EDStatic.noXxxBecause, "WMS", 
-                    EDStatic.noXxxItsTabular));
+                MessageFormat.format(EDStatic.noXxxBecause_s[0], "WMS", 
+                    EDStatic.noXxxItsTabular_s[0]));
         return accessibleViaWMS;
     }
      
@@ -13440,8 +13552,8 @@ public abstract class EDDTable extends EDD {
             //the cdmType (e.g., Other) doesn't support .ncCF/.ncCFMA
             } else {
                 accessibleViaNcCF = String2.canonical(
-                    MessageFormat.format(EDStatic.noXxxBecause2, ".ncCF/.ncCFMA", 
-                        MessageFormat.format(EDStatic.noXxxNoCdmDataType, cdmType)));
+                    MessageFormat.format(EDStatic.noXxxBecause2_s[0], ".ncCF/.ncCFMA", 
+                        MessageFormat.format(EDStatic.noXxxNoCdmDataType_s[0], cdmType)));
             }
 
 
@@ -13563,7 +13675,7 @@ public abstract class EDDTable extends EDD {
         //don't validate the optional acceptVersions=.  Always return 1.0.0.
 
         //gather other information
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         String stationGmlNameStart = getSosGmlNameStart(sosOfferingType);
         String networkGmlNameStart = getSosGmlNameStart(sosNetworkOfferingType);
         String sensorGmlNameStart = getSosGmlNameStart("sensor");
@@ -14097,7 +14209,7 @@ public abstract class EDDTable extends EDD {
     public void sosDescribeSensor(String loggedInAs, String shortName,
         Writer writer) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         String sosUrl = tErddapUrl + "/sos/" + datasetID + "/" + sosServer;
 
         //get sensor info
@@ -14541,7 +14653,7 @@ public abstract class EDDTable extends EDD {
         String dir, String fileName) throws Throwable {
 
         if (reallyVerbose) String2.log("\nrespondToSosQuery q=" + sosQuery);
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         String requestUrl = "/sos/" + datasetID + "/" + sosServer;
 
         if (accessibleViaSOS().length() > 0)
@@ -14641,7 +14753,7 @@ public abstract class EDDTable extends EDD {
      */
     public String[] sosQueryToDapQuery(String loggedInAs, String sosQuery) throws Throwable {
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         HashMap<String, String> sosQueryMap = userQueryHashMap(sosQuery, true);
 
         //parse the query and build the dapQuery
@@ -14962,7 +15074,7 @@ public abstract class EDDTable extends EDD {
         //if (accessibleViaSOS().length() > 0)
         //    throw new SimpleException(EDStatic.queryError + accessibleViaSOS());
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         String sosUrl = tErddapUrl + "/sos/" + datasetID + "/" + sosServer;
         String stationGmlNameStart = getSosGmlNameStart(sosOfferingType);
         String sensorGmlNameStart = getSosGmlNameStart("sensor");
@@ -15228,7 +15340,7 @@ public abstract class EDDTable extends EDD {
         //if (accessibleViaSOS().length() > 0)
         //    throw new SimpleException(EDStatic.queryError + accessibleViaSOS());
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         String sosUrl = tErddapUrl + "/sos/" + datasetID + "/" + sosServer;
         String stationGmlNameStart = getSosGmlNameStart(sosOfferingType);
         String sensorGmlNameStart = getSosGmlNameStart("sensor");
@@ -15248,14 +15360,14 @@ public abstract class EDDTable extends EDD {
         int tDepthIndex = table.findColumnNumber(EDV.DEPTH_NAME);
         int tTimeIndex  = table.findColumnNumber(EDV.TIME_NAME);
         int tIdIndex    = table.findColumnNumber(idName);
-        if (tLonIndex < 0)  throw new RuntimeException(EDStatic.errorInternal + "'longitude' isn't in the response table.");
-        if (tLatIndex < 0)  throw new RuntimeException(EDStatic.errorInternal + "'latitude' isn't in the response table.");
+        if (tLonIndex < 0)  throw new RuntimeException(EDStatic.errorInternal_s[0] + "'longitude' isn't in the response table.");
+        if (tLatIndex < 0)  throw new RuntimeException(EDStatic.errorInternal_s[0] + "'latitude' isn't in the response table.");
         if (altIndex >= 0 && tAltIndex < 0) //yes, first one is alt, not tAlt
-                            throw new RuntimeException(EDStatic.errorInternal + "'altitude' isn't in the response table.");
+                            throw new RuntimeException(EDStatic.errorInternal_s[0] + "'altitude' isn't in the response table.");
         if (depthIndex >= 0 && tDepthIndex < 0) //yes, first one is depth, not tDepth
-                            throw new RuntimeException(EDStatic.errorInternal + "'depth' isn't in the response table.");
-        if (tTimeIndex < 0) throw new RuntimeException(EDStatic.errorInternal + "'time' isn't in the response table.");
-        if (tIdIndex < 0)   throw new RuntimeException(EDStatic.errorInternal + "'" + idName + "' isn't in the response table.");
+                            throw new RuntimeException(EDStatic.errorInternal_s[0] + "'depth' isn't in the response table.");
+        if (tTimeIndex < 0) throw new RuntimeException(EDStatic.errorInternal_s[0] + "'time' isn't in the response table.");
+        if (tIdIndex < 0)   throw new RuntimeException(EDStatic.errorInternal_s[0] + "'" + idName + "' isn't in the response table.");
 
         //Ensure it is sorted by tIdIndex, tTimeIndex, [tAltIndex|tDepthIndex] (it usually is, but make sure; it is assumed below)
         int sortIndices[] = tAltIndex   >= 0? new int[]{tIdIndex, tTimeIndex, tAltIndex} : 
@@ -15734,7 +15846,7 @@ public abstract class EDDTable extends EDD {
         //if (accessibleViaSOS().length() > 0)
         //    throw new SimpleException(EDStatic.queryError + accessibleViaSOS());
 
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, 0);
         String sosUrl = tErddapUrl + "/sos/" + datasetID + "/" + sosServer;
         String stationGmlNameStart = getSosGmlNameStart(sosOfferingType);
         String sensorGmlNameStart = getSosGmlNameStart("sensor");
@@ -15755,14 +15867,14 @@ public abstract class EDDTable extends EDD {
         int tDepthIndex = table.findColumnNumber(EDV.DEPTH_NAME);
         int tTimeIndex  = table.findColumnNumber(EDV.TIME_NAME);
         int tIdIndex    = table.findColumnNumber(idName);
-        if (tLonIndex < 0)  throw new RuntimeException(EDStatic.errorInternal + "'longitude' isn't in the response table.");
-        if (tLatIndex < 0)  throw new RuntimeException(EDStatic.errorInternal + "'latitude' isn't in the response table.");
+        if (tLonIndex < 0)  throw new RuntimeException(EDStatic.errorInternal_s[0] + "'longitude' isn't in the response table.");
+        if (tLatIndex < 0)  throw new RuntimeException(EDStatic.errorInternal_s[0] + "'latitude' isn't in the response table.");
         if (altIndex >= 0 && tAltIndex < 0) //yes, first one is alt, not tAlt
-                            throw new RuntimeException(EDStatic.errorInternal + "'altitude' isn't in the response table.");
+                            throw new RuntimeException(EDStatic.errorInternal_s[0] + "'altitude' isn't in the response table.");
         if (depthIndex >= 0 && tDepthIndex < 0) //yes, first one is depth, not tDepth
-                            throw new RuntimeException(EDStatic.errorInternal + "'depth' isn't in the response table.");
-        if (tTimeIndex < 0) throw new RuntimeException(EDStatic.errorInternal + "'time' isn't in the response table.");
-        if (tIdIndex < 0)   throw new RuntimeException(EDStatic.errorInternal + "'" + idName + "' isn't in the response table.");
+                            throw new RuntimeException(EDStatic.errorInternal_s[0] + "'depth' isn't in the response table.");
+        if (tTimeIndex < 0) throw new RuntimeException(EDStatic.errorInternal_s[0] + "'time' isn't in the response table.");
+        if (tIdIndex < 0)   throw new RuntimeException(EDStatic.errorInternal_s[0] + "'" + idName + "' isn't in the response table.");
 
         //Ensure it is sorted by tIdIndex, tTimeIndex, [tAltIndex|tDepthIndex] (it usually is, but make sure; it is assumed below)
         int sortIndices[] = tAltIndex   >= 0? new int[]{tIdIndex, tTimeIndex, tAltIndex} : 
@@ -16015,9 +16127,9 @@ public abstract class EDDTable extends EDD {
      *    <br>Afterwards, the writer is flushed, not closed.
      * @throws Throwable if trouble (there shouldn't be)
      */
-    public void sosDatasetHtml(String loggedInAs, Writer writer) throws Throwable {
+    public void sosDatasetHtml(String loggedInAs, Writer writer, int currLang) throws Throwable {
       
-        String tErddapUrl = EDStatic.erddapUrl(loggedInAs);        
+        String tErddapUrl = EDStatic.erddapUrl(loggedInAs, currLang);        
         String sosUrl = tErddapUrl + "/sos/" + datasetID + "/" + sosServer;
         String dictionaryUrl = tErddapUrl + "/sos/" + datasetID + "/" + sosPhenomenaDictionaryUrl;
         int whichOffering = Math.max(0, sosOfferings.indexOf("41004")); //cheap trick for cwwcNDBCMet demo
@@ -16168,13 +16280,13 @@ public abstract class EDDTable extends EDD {
             "<br>The parameters may be in any order in the URL, separated by '&amp;' .\n" +
             "<br>Parameter values are case sensitive and must be\n" +
             "  <a class=\"N\" rel=\"help\" href=\"https://en.wikipedia.org/wiki/Percent-encoding\">percent encoded" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>:\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>:\n" +
             "<br>all characters in query values (the parts after the '=' signs) other than A-Za-z0-9_-!.~'()* must be\n" +
             "<br>encoded as %HH, where HH is the 2 digit hexadecimal value of the character, for example, space becomes %20.\n" +
             "<br>Characters above #127 must be converted to UTF-8 bytes, then each UTF-8 byte must be percent encoded\n" +
             "<br>(ask a programmer for help). There are\n" +
                 "<a class=\"N\" rel=\"help\" href=\"https://www.url-encode-decode.com\">websites that percent encode/decode for you" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "\n";
 
         //network
@@ -16220,11 +16332,11 @@ public abstract class EDDTable extends EDD {
         //*** html body content
         writer.write("<div class=\"standard_width\">\n");
         writer.write(
-            EDStatic.youAreHere(loggedInAs, "sos", datasetID)); //sos must be lowercase for link to work
+            EDStatic.youAreHere(loggedInAs, "sos", datasetID, currLang)); //sos must be lowercase for link to work
         writeHtmlDatasetInfo(loggedInAs, writer, true, true, true, true, "", "");
 
         String makeAGraphRef = "<a href=\"" + tErddapUrl + "/tabledap/" + datasetID + ".graph\">" +
-            EDStatic.mag + "</a>";
+            EDStatic.mag_s[currLang] + "</a>";
         String datasetListRef = 
             "<p>See the\n" +
             "  <a href=\"" + tErddapUrl + "/sos/index.html\">list \n" +
@@ -16239,7 +16351,7 @@ public abstract class EDDTable extends EDD {
         //!!!see the almost identical documentation above
         writer.write(
             "<h2><a class=\"selfLink\" id=\"description\" href=\"#description\" rel=\"bookmark\">What</a> is SOS?</h2>\n" +
-            String2.replaceAll(EDStatic.sosLongDescriptionHtml, "&erddapUrl;", tErddapUrl) + "\n" +
+            String2.replaceAll(EDStatic.sosLongDescriptionHtml_s[currLang], "&erddapUrl;", tErddapUrl) + "\n" +
             datasetListRef + "\n" +
             "\n");
 
@@ -16268,7 +16380,7 @@ public abstract class EDDTable extends EDD {
             "  <br>Some of the information you need to write such software is below. Good luck.\n" +
             "<li>For additional information, please see the\n" +
             "  <a rel=\"help\" href=\"https://www.opengeospatial.org/standards/sos\">OGC's SOS Specification" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "</ul>\n" +
             "\n");
 
@@ -16276,7 +16388,7 @@ public abstract class EDDTable extends EDD {
         writer.write(
             "<h2>Sample SOS Requests for this Dataset and Details from the \n" +
             "<a rel=\"help\" href=\"https://www.opengeospatial.org/standards/sos\">SOS Specification" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a></h2>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a></h2>\n" +
             "SOS requests are specially formed URLs with queries.\n" +
             "<br>You can create these URLs yourself or write software to do it for you.\n" +
             "<br>There are three types of SOS requests:\n" +
@@ -16376,7 +16488,7 @@ public abstract class EDDTable extends EDD {
                 SSR.minimalPercentEncode(sosDSOutputFormat) + "</td>\n" +
             "    <td>The only valid value (in\n" +
             "      <a class=\"N\" rel=\"help\" href=\"https://en.wikipedia.org/wiki/Percent-encoding\">percent encoded" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>\n" +
             "      form) is" +
             "       <br>\"" + SSR.minimalPercentEncode(sosDSOutputFormat) + "\".\n" +
             "      <br>Required.\n" +
@@ -16656,7 +16768,7 @@ public abstract class EDDTable extends EDD {
             "    <br>eventTime=<i>beginTime/endTime</i></td>\n" +
             "    <td>The beginTime and endTime must be in\n" +
             "      <a rel=\"help\" href=\"https://en.wikipedia.org/wiki/ISO_8601\">ISO 8601:2004 \"extended\" format\n" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>,\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>,\n" +
             "      <br>for example, \"1985-01-02T00:00:00Z\".\n" +
             "      <br>This parameter is optional for the SOS standard and ERDDAP.\n" +
             "      <br>For IOOS SOS, the default is the last value.\n" +
@@ -16697,13 +16809,13 @@ public abstract class EDDTable extends EDD {
             "    <td>responseFormat=<i>mimeType</i></td>\n" +
             "    <td>In ERDDAP, this can be any one of several response formats.\n" +
             "      <br>The value must be <a class=\"N\" rel=\"help\" href=\"https://en.wikipedia.org/wiki/Percent-encoding\">percent encoded" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>:\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>:\n" +
             "      <br>all characters in query values (the parts after the '=' signs) other than A-Za-z0-9_-!.~'()* must be\n" +
             "      <br>encoded as %HH, where HH is the 2 digit hexadecimal value of the character, for example, space becomes %20.\n" +
             "      <br>Characters above #127 must be converted to UTF-8 bytes, then each UTF-8 byte must be percent encoded\n" +
             "      <br>(ask a programmer for help). There are\n" +
                 "<a class=\"N\" rel=\"help\" href=\"https://www.url-encode-decode.com\">websites that percent encode/decode for you" +
-                    EDStatic.externalLinkHtml(tErddapUrl) + "</a>.\n" +
+                    EDStatic.externalLinkHtml(tErddapUrl, currLang) + "</a>.\n" +
             "      <br>The data responseFormats are:<br>");
         charsWritten = 0;
         for (int f = 0; f < sosDataResponseFormats.length; f++) {
@@ -16958,12 +17070,12 @@ public abstract class EDDTable extends EDD {
      * @param writer a UTF-8 writer
      * @throws Throwable if trouble (e.g., no latitude and longitude variables)
      */
-    protected void writeFGDC(Writer writer) throws Throwable {
+    protected void writeFGDC(Writer writer, int currLang) throws Throwable {
         //FUTURE: support datasets with x,y (and not longitude,latitude)
 
         //requirements
         if (lonIndex < 0 || latIndex < 0) 
-            throw new SimpleException(EDStatic.queryError + EDStatic.noXxxNoLL);
+            throw new SimpleException(EDStatic.queryError + EDStatic.noXxxNoLL_s[currLang]);
 
         String tErddapUrl = EDStatic.preferredErddapUrl;
         String datasetUrl = tErddapUrl + "/" + dapProtocol + "/" + datasetID();
@@ -17628,7 +17740,7 @@ writer.write(
 "        <digtinfo>\n" + //digital transfer info
 "          <formname>" + dataFileTypeNames[ft] + "</formname>\n" + 
 "          <formvern>1</formvern>\n" +
-"          <formspec>" + XML.encodeAsXML(dataFileTypeDescriptions[ft] + " " +
+"          <formspec>" + XML.encodeAsXML(dataFileTypeDescriptions[ft][currLang] + " " +
               dataFileTypeInfo[ft]) + "</formspec>\n" +
 //           I think file decompression technique only used if file *always* encoded.
 //"          <filedec>gzip</filedec>\n" + 
@@ -17652,7 +17764,7 @@ writer.write(
 "        <digtinfo>\n" + //digital transfer info
 "          <formname>" + imageFileTypeNames[ft] + "</formname>\n" + 
 "          <formvern>1</formvern>\n" +
-"          <formspec>" + XML.encodeAsXML(imageFileTypeDescriptions[ft] + " " +
+"          <formspec>" + XML.encodeAsXML(imageFileTypeDescriptions[ft][currLang] + " " +
               imageFileTypeInfo[ft]) + "</formspec>\n" +
 //           I think file decompression technique only used if file *always* encoded.
 //"          <filedec>gzip</filedec>\n" + //file decompression technique
@@ -17728,7 +17840,7 @@ writer.write(
         //FUTURE: support datasets with x,y (and not longitude,latitude)?
 
         if (lonIndex < 0 || latIndex < 0) 
-            throw new SimpleException(EDStatic.queryError + EDStatic.noXxxNoLL);
+            throw new SimpleException(EDStatic.queryError + EDStatic.noXxxNoLL_s[0]);
 
         String tErddapUrl = EDStatic.preferredErddapUrl;
         String datasetUrl = tErddapUrl + "/tabledap/" + datasetID;

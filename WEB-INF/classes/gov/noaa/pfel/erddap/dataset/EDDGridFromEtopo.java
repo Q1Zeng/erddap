@@ -142,7 +142,7 @@ public class EDDGridFromEtopo extends EDDGrid {
             errorInMethod + "datasetID must be \"etopo180\" or \"etopo360\".");
         if (!tAccessibleViaWMS) 
             accessibleViaWMS = String2.canonical(
-                MessageFormat.format(EDStatic.noXxx, "WMS"));
+                MessageFormat.format(EDStatic.noXxx_s[0], "WMS"));
         accessibleViaFiles = EDStatic.filesActive && tAccessibleViaFiles;
         nThreads = tnThreads; //interpret invalid values (like -1) as EDStatic.nGridThreads
         dimensionValuesInMemory = tDimensionValuesInMemory; 
@@ -168,7 +168,7 @@ public class EDDGridFromEtopo extends EDDGrid {
         sourceGlobalAttributes.add("institution", "NOAA NGDC");
         sourceGlobalAttributes.add("keywords", "Oceans > Bathymetry/Seafloor Topography > Bathymetry");
         sourceGlobalAttributes.add("keywords_vocabulary", "GCMD Science Keywords");
-        sourceGlobalAttributes.add("license", EDStatic.standardLicense);
+        sourceGlobalAttributes.add("license", EDStatic.standardLicense_s[0]);
         sourceGlobalAttributes.add("naming_authority", "gov.noaa.pfeg.coastwatch");
         sourceGlobalAttributes.add("project", "NOAA NGDC ETOPO");
         sourceGlobalAttributes.add("projection", "geographic");

@@ -65,7 +65,7 @@ public class TableWriterJson extends TableWriter {
         super(tEdd, tNewHistory, tOutputStreamSource);
         jsonp = tJsonp;
         if (jsonp != null && !String2.isJsonpNameSafe(jsonp))
-            throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName);
+            throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName_s[0]);
         writeUnits = tWriteUnits;
     }
 

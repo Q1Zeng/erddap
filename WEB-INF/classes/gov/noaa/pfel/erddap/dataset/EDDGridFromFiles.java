@@ -339,9 +339,9 @@ public abstract class EDDGridFromFiles extends EDDGrid{
 
     }
 
-    /**
+        /**
      * The constructor.
-     *
+     * If currLang is not specified, it's set to 0 as default
      * @param tClassName  e.g., EDDGridFromNcFiles
      * @param tDatasetID is a very short string identifier 
      *  (recommended: [A-Za-z][A-Za-z0-9_]* )
@@ -442,6 +442,115 @@ public abstract class EDDGridFromFiles extends EDDGrid{
         String tCacheFromUrl, int tCacheSizeGB, String tCachePartialPathRegex) 
         throws Throwable {
 
+            this(tClassName, tDatasetID, tAccessibleTo, tGraphsAccessibleTo, tAccessibleViaWMS,
+                tOnChange, tFgdcFile, tIso19115File, tDefaultDataQuery, tDefaultGraphQuery,
+                tAddGlobalAttributes, tAxisVariables, tDataVariables, tReloadEveryNMinutes, tUpdateEveryNMillis,
+                tFileDir, tFileNameRegex, tRecursive, tPathRegex, tMetadataFrom, tMatchAxisNDigits, tFileTableInMemory,
+                tAccessibleViaFiles, tnThreads, tDimensionValuesInMemory, tCacheFromUrl, tCacheSizeGB, tCachePartialPathRegex, 0);
+        }
+    /**
+     * The constructor.
+     *
+     * @param tClassName  e.g., EDDGridFromNcFiles
+     * @param tDatasetID is a very short string identifier 
+     *  (recommended: [A-Za-z][A-Za-z0-9_]* )
+     *   for this dataset. See EDD.datasetID().
+     * @param tAccessibleTo is a comma separated list of 0 or more
+     *    roles which will have access to this dataset.
+     *    <br>If null, everyone will have access to this dataset (even if not logged in).
+     *    <br>If "", no one will have access to this dataset.
+     * @param tOnChange 0 or more actions (starting with http://, https://, or mailto: )
+     *    to be done whenever the dataset changes significantly
+     * @param tFgdcFile This should be the fullname of a file with the FGDC
+     *    that should be used for this dataset, or "" (to cause ERDDAP not
+     *    to try to generate FGDC metadata for this dataset), or null (to allow
+     *    ERDDAP to try to generate FGDC metadata for this dataset).
+     * @param tIso19115 This is like tFgdcFile, but for the ISO 19119-2/19139 metadata.
+     * @param tAddGlobalAttributes are global attributes which will
+     *   be added to (and take precedence over) the data source's global attributes.
+     *   This may be null if you have nothing to add.
+     *   The combined global attributes must include:
+     *   <ul>
+     *   <li> "title" - the short (&lt; 80 characters) description of the dataset 
+     *   <li> "summary" - the longer description of the dataset.
+     *      It may have newline characters (usually at &lt;= 72 chars per line). 
+     *   <li> "institution" - the source of the data 
+     *      (best if &lt; 50 characters so it fits in a graph's legend).
+     *   <li> "infoUrl" - the url with information about this data set 
+     *   <li> "cdm_data_type" - one of the EDD.CDM_xxx options
+     *   </ul>
+     *   Special case: value="null" causes that item to be removed from combinedGlobalAttributes.
+     *   Special case: if combinedGlobalAttributes name="license", any instance of "[standard]"
+     *     will be converted to the EDStatic.standardLicense
+     * @param tAxisVariables is an Object[nAxisVariables][3]: 
+     *    <br>[0]=String sourceName (the name of the data variable in the dataset source),
+     *    <br>[1]=String destinationName (the name to be presented to the ERDDAP user, 
+     *        or null to use the sourceName),
+     *    <br>[2]=Attributes addAttributes (at ERD, this must have "ioos_category" -
+     *        a category from EDV.ioosCategories, 
+     *        although they are added automatically for lon, lat, alt, and time). 
+     *        Special case: value="null" causes that item to be removed from combinedAttributes.
+     *    <br>If there are longitude, latitude, altitude, or time variables,
+     *        they must have that name as the destinationName (or sourceName) 
+     *        to be identified as such.
+     *    <br>Or, use tAxisVariables=null if the axis variables need no addAttributes
+     *        and the longitude,latitude,altitude,time variables (if present) 
+     *        all have their correct names in the source.
+     *    <br>The order of variables you define must match the
+     *       order in the source.
+     *    <br>A time variable must have "units" specified in addAttributes (read first)
+     *       or sourceAttributes.  "units" must be
+     *       a udunits string (containing " since ")
+     *        describing how to interpret numbers 
+     *        (e.g., "seconds since 1970-01-01T00:00:00Z").
+     * @param tDataVariables is an Object[nDataVariables][4]: 
+     *    <br>[0]=String sourceName (the name of the data variable in the dataset source, 
+     *         without the outer or inner sequence name),
+     *    <br>[1]=String destinationName (the name to be presented to the ERDDAP user, 
+     *        or null to use the sourceName),
+     *    <br>[2]=Attributes addAttributes (at ERD, this must have "ioos_category" - 
+     *        a category from EDV.ioosCategories). 
+     *        Special case: value="null" causes that item to be removed from combinedAttributes.
+     *    <br>[3]=String the source dataType (e.g., "int", "float", "String"). 
+     *        Some data sources have ambiguous data types, so it needs to be specified here.
+     *        <br>This class is unusual: it is okay if different source files have different dataTypes.
+     *        <br>All will be converted to the dataType specified here.           
+     *    <br>The order of variables you define doesn't have to match the
+     *       order in the source.
+     * @param tReloadEveryNMinutes indicates how often the source should
+     *    be checked for new data.
+     * @param tFileDir the base directory where the files are located
+     * @param tFileNameRegex the regex which determines which files in 
+     *    the directories are to be read.
+     *    <br>You can use .* for all, but it is better to be more specific.
+     *        For example, .*\.nc will get all files with the extension .nc.
+     *    <br>All files must have all of the axisVariables and all of the dataVariables.
+     * @param tRecursive if true, this class will look for files in the
+     *    fileDir and all subdirectories
+     * @param tMetadataFrom this indicates the file to be used
+     *    to extract source metadata (first/last based on file list sorted by minimum axis #0 value).
+     *    Valid values are "first", "penultimate", "last".
+     *    If invalid, "last" is used.
+     * @param tMatchAxisNDigits 0=no test, 
+     *    1-18 tests 1-18 digits for doubles and hiDiv(n,2) for floats, 
+     *    &gt;18 does an exact test. Default is 20.
+     * @throws Throwable if trouble
+     */
+    public EDDGridFromFiles(String tClassName, String tDatasetID, 
+        String tAccessibleTo, String tGraphsAccessibleTo, boolean tAccessibleViaWMS,
+        StringArray tOnChange, String tFgdcFile, String tIso19115File, 
+        String tDefaultDataQuery, String tDefaultGraphQuery, 
+        Attributes tAddGlobalAttributes,
+        Object[][] tAxisVariables,
+        Object[][] tDataVariables,
+        int tReloadEveryNMinutes, int tUpdateEveryNMillis,
+        String tFileDir, String tFileNameRegex, boolean tRecursive, String tPathRegex, 
+        String tMetadataFrom, int tMatchAxisNDigits, 
+        boolean tFileTableInMemory, boolean tAccessibleViaFiles, 
+        int tnThreads, boolean tDimensionValuesInMemory,
+        String tCacheFromUrl, int tCacheSizeGB, String tCachePartialPathRegex, int currLang) 
+        throws Throwable {
+
         if (verbose) String2.log(
             "\n*** constructing EDDGridFromFiles " + tDatasetID); 
         long constructionStartMillis = System.currentTimeMillis();
@@ -462,7 +571,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
         setGraphsAccessibleTo(tGraphsAccessibleTo);
         if (!tAccessibleViaWMS) 
             accessibleViaWMS = String2.canonical(
-                MessageFormat.format(EDStatic.noXxx, "WMS"));
+                MessageFormat.format(EDStatic.noXxx_s[0], "WMS"));
         onChange = tOnChange;
         fgdcFile = tFgdcFile;
         iso19115File = tIso19115File;
@@ -763,7 +872,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
                 String subject = String2.ERROR + " in " + datasetID + " constructor (inotify)";
                 String tmsg = MustBe.throwableToString(t);
                 if (tmsg.indexOf("inotify instances") >= 0)
-                    tmsg += EDStatic.inotifyFix;
+                    tmsg += EDStatic.inotifyFix_s[currLang];
                 EDStatic.email(EDStatic.adminEmail, subject, tmsg);
             }
         }
@@ -931,7 +1040,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
             while (tFileListPo < tFileNamePA.size()) {
                 if (Thread.currentThread().isInterrupted())
                     throw new SimpleException("EDDGridFromFiles.init" +
-                        EDStatic.caughtInterrupted);
+                        EDStatic.caughtInterrupted_s[currLang]);
 
                 int    tDirI   = tFileDirIndexPA.get(tFileListPo);
                 String tFileS  = tFileNamePA.get(tFileListPo);
@@ -1176,7 +1285,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
         if (combinedGlobalAttributes.getString("cdm_data_type") == null)
             combinedGlobalAttributes.add("cdm_data_type", "Grid");
@@ -1467,7 +1576,31 @@ public abstract class EDDGridFromFiles extends EDDGrid{
         }
 
     }
-
+    /**
+     * This does the actual incremental update of this dataset 
+     * (i.e., for real time datasets).
+     * currLang not specified, set to 0 as default
+     * 
+     * <p>Concurrency issue: The changes here are first prepared and 
+     * then applied as quickly as possible (but not atomically!).
+     * There is a chance that another thread will get inconsistent information
+     * (from some things updated and some things not yet updated).
+     * But I don't want to synchronize all activities of this class.
+     *
+     * @param msg the start of a log message, e.g., "update(thisDatasetID): ".
+     * @param startUpdateMillis the currentTimeMillis at the start of this update.
+     * @return true if a change was made
+     * @throws Throwable if serious trouble. 
+     *   For simple failures, this writes info to log.txt but doesn't throw an exception.
+     *   If the dataset has changed in a serious / incompatible way and needs a full
+     *     reload, this throws WaitThenTryAgainException 
+     *     (usually, catcher calls LoadDatasets.tryToUnload(...) and EDD.requestReloadASAP(tDatasetID))..
+     *   If the changes needed are probably fine but are too extensive to deal with here, 
+     *     this calls requestReloadASAP() and returns without doing anything.
+     */
+    public boolean lowUpdate(String msg, long startUpdateMillis) throws Throwable {
+        return lowUpdate(msg, startUpdateMillis, 0);
+    }
     /**
      * This does the actual incremental update of this dataset 
      * (i.e., for real time datasets).
@@ -1489,7 +1622,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
      *   If the changes needed are probably fine but are too extensive to deal with here, 
      *     this calls requestReloadASAP() and returns without doing anything.
      */
-    public boolean lowUpdate(String msg, long startUpdateMillis) throws Throwable {
+    public boolean lowUpdate(String msg, long startUpdateMillis, int currLang) throws Throwable {
 
         //Most of this lowUpdate code is identical in EDDGridFromFiles and EDDTableFromFiles
         if (watchDirectory == null)
@@ -1579,7 +1712,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
         for (int evi = 0; evi < nEvents; evi++) {
             if (Thread.currentThread().isInterrupted())
                 throw new SimpleException("EDDGridFromFiles.lowUpdate" +
-                        EDStatic.caughtInterrupted);
+                        EDStatic.caughtInterrupted_s[currLang]);
 
             String fullName = contexts.get(evi);
             String dirName = File2.getDirectory(fullName);
@@ -2276,7 +2409,8 @@ public abstract class EDDGridFromFiles extends EDDGrid{
 
     /** 
      * This is the low-level request corresponding to what is actually in the file. 
-     *
+     * currLang not specified, set to 0;
+     * 
      * @param tFullName the name of the decompressed data file
      * @param tConstraints 
      *   For each axis variable, there will be 3 numbers (startIndex, stride, stopIndex).
@@ -2285,6 +2419,11 @@ public abstract class EDDGridFromFiles extends EDDGrid{
     public abstract PrimitiveArray[] lowGetSourceDataFromFile(String tFullName, 
         EDV tDataVariables[], IntArray tConstraints) throws Throwable;
 
+    public PrimitiveArray[] getSourceData(Table tDirTable, Table tFileTable,
+    EDV tDataVariables[], IntArray tConstraints) 
+    throws Throwable {
+        return getSourceData(tDirTable, tFileTable, tDataVariables, tConstraints, 0);
+    }
     /** 
      * This gets data (not yet standardized) from the data source for this EDDGrid.     
      * Because this is called by GridDataAccessor, the request won't be the 
@@ -2305,7 +2444,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
      * @throws Throwable if trouble (notably, WaitThenTryAgainException)
      */
     public PrimitiveArray[] getSourceData(Table tDirTable, Table tFileTable,
-        EDV tDataVariables[], IntArray tConstraints) 
+        EDV tDataVariables[], IntArray tConstraints, int currLang) 
         throws Throwable {
 
         //get a local reference to dirTable and fileTable
@@ -2354,7 +2493,7 @@ public abstract class EDDGridFromFiles extends EDDGrid{
         while (axis0Start <= axis0Stop) {
             if (Thread.currentThread().isInterrupted())
                 throw new SimpleException("EDDGridFromFiles.getDataForDapQuery" + 
-                    EDStatic.caughtInterrupted);
+                    EDStatic.caughtInterrupted_s[currLang]);
 
             //find next relevant file
             ftRow = ftStartIndex.binaryFindLastLE(ftRow, nFiles - 1, PAOne.fromInt(axis0Start));

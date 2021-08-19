@@ -401,7 +401,7 @@ public class EDDTableFromNWISDV extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
         parameterCode = combinedGlobalAttributes.getString("parameterCode");
         statisticCode = combinedGlobalAttributes.getString("statisticCode");
@@ -2215,7 +2215,7 @@ public class EDDTableFromNWISDV extends EDDTable{
                 }
 
                 //<dt><strong>DESCRIPTION:</strong></dt>
-                //<dd>Latitude  35°40'26", &nbsp; Longitude  96°04'06" &nbsp; NAD27<br /></dd>
+                //<dd>Latitude  35ï¿½40'26", &nbsp; Longitude  96ï¿½04'06" &nbsp; NAD27<br /></dd>
                 //<dd>Okmulgee County, Oklahoma,  Hydrologic Unit 11100303</dd>
                 po1 = siteInfo.indexOf("DESCRIPTION", Math.max(po1, 0));
                 int descPo = po1;

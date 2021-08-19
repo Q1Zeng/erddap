@@ -5415,8 +5415,8 @@ expected =
     }
 
     /** NOT FOR GENERAL USE. Bob uses this to consolidate the individual GTSPP
-     * data files into 30° x 30° x 1 month files (tiles).
-     * 30° x 30° leads to 12x6=72 files for a given time point, so a request
+     * data files into 30ï¿½ x 30ï¿½ x 1 month files (tiles).
+     * 30ï¿½ x 30ï¿½ leads to 12x6=72 files for a given time point, so a request
      * for a short time but entire world opens ~72 files.
      * There are ~240 months worth of data, so a request for a small lon lat 
      * range for all time opens ~240 files.
@@ -7606,8 +7606,8 @@ expected =
     }
 
     /** NOT FOR GENERAL USE. Bob uses this to consolidate the individual WOD
-     * data files into 45° x 45° x 1 month files (tiles).
-     * 45° x 45° leads to 8x4=32 files for a given time point, so a request
+     * data files into 45ï¿½ x 45ï¿½ x 1 month files (tiles).
+     * 45ï¿½ x 45ï¿½ leads to 8x4=32 files for a given time point, so a request
      * for a short time but entire world opens ~32 files.
      * There are ~240 months worth of data, so a request for a small lon lat 
      * range for all time opens ~240 files.
@@ -12481,9 +12481,9 @@ expected =
         results = String2.directReadFromUtf8File(dir + tName);
         //String2.log(results);
         expected = 
-EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null), "EDDTableFromNcFiles_Data") + "\n" +
+EDStatic.startHeadHtml(EDStatic.erddapUrl((String)null, 0), "EDDTableFromNcFiles_Data", 0) + "\n" +
 "</head>\n" +
-EDStatic.startBodyHtml(null) + "&nbsp;<br>\n" +
+EDStatic.startBodyHtml(null, 0) + "&nbsp;<br>\n" +
 //HtmlWidgets.BACK_BUTTON +
 "&nbsp;\n" +
 "<table class=\"erd commonBGColor nowrap\">\n" +
@@ -12515,7 +12515,7 @@ EDStatic.startBodyHtml(null) + "&nbsp;<br>\n" +
 "<td>New_Horizon\n" +
 "</tr>\n" +
 "</table>\n" +
-EDStatic.endBodyHtml(EDStatic.erddapUrl((String)null)) + "\n" +
+EDStatic.endBodyHtml(EDStatic.erddapUrl((String)null, 0), 0) + "\n" +
 "</html>\n";
         tResults = results.substring(results.length() - expected.length());
         Test.ensureEqual(tResults, expected, "\ntResults=\n" + tResults);

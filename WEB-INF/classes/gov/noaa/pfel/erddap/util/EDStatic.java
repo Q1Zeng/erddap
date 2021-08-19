@@ -323,7 +323,7 @@ public static boolean developmentMode = false;
     public static int    unusualActivity        = DEFAULT_unusualActivity;
 
     //work-in-progress: read the messages in different languages
-    private static String[]  //these are set by setup.xml (deprecated) and/or datasets.xml (v2.00+)
+    public static String[]  //these are set by setup.xml (deprecated) and/or datasets.xml (v2.00+)
         standardShortDescriptionHtml_s,
         DEFAULT_standardLicense_s,
         DEFAULT_standardContact_s,
@@ -349,31 +349,6 @@ public static boolean developmentMode = false;
         theShortDescriptionHtml_s,
         endBodyHtml_s;
 
-    public static String  //these are set by setup.xml (deprecated) and/or datasets.xml (v2.00+)
-        standardShortDescriptionHtml, 
-        DEFAULT_standardLicense,
-        DEFAULT_standardContact,
-        DEFAULT_standardDataLicenses,
-        DEFAULT_standardDisclaimerOfEndorsement,
-        DEFAULT_standardDisclaimerOfExternalLinks,
-        DEFAULT_standardGeneralDisclaimer,
-        DEFAULT_standardPrivacyPolicy,
-        DEFAULT_startHeadHtml, //see xxx() methods
-        DEFAULT_startBodyHtml, 
-        DEFAULT_theShortDescriptionHtml,
-        DEFAULT_endBodyHtml, 
- 
-        standardLicense, 
-        standardContact,
-        standardDataLicenses,
-        standardDisclaimerOfEndorsement,
-        standardDisclaimerOfExternalLinks,
-        standardGeneralDisclaimer,
-        standardPrivacyPolicy,
-        startHeadHtml, //see xxx() methods
-        startBodyHtml, 
-        theShortDescriptionHtml, 
-        endBodyHtml;
     public static String //in messages.xml and perhaps in datasets.xml (v2.00+)
         commonStandardNames[],
         DEFAULT_commonStandardNames[];
@@ -631,7 +606,7 @@ public static boolean developmentMode = false;
         lowResLogoImageFileWidth,  lowResLogoImageFileHeight,
         highResLogoImageFileWidth, highResLogoImageFileHeight,
         googleEarthLogoFileWidth,  googleEarthLogoFileHeight;
-    private static volatile int[] ampLoginInfoPo_s;
+    public static volatile int[] ampLoginInfoPo_s;
     public static volatile int ampLoginInfoPo = -1;
     /** These are special because other loggedInAs must be String2.justPrintable
         loggedInAsHttps is for using https without being logged in, 
@@ -742,7 +717,7 @@ public static boolean developmentMode = false;
         updateUrlsFrom[],
         updateUrlsTo[],
         waitThenTryAgain;
-    private static String[]
+    public static String[]
         accessRESTFUL_s,
         acronyms_s,
         addConstraints_s,
@@ -840,7 +815,7 @@ public static boolean developmentMode = false;
         categorySearchDifferentHtml_s,
         categoryClickHtml_s,
         categoryNotAnOption_s,
-        caughtInterrupted_s,
+        caughtInterrupted_s, //currently all of them are [0]
         cdmDataTypeHelp_s,
         clickAccess_s,
         clickBackgroundInfo_s,
@@ -1545,8 +1520,8 @@ public static boolean developmentMode = false;
         statusHtml_s,
         submit_s,
         submitTooltip_s,
-        subscriptionRSSHTML_s,
-        subscriptionURLHTML_s,
+        subscriptionOfferRss_s,
+        subscriptionOfferUrl_s,
         subscriptionsTitle_s,
         subscriptionAdd_s,
         subscriptionAddHtml_s,
@@ -1665,910 +1640,6 @@ public static boolean developmentMode = false;
         zoomOut_s;
 
     
-    private static String
-        acceptEncodingHtml,
-        filesDocumentation;
-    public static String 
-        acronyms,
-        accessRESTFUL,
-        addConstraints,
-        addVarWhereAttName,
-        addVarWhereAttValue,
-        addVarWhere,
-        additionalLinks,
-        admSummary,
-        admTitle,
-        advl_datasetID,
-        advc_accessible,
-        advl_accessible,
-        advl_institution,
-        advc_dataStructure,
-        advl_dataStructure,
-        advl_cdm_data_type,
-        advl_class,
-        advl_title,
-        advl_minLongitude,
-        advl_maxLongitude,
-        advl_longitudeSpacing,
-        advl_minLatitude,
-        advl_maxLatitude,
-        advl_latitudeSpacing,
-        advl_minAltitude,
-        advl_maxAltitude,
-        advl_minTime,
-        advc_maxTime,
-        advl_maxTime,
-        advl_timeSpacing,
-        advc_griddap,
-        advl_griddap,
-        advl_subset,
-        advc_tabledap,
-        advl_tabledap,
-        advl_MakeAGraph,
-        advc_sos,
-        advl_sos,
-        advl_wcs,
-        advl_wms,
-        advc_files,
-        advl_files,
-        advc_fgdc,
-        advl_fgdc,
-        advc_iso19115,
-        advl_iso19115,
-        advc_metadata,
-        advl_metadata,
-        advl_sourceUrl,
-        advl_infoUrl,
-        advl_rss,
-        advc_email,
-        advl_email,
-        advl_summary,
-        advc_testOutOfDate,
-        advl_testOutOfDate,
-        advc_outOfDate,
-        advl_outOfDate,
-        advn_outOfDate,
-        advancedSearch,
-        advancedSearchResults,
-        advancedSearchDirections,
-        advancedSearchTooltip,
-        advancedSearchBounds,
-        advancedSearchMinLat,
-        advancedSearchMaxLat,
-        advancedSearchMinLon,
-        advancedSearchMaxLon,
-        advancedSearchMinMaxLon,
-        advancedSearchMinTime,
-        advancedSearchMaxTime,
-        advancedSearchClear,
-        advancedSearchClearHelp,
-        advancedSearchCategoryTooltip,
-        advancedSearchRangeTooltip,
-        advancedSearchMapTooltip,
-        advancedSearchLonTooltip,
-        advancedSearchTimeTooltip,
-        advancedSearchWithCriteria,
-        advancedSearchFewerCriteria,
-        advancedSearchNoCriteria,
-        advancedSearchErrorHandling,
-        autoRefresh,
-        categoryTitleHtml,
-        categoryHtml,
-        category3Html,
-        categoryPickAttribute,
-        categorySearchHtml,
-        categorySearchDifferentHtml,
-        categoryClickHtml,
-        categoryNotAnOption,
-        caughtInterrupted,
-        cdmDataTypeHelp,
-        clickAccess,
-        clickBackgroundInfo,
-        clickERDDAP,
-        clickInfo,
-        clickToSubmit,
-        converterWebService,
-        convertOceanicAtmosphericAcronyms,
-        convertOceanicAtmosphericAcronymsIntro,
-        convertOceanicAtmosphericAcronymsNotes,
-        convertOceanicAtmosphericAcronymsService,
-        convertOceanicAtmosphericVariableNames,
-        convertOceanicAtmosphericVariableNamesIntro,
-        convertOceanicAtmosphericVariableNamesNotes,
-        convertOceanicAtmosphericVariableNamesService,
-        convertFipsCounty,
-        convertFipsCountyIntro,
-        convertFipsCountyNotes,
-        convertFipsCountyService,
-        convertHtml,
-        convertInterpolate,
-        convertInterpolateIntro,
-        convertInterpolateTLLTable,
-        convertInterpolateTLLTableHelp,
-        convertInterpolateDatasetIDVariable,
-        convertInterpolateDatasetIDVariableHelp,
-        convertInterpolateNotes,
-        convertInterpolateService,
-        convertKeywords,
-        convertKeywordsCfTooltip,
-        convertKeywordsGcmdTooltip,
-        convertKeywordsIntro,
-        convertKeywordsNotes,
-        convertKeywordsService,
-        convertTime,
-        convertTimeBypass,
-        convertTimeReference,
-        convertTimeIntro,
-        convertTimeNotes,
-        convertTimeService,
-        convertTimeNumberTooltip,
-        convertTimeStringTimeTooltip,
-        convertTimeUnitsTooltip,
-        convertTimeUnitsHelp,
-        convertTimeIsoFormatError,
-        convertTimeNoSinceError,
-        convertTimeNumberError,
-        convertTimeNumericTimeError,
-        convertTimeParametersError,
-        convertTimeStringFormatError,
-        convertTimeTwoTimeError,
-        convertTimeUnitsError,
-        convertUnits,
-        convertUnitsComparison,
-        convertUnitsFilter,
-        convertUnitsIntro,
-        convertUnitsNotes,
-        convertUnitsService,
-        convertURLs,
-        convertURLsIntro,
-        convertURLsNotes,
-        convertURLsService,
-        cookiesHelp,
-        daf,
-        dafGridBypassTooltip,
-        dafGridTooltip,
-        dafTableBypassTooltip,
-        dafTableTooltip,
-        dasTitle,
-        dataAccessNotAllowed,
-        databaseUnableToConnect,
-        dataProviderFormSuccess,
-        dataProviderFormShortDescription,
-        dataProviderFormLongDescriptionHTML,
-        dataProviderFormPart1,
-        dataProviderFormPart2Header,
-        dataProviderFormPart2GlobalMetadata,
-        dataProviderContactInfo,
-        dataProviderData,
-        dpf_submit,
-        dpf_fixProblem,
-        dpf_yourName,
-        dpf_emailAddress,
-        dpf_Timestamp,
-        dpf_frequency,
-        dpf_title,
-        dpf_titleTooltip,
-        dpf_summary,
-        dpf_summaryTooltip,
-        dpf_creatorName,
-        dpf_creatorNameTooltip,
-        dpf_creatorType,
-        dpf_creatorTypeTooltip,
-        dpf_creatorEmail,
-        dpf_creatorEmailTooltip,
-        dpf_institution,
-        dpf_institutionTooltip,
-        dpf_infoUrl,
-        dpf_infoUrlTooltip,
-        dpf_license,
-        dpf_licenseTooltip,
-        dpf_howYouStoreData,
-        dpf_required,
-        dpf_optional,
-        dpf_provideIfAvaliable,
-        dpf_acknowledgement,
-        dpf_acknowledgementTooltip,
-        dpf_history,
-        dpf_historyTooltip,
-        dpf_idTooltip,
-        dpf_namingAuthority,
-        dpf_namingAuthorityTooltip,
-        dpf_productVersion,
-        dpf_productVersionTooltip,
-        dpf_references,
-        dpf_referencesTooltip,
-        dpf_comment,
-        dpf_commentTooltip,
-        dpf_dataTypeHelp,
-        dpf_ioosCategory,
-        dpf_ioosCategoryHelp,
-        dpf_part3Header,
-        dpf_variableMetadata,
-        dpf_sourceName,
-        dpf_sourceNameTooltip,
-        dpf_destinationName,
-        dpf_destinationNameTooltip,
-        dpf_longName,
-        dpf_longNameTooltip,
-        dpf_standardName,
-        dpf_standardNameTooltip,
-        dpf_dataType,
-        dpf_fillValue,
-        dpf_fillValueTooltip,
-        dpf_units,
-        dpf_unitsTooltip,
-        dpf_range,
-        dpf_rangeTooltip,
-        dpf_part4Header,
-        dpf_otherComment,
-        dpf_finishPart4,
-        dpf_congratulation,
-        disabled,
-        distinctValuesTooltip,
-        doWithGraphs,
-        dtAccessible,
-        dtAccessibleYes,
-        dtAccessibleGraphs,
-        dtAccessibleNo,
-        dtAccessibleLogIn,
-        dtLogIn,
-        dtDAF,
-        dtFiles,
-        dtMAG,
-        dtSOS,
-        dtSubset,
-        dtWCS,
-        dtWMS,
-        EDDDatasetID,
-        EDDFgdc,
-        EDDFgdcMetadata,
-        EDDFiles,
-        EDDIso19115Metadata,
-        EDDMetadata,
-        EDDBackground,
-        EDDClickOnSubmitHtml,
-        EDDInstitution,
-        EDDInformation,
-        EDDSummary,
-        EDDDatasetTitle,
-        EDDDownloadData,
-        EDDMakeAGraph,
-        EDDMakeAMap,
-        EDDFileType,
-        EDDFileTypeInformation,
-        EDDSelectFileType,
-        EDDMinimum,
-        EDDMaximum,
-        EDDConstraint,
-
-        EDDChangedWasnt,
-        EDDChangedDifferentNVar,
-        EDDChanged2Different,
-        EDDChanged1Different,
-        EDDChangedCGADifferent,
-        EDDChangedAxesDifferentNVar,
-        EDDChangedAxes2Different,
-        EDDChangedAxes1Different,
-        EDDChangedNoValue,
-        EDDChangedTableToGrid,
-
-        EDDSimilarDifferentNVar,
-        EDDSimilarDifferent,
-
-        EDDGridDapDescription,
-        EDDGridDapLongDescription,
-        EDDGridDownloadDataTooltip,
-        EDDGridDimension,
-        EDDGridDimensionRanges,
-        EDDGridFirst,
-        EDDGridLast,
-        EDDGridStart,
-        EDDGridStop,
-        EDDGridStartStopTooltip,
-        EDDGridStride,
-        EDDGridNValues,
-        EDDGridNValuesHtml,
-        EDDGridSpacing,
-        EDDGridJustOneValue,
-        EDDGridEven,
-        EDDGridUneven,
-        EDDGridDimensionTooltip,
-        EDDGridDimensionFirstTooltip,
-        EDDGridDimensionLastTooltip,
-        EDDGridVarHasDimTooltip,
-        EDDGridSSSTooltip,
-        EDDGridStartTooltip,
-        EDDGridStopTooltip,
-        EDDGridStrideTooltip,
-        EDDGridSpacingTooltip,
-        EDDGridDownloadTooltip,
-        EDDGridGridVariableHtml,
-
-        EDDTableConstraints,
-        EDDTableTabularDatasetTooltip,
-        EDDTableVariable,
-        EDDTableCheckAll,
-        EDDTableCheckAllTooltip,
-        EDDTableUncheckAll,
-        EDDTableUncheckAllTooltip,
-        EDDTableMinimumTooltip,
-        EDDTableMaximumTooltip,
-        EDDTableCheckTheVariables,
-        EDDTableSelectAnOperator,
-        EDDTableFromEDDGridSummary,
-        EDDTableOptConstraint1Html,
-        EDDTableOptConstraint2Html,
-        EDDTableOptConstraintVar,
-        EDDTableNumericConstraintTooltip,
-        EDDTableStringConstraintTooltip,
-        EDDTableTimeConstraintTooltip,
-        EDDTableConstraintTooltip,
-        EDDTableSelectConstraintTooltip,
-        EDDTableDapDescription,
-        EDDTableDapLongDescription,
-        EDDTableDownloadDataTooltip,
-        EDDTableFromHttpGetDatasetDescription,
-        EDDTableFromHttpGetAuthorDescription,
-        EDDTableFromHttpGetTimestampDescription,
-        erddapVersionHTML,
-        errorTitle,
-        errorRequestUrl,
-        errorRequestQuery,
-        errorTheError,
-        errorCopyFrom,
-        errorFileNotFound,
-        errorFileNotFoundImage,
-        errorInternal,
-        errorJsonpFunctionName,
-        errorJsonpNotAllowed,
-        errorMoreThan2GB,
-        errorNotFound,
-        errorNotFoundIn,
-        errorOdvLLTGrid,
-        errorOdvLLTTable,
-        errorOnWebPage,
-        externalLink,
-        externalWebSite,
-        fileHelp_asc,
-        fileHelp_csv,
-        fileHelp_csvp,
-        fileHelp_csv0,
-        fileHelp_dataTable,
-        fileHelp_das,
-        fileHelp_dds,
-        fileHelp_dods,
-        fileHelpGrid_esriAscii,
-        fileHelpTable_esriCsv,
-        fileHelp_fgdc,
-        fileHelp_geoJson,
-        fileHelp_graph,
-        fileHelpGrid_help,
-        fileHelpTable_help,
-        fileHelp_html,
-        fileHelp_htmlTable,
-        fileHelp_iso19115,
-        fileHelp_itxGrid,
-        fileHelp_itxTable,
-        fileHelp_json,
-        fileHelp_jsonlCSV1,
-        fileHelp_jsonlCSV,
-        fileHelp_jsonlKVP,
-        fileHelp_mat,
-        fileHelpGrid_nc3,
-        fileHelpGrid_nc4,
-        fileHelpTable_nc3,
-        fileHelpTable_nc4,
-        fileHelp_nc3Header,
-        fileHelp_nc4Header,
-        fileHelp_nccsv,
-        fileHelp_nccsvMetadata,
-        fileHelp_ncCF,
-        fileHelp_ncCFHeader,
-        fileHelp_ncCFMA,
-        fileHelp_ncCFMAHeader,
-        fileHelp_ncml,
-        fileHelp_ncoJson,
-        fileHelpGrid_odvTxt,
-        fileHelpTable_odvTxt,
-        fileHelp_subset,
-        fileHelp_timeGaps,
-        fileHelp_tsv,
-        fileHelp_tsvp,
-        fileHelp_tsv0,
-        fileHelp_wav,
-        fileHelp_xhtml,
-        fileHelp_geotif,
-        fileHelpGrid_kml,
-        fileHelpTable_kml,
-        fileHelp_smallPdf,
-        fileHelp_pdf,
-        fileHelp_largePdf,
-        fileHelp_smallPng,
-        fileHelp_png,
-        fileHelp_largePng,
-        fileHelp_transparentPng,
-        filesDescription,
-        filesSort,
-        filesWarning,
-        findOutChange,
-        FIPSCountryCode,
-        forSOSUse,
-        forWCSUse,
-        forWMSUse,
-        functions,
-        functionTooltip,
-        functionDistinctCheck,
-        functionDistinctTooltip,
-        functionOrderByExtra,
-        functionOrderByTooltip,
-        functionOrderBySort,
-        functionOrderBySort1,
-        functionOrderBySort2,
-        functionOrderBySort3,
-        functionOrderBySort4,
-        functionOrderBySortLeast,
-        functionOrderBySortRowMax,
-        generatedAt,
-        geoServicesDescription,
-        getStartedHtml,
-        htmlTableMaxMessage,
-        hpn_information,
-        hpn_legalNotices,
-        hpn_dataProviderForm,
-        hpn_dataProviderFormP1,
-        hpn_dataProviderFormP2,
-        hpn_dataProviderFormP3,
-        hpn_dataProviderFormP4,
-        hpn_dataProviderFormDone,
-        hpn_status,
-        hpn_restfulWebService,
-        hpn_documentation,
-        hpn_help,
-        hpn_files,
-        hpn_SOS,
-        hpn_WCS,
-        hpn_slideSorter,
-        hpn_add,
-        hpn_list,
-        hpn_validate,
-        hpn_remove,
-        hpn_convert,
-        hpn_fipsCounty,
-        hpn_OAAcronyms,
-        hpn_OAVariableNames,
-        hpn_keywords,
-        hpn_time,
-        hpn_units,
-        imageDataCourtesyOf,
-        indexViewAll,
-        indexSearchWith,
-        indexDevelopersSearch,
-        indexProtocol,
-        indexDescription,
-        indexDatasets,
-        indexDocumentation,
-        indexRESTfulSearch,
-        indexAllDatasetsSearch,
-        indexOpenSearch,
-        indexServices,
-        indexDescribeServices,
-        indexMetadata,
-        indexWAF1,
-        indexWAF2,
-        indexConverters,
-        indexDescribeConverters,
-        infoAboutFrom,
-        infoTableTitleHtml,
-        infoRequestForm,
-        inotifyFix,
-        interpolate,
-        javaProgramsHTML,
-        justGenerateAndView,
-        justGenerateAndViewTooltip,
-        justGenerateAndViewUrl,
-        justGenerateAndViewGraphUrlTooltip,
-        keywords_word,
-        langCode,
-        legal,
-        legalNotices,
-        license,
-        listAll,
-        listOfDatasets,
-        LogIn,
-        login,
-        loginHTML,
-        loginAttemptBlocked,
-        loginDescribeCustom,
-        loginDescribeEmail,
-        loginDescribeGoogle,
-        loginDescribeOrcid,
-        loginDescribeOauth2,
-        loginErddap,
-        loginCanNot,
-        loginAreNot,
-        loginToLogIn,
-        loginEmailAddress,
-        loginYourEmailAddress,
-        loginUserName,
-        loginPassword,
-        loginUserNameAndPassword,
-        loginGoogleSignIn,
-        loginGoogleSignIn2,
-        loginOrcidSignIn,
-        loginOpenID,
-        loginOpenIDOr,
-        loginOpenIDCreate,
-        loginOpenIDFree,
-        loginOpenIDSame,
-        loginAs,
-        loginPartwayAs,
-        loginFailed,
-        loginSucceeded,
-        loginInvalid,
-        loginNot,
-        loginBack,
-        loginProblemExact,
-        loginProblemExpire,
-        loginProblemGoogleAgain,
-        loginProblemOrcidAgain,
-        loginProblemOauth2Again,
-        loginProblemSameBrowser,
-        loginProblem3Times,
-        loginProblems,
-        loginProblemsAfter,
-        loginPublicAccess,
-        LogOut,
-        logout,
-        logoutOpenID,
-        logoutSuccess,
-        mag,
-        magAxisX,
-        magAxisY,
-        magAxisColor,
-        magAxisStickX,
-        magAxisStickY,
-        magAxisVectorX,
-        magAxisVectorY,
-        magAxisHelpGraphX,
-        magAxisHelpGraphY,
-        magAxisHelpMarkerColor,
-        magAxisHelpSurfaceColor,
-        magAxisHelpStickX,
-        magAxisHelpStickY,
-        magAxisHelpMapX,
-        magAxisHelpMapY,
-        magAxisHelpVectorX,
-        magAxisHelpVectorY,
-        magAxisVarHelp,
-        magAxisVarHelpGrid,
-        magConstraintHelp,
-        magDocumentation,
-        magDownload,
-        magDownloadTooltip,
-        magFileType,
-        magGraphType,
-        magGraphTypeTooltipGrid,
-        magGraphTypeTooltipTable,
-        magGS,
-        magGSMarkerType,
-        magGSSize,
-        magGSColor,
-        magGSColorBar,
-        magGSColorBarTooltip,
-        magGSContinuity,
-        magGSContinuityTooltip,
-        magGSScale,
-        magGSScaleTooltip,
-        magGSMin,
-        magGSMinTooltip,
-        magGSMax,
-        magGSMaxTooltip,
-        magGSNSections,
-        magGSNSectionsTooltip,
-        magGSLandMask,
-        magGSLandMaskTooltipGrid,
-        magGSLandMaskTooltipTable,
-        magGSVectorStandard,
-        magGSVectorStandardTooltip,
-        magGSYAscendingTooltip,
-        magGSYAxisMin,
-        magGSYAxisMax,
-        magGSYRangeMinTooltip,
-        magGSYRangeMaxTooltip,
-        magGSYRangeTooltip,
-        magGSYScaleTooltip,
-        magItemFirst,
-        magItemPrevious,
-        magItemNext,
-        magItemLast,
-        magJust1Value,
-        magRange,
-        magRangeTo,
-        magRedraw,
-        magRedrawTooltip,
-        magTimeRange,
-        magTimeRangeFirst,
-        magTimeRangeBack,
-        magTimeRangeForward,
-        magTimeRangeLast,
-        magTimeRangeTooltip,
-        magTimeRangeTooltip2,
-        magTimesVary,
-        magViewUrl,
-        magZoom,
-        magZoomCenter,
-        magZoomCenterTooltip,
-        magZoomIn,
-        magZoomInTooltip,
-        magZoomOut,
-        magZoomOutTooltip,
-        magZoomALittle,
-        magZoomData,
-        magZoomOutData,
-        magGridTooltip,
-        magTableTooltip,
-        metadataDownload,
-        moreInformation,
-        nMatching1,
-        nMatching,
-        nMatchingAlphabetical,
-        nMatchingMostRelevant,
-        nMatchingPage,
-        nMatchingCurrent,
-        noDataFixedValue,
-        noDataNoLL,
-        noDatasetWith,
-        noPage1,
-        noPage2,
-        notAllowed,
-        notAuthorized,
-        notAuthorizedForData,
-        notAvailable,
-        note,
-        noXxx,
-        noXxxBecause,
-        noXxxBecause2,
-        noXxxNotActive,
-        noXxxNoAxis1,
-        noXxxNoColorBar,
-        noXxxNoCdmDataType,
-        noXxxNoLL,
-        noXxxNoLLEvenlySpaced,
-        noXxxNoLLGt1,
-        noXxxNoLLT,
-        noXxxNoLonIn180,
-        noXxxNoNonString,
-        noXxxNo2NonString,
-        noXxxNoStation,
-        noXxxNoStationID,
-        noXxxNoSubsetVariables,
-        noXxxNoOLLSubsetVariables,
-        noXxxNoMinMax,
-        noXxxItsGridded,
-        noXxxItsTabular,
-        oneRequestAtATime,
-        openSearchDescription,
-        optional,
-        options,
-        orRefineSearchWith,
-        orSearchWith,
-        orComma,
-        outOfDateKeepTrack,
-        outOfDateHtml,
-        patientData,
-        patientYourGraph,
-        percentEncode,
-        pickADataset,
-        protocolSearchHtml,
-        protocolSearch2Html,
-        protocolClick,
-        queryError180,
-        queryError1Value,
-        queryError1Var,
-        queryError2Var,
-        queryErrorActualRange,
-        queryErrorAdjusted,
-        queryErrorAscending,
-        queryErrorConstraintNaN,
-        queryErrorEqualSpacing,
-        queryErrorExpectedAt,
-        queryErrorFileType,
-        queryErrorInvalid,
-        queryErrorLL,
-        queryErrorLLGt1,
-        queryErrorLLT,
-        queryErrorNeverTrue,
-        queryErrorNeverBothTrue,
-        queryErrorNotAxis,
-        queryErrorNotExpectedAt,
-        queryErrorNotFoundAfter,
-        queryErrorOccursTwice,
-        queryErrorOrderByVariable,
-        queryErrorUnknownVariable,
-
-        queryErrorGrid1Axis,
-        queryErrorGridAmp,
-        queryErrorGridDiagnostic,
-        queryErrorGridBetween,
-        queryErrorGridLessMin,
-        queryErrorGridGreaterMax,
-        queryErrorGridMissing,
-        queryErrorGridNoAxisVar,
-        queryErrorGridNoDataVar,
-        queryErrorGridNotIdentical,
-        queryErrorGridSLessS,
-        queryErrorLastEndP,
-        queryErrorLastExpected,
-        queryErrorLastUnexpected,
-        queryErrorLastPMInvalid,
-        queryErrorLastPMInteger,
-        rangesFromTo,
-        resetTheForm,
-        resetTheFormWas,
-
-        restfulWebServices,
-        restfulHTML,
-        restfulHTMLContinued,
-        restfulGetAllDataset,
-        restfulProtocols,
-        SOSDocumentation,
-        WCSDocumentation,
-        WMSDocumentation,
-        requestFormatExamplesHtml,
-        resultsFormatExamplesHtml,
-        resultsOfSearchFor,
-        restfulInformationFormats,
-        restfulViaService,
-        rows,
-        rssNo,
-        searchTitle,
-        searchDoFullTextHtml,
-        searchFullTextHtml,
-        searchHintsLuceneTooltip,
-        searchHintsOriginalTooltip,
-        searchHintsTooltip,
-        searchButton,
-        searchClickTip,
-        searchMultipleERDDAPs,
-        searchMultipleERDDAPsDescription,
-        searchNotAvailable,
-        searchTip,
-        searchSpelling,
-        searchFewerWords,
-        searchWithQuery,
-        seeProtocolDocumentation,
-        selectNext,
-        selectPrevious,
-        shiftXAllTheWayLeft,
-        shiftXLeft,
-        shiftXRight,
-        shiftXAllTheWayRight,
-        sosDescriptionHtml,
-        sosLongDescriptionHtml,
-        sosOverview1,
-        sosOverview2,
-
-
-        ssUse,
-        ssUsePlain,
-        ssBePatient,
-        ssInstructionsHtml,
-        statusHtml,
-        submit,
-        submitTooltip,
-        subscriptionRSSHTML,
-        subscriptionURLHTML,
-        subscriptionsTitle,
-        subscriptionAdd,
-        subscriptionAddHtml,
-        subscriptionValidate,
-        subscriptionValidateHtml,
-        subscriptionList,
-        subscriptionListHtml,
-        subscriptionRemove,
-        subscriptionRemoveHtml,
-        subscriptionAbuse,
-        subscriptionAddError,
-        subscriptionAdd2,
-        subscriptionAddSuccess,
-        subscriptionEmail,
-        subscriptionEmailOnBlacklist,
-        subscriptionEmailInvalid,
-        subscriptionEmailTooLong,
-        subscriptionEmailUnspecified,
-        subscription0Html,
-        subscription1Html,
-        subscription2Html,
-        subscriptionIDInvalid,
-        subscriptionIDTooLong,
-        subscriptionIDUnspecified,
-        subscriptionKeyInvalid,
-        subscriptionKeyUnspecified,
-        subscriptionListError,
-        subscriptionListSuccess,
-        subscriptionRemoveError,
-        subscriptionRemove2,
-        subscriptionRemoveSuccess,
-        subscriptionRSS,
-        subscriptionsNotAvailable,
-        subscriptionUrlHtml,
-        subscriptionUrlInvalid,
-        subscriptionUrlTooLong,
-        subscriptionValidateError,
-        subscriptionValidateSuccess,
-        subset,
-        subsetSelect,
-        subsetNMatching,
-        subsetInstructions,
-        subsetOption,
-        subsetOptions,
-        subsetRefineMapDownload,
-        subsetRefineSubsetDownload,
-        subsetClickResetClosest,
-        subsetClickResetLL,
-        subsetMetadata,
-        subsetCount,
-        subsetPercent,
-        subsetViewSelect,
-        subsetViewSelectDistinctCombos,
-        subsetViewSelectRelatedCounts,
-        subsetWhen,
-        subsetWhenNoConstraints,
-        subsetWhenCounts,
-        subsetComboClickSelect,
-        subsetNVariableCombos,
-        subsetShowingAllRows,
-        subsetShowingNRows,
-        subsetChangeShowing,
-        subsetNRowsRelatedData,
-        subsetViewRelatedChange,
-        subsetTotalCount,
-        subsetView,
-        subsetViewCheck,
-        subsetViewCheck1,
-        subsetViewDistinctMap,
-        subsetViewRelatedMap,
-        subsetViewDistinctDataCounts,
-        subsetViewDistinctData,
-        subsetViewRelatedDataCounts,
-        subsetViewRelatedData,
-        subsetViewDistinctMapTooltip,
-        subsetViewRelatedMapTooltip,
-        subsetViewDistinctDataCountsTooltip,
-        subsetViewDistinctDataTooltip,
-        subsetViewRelatedDataCountsTooltip,
-        subsetViewRelatedDataTooltip,
-        subsetWarn,
-        subsetWarn10000,
-        subsetTooltip,
-        subsetNotSetUp,
-        subsetLongNotShown,
-        tabledapVideoIntro,
-        Then,
-        time,
-        timeoutOtherRequests,
-        units,
-        unknownDatasetID,
-        unknownProtocol,
-        unsupportedFileType,
-        variableNames,
-        viewAllDatasetsHtml,
-        warning,
-        wcsDescriptionHtml,
-        wcsLongDescriptionHtml,
-        wcsOverview1,
-        wcsOverview2,
-        wmsDescriptionHtml,
-        WMSDocumentation1,
-        WMSGetCapabilities,
-        WMSGetMap,
-        WMSNotes,
-        wmsInstructions,
-        wmsLongDescriptionHtml,
-        wmsManyDatasets,
-        zoomIn,
-        zoomOut,
-        theLongDescriptionHtml;
 
     public static int[] imageWidths, imageHeights, pdfWidths, pdfHeights;
     private static String[] theLongDescriptionHtml_s; //see the xxx() methods
@@ -2577,9 +1648,6 @@ public static boolean developmentMode = false;
     public static final String[] languageList = {"English (default)", "Chinese"};
     //this differs from translate.languageCodeList because the index 0 is "en"
     public static String[] fullLanguageCodeList;
-    
-
-    public static int currLang = 0;
 
     /** These are only created/used by GenerateDatasetsXml threads. 
      *  See the related methods below that create them.
@@ -4099,8 +3167,8 @@ wcsActive = false; //getSetupEVBoolean(setup, ev,          "wcsActive",         
         statusHtml_s                 = getMessageInAllVersions(messages, "statusHtml",                 errorInMethod);
         submit_s                     = getMessageInAllVersions(messages, "submit",                     errorInMethod);
         submitTooltip_s              = getMessageInAllVersions(messages, "submitTooltip",              errorInMethod);
-        subscriptionRSSHTML_s        = getMessageInAllVersions(messages, "subscriptionRSSHTML",        errorInMethod);
-        subscriptionURLHTML_s        = getMessageInAllVersions(messages, "subscriptionURLHTML",        errorInMethod);
+        subscriptionOfferRss_s        = getMessageInAllVersions(messages, "subscriptionOfferRss",        errorInMethod);
+        subscriptionOfferUrl_s        = getMessageInAllVersions(messages, "subscriptionOfferUrl",        errorInMethod);
         subscriptionsTitle_s         = getMessageInAllVersions(messages, "subscriptionsTitle",         errorInMethod);
         subscriptionAdd_s            = getMessageInAllVersions(messages, "subscriptionAdd",            errorInMethod);
         subscriptionValidate_s       = getMessageInAllVersions(messages, "subscriptionValidate",       errorInMethod);
@@ -4440,8 +3508,6 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
     }
 
 
-    updateLangChoice(0);
-
     //**************************************************************** 
     //other initialization
 
@@ -4674,10 +3740,11 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      *  (neither has slash at end).
      *
      * @param loggedInAs
+     * @param currLang
      * @return If loggedInAs == null, this returns erddapUrl, else erddapHttpsUrl
      *  (neither has slash at end).
      */
-    public static String erddapUrl(String loggedInAs) {
+    public static String erddapUrl(String loggedInAs, int currLang) {
         
         if (currLang == 0) {
             return loggedInAs == null? erddapUrl : erddapHttpsUrl;
@@ -4732,14 +3799,15 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * with the warning that the link is to an external website.
      *
      * @param tErddapUrl
+     * @param currLang
      * @return the html needed to display the external.png image and messages.
      */
-    public static String externalLinkHtml(String tErddapUrl) {
+    public static String externalLinkHtml(String tErddapUrl, int currLang) {
         return 
             "<img\n" +
             "    src=\"" + tErddapUrl + "/images/external.png\" " +
-                "alt=\"" + externalLink + "\"\n" + 
-            "    title=\"" + externalWebSite + "\">";
+                "alt=\"" + externalLink_s[currLang] + "\"\n" + 
+            "    title=\"" + externalWebSite_s[currLang] + "\">";
     }
 
     /** 
@@ -4747,21 +3815,23 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      *
      * @param headingType  e.g., h2 or h3
      * @param tErddapUrl
+     * @param currLang
      * @return the html needed to document acceptEncodig.
      */
-    public static String acceptEncodingHtml(String headingType, String tErddapUrl) {
-        String s = String2.replaceAll(acceptEncodingHtml, "&headingType;",      headingType);
-        return     String2.replaceAll(s,                  "&externalLinkHtml;", externalLinkHtml(tErddapUrl));
+    public static String acceptEncodingHtml(String headingType, String tErddapUrl, int currLang) {
+        String s = String2.replaceAll(acceptEncodingHtml_s[currLang], "&headingType;",      headingType);
+        return     String2.replaceAll(s,                  "&externalLinkHtml;", externalLinkHtml(tErddapUrl, currLang));
     }
 
     /** 
      * This returns the html documentation for the /files/ system.
      *
      * @param tErddapUrl
+     * @param currLang
      * @return the html needed to document acceptEncodig.
      */
-    public static String filesDocumentation(String tErddapUrl) {
-        return String2.replaceAll(filesDocumentation, "&acceptEncodingHtml;", acceptEncodingHtml("h3", tErddapUrl));
+    public static String filesDocumentation(String tErddapUrl, int currLang) {
+        return String2.replaceAll(filesDocumentation_s[currLang], "&acceptEncodingHtml;", acceptEncodingHtml("h3", tErddapUrl, currLang));
     }
 
     /**
@@ -4783,9 +3853,9 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * @param protocol e.g., tabledap
      * @return the You Are Here html for this EDD subclass.
      */
-    public static String youAreHere(String loggedInAs, String protocol) {
+    public static String youAreHere(String loggedInAs, String protocol, int currLang) {
         return 
-            "\n<h1 class=\"nowrap\">" + erddapHref(erddapUrl(loggedInAs)) +
+            "\n<h1 class=\"nowrap\">" + erddapHref(erddapUrl(loggedInAs, currLang), currLang) +
             " &gt; " + protocol + "</h1>\n";
     }
 
@@ -4810,10 +3880,10 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * @param datasetID e.g., erdGlobecBottle
      * @return the You Are Here html for this EDD subclass.
      */
-    public static String youAreHere(String loggedInAs, String protocol, String datasetID) {
-        String tErddapUrl = erddapUrl(loggedInAs);
+    public static String youAreHere(String loggedInAs, String protocol, String datasetID, int currLang) {
+        String tErddapUrl = erddapUrl(loggedInAs, currLang);
         return 
-            "\n<h1 class=\"nowrap\">" + erddapHref(tErddapUrl) +
+            "\n<h1 class=\"nowrap\">" + erddapHref(tErddapUrl, currLang) +
             "\n &gt; <a rel=\"contents\" " +
                 "href=\"" + XML.encodeAsHTMLAttribute(protocolUrl(tErddapUrl, protocol)) +
                 "\">" + protocol + "</a>" +
@@ -4829,10 +3899,10 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * @param htmlHelp 
      * @return the You Are Here html for this EDD subclass.
      */
-    public static String youAreHereWithHelp(String loggedInAs, String protocol, String htmlHelp) {
-        String tErddapUrl = erddapUrl(loggedInAs);
+    public static String youAreHereWithHelp(String loggedInAs, String protocol, String htmlHelp, int currLang) {
+        String tErddapUrl = erddapUrl(loggedInAs, currLang);
         return 
-            "\n<h1 class=\"nowrap\">" + erddapHref(tErddapUrl) + 
+            "\n<h1 class=\"nowrap\">" + erddapHref(tErddapUrl, currLang) + 
             "\n &gt; " + protocol + 
             "\n" + htmlTooltipImage(loggedInAs, htmlHelp) +
             "\n</h1>\n";
@@ -4849,11 +3919,11 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * @return the You Are Here html for this EDD subclass.
      */
     public static String youAreHereWithHelp(String loggedInAs, String protocol, 
-        String datasetID, String htmlHelp) {
+        String datasetID, String htmlHelp, int currLang) {
 
-        String tErddapUrl = erddapUrl(loggedInAs);
+        String tErddapUrl = erddapUrl(loggedInAs, currLang);
         return 
-            "\n<h1 class=\"nowrap\">" + erddapHref(tErddapUrl) + 
+            "\n<h1 class=\"nowrap\">" + erddapHref(tErddapUrl, currLang) + 
             "\n &gt; <a rel=\"contents\" " +
                 "href=\"" + XML.encodeAsHTMLAttribute(protocolUrl(tErddapUrl, protocol)) + 
                 "\">" + protocol + "</a>" +
@@ -5484,7 +4554,7 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      */
     public static void sendHttpUnauthorizedError(int requestNumber, String loggedInAs, 
         HttpServletResponse response, String datasetID, 
-        boolean graphsAccessibleToPublic) throws Throwable {
+        boolean graphsAccessibleToPublic, int currLang) throws Throwable {
 
         String message = "The user is not authorized to make that request."; //default
         try {
@@ -5495,8 +4565,8 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
             if (datasetID != null && datasetID.length() > 0) 
                 message = MessageFormat.format(
                     graphsAccessibleToPublic?
-                        EDStatic.notAuthorizedForData :
-                        EDStatic.notAuthorized, 
+                        notAuthorizedForData_s[currLang] :
+                        notAuthorized_s[currLang], 
                     loggedInAsHttps.equals(loggedInAs)? "" : loggedInAs, 
                     datasetID);
 
@@ -5523,16 +4593,16 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      *   Special case: "loggedInAsHttps" is for using https without being logged in, 
      *   but &amp;loginInfo; indicates user isn't logged in.
      */
-    public static String getLoginHtml(String loggedInAs) {
+    public static String getLoginHtml(String loggedInAs, int currLang) {
         if (authentication.equals("")) {
             //user can't log in
             return "";
         } else {
             return loggedInAs == null || loggedInAsHttps.equals(loggedInAs)?  //ie not logged in
                 //always use the erddapHttpsUrl for login/logout pages
-                "<a href=\"" + erddapHttpsUrl + "/login.html\">" + login + "</a>" :
+                "<a href=\"" + erddapHttpsUrl + "/login.html\">" + login_s[currLang] + "</a>" :
                 "<a href=\"" + erddapHttpsUrl + "/login.html\"><strong>" + XML.encodeAsHTML(loggedInAs) + "</strong></a> | \n" + 
-                "<a href=\"" + erddapHttpsUrl + "/logout.html\">" + logout + "</a>";
+                "<a href=\"" + erddapHttpsUrl + "/logout.html\">" + logout_s[currLang] + "</a>";
         }
     }
 
@@ -5546,9 +4616,10 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * @param loggedInAs  the name of the logged in user (or null if not logged in).
      *   Special case: "loggedInAsHttps" is for using https without being logged in, 
      *   but &amp;loginInfo; indicates user isn't logged in.
+     * @param currLang the langauge choice of the method
      */
-    public static String startBodyHtml(String loggedInAs) {
-        return startBodyHtml(loggedInAs, "");
+    public static String startBodyHtml(String loggedInAs, int currLang) {
+        return startBodyHtml(loggedInAs, "", currLang);
     }
 
     /**
@@ -5562,27 +4633,29 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      *   Special case: "loggedInAsHttps" is for using https without being logged in, 
      *   but &amp;loginInfo; indicates user isn't logged in.
      * @param otherBody other content for the &lt;body&gt; tag, e.g., " onload=\"myFunction()\"".
+     * @param currLang the langauge choice of the method
      *   
      */
-    public static String startBodyHtml(String loggedInAs, String otherBody) {
-        String s = startBodyHtml;
+    public static String startBodyHtml(String loggedInAs, String otherBody, int currLang) {
+        String s = startBodyHtml_s[currLang];
         if (String2.isSomething(otherBody)) 
             s = String2.replaceAll(s, "<body>", "<body " + otherBody + ">");
         if (ampLoginInfoPo_s[currLang] >= 0) {
-            s = startBodyHtml.substring(0, ampLoginInfoPo_s[currLang]) +
-                getLoginHtml(loggedInAs) +
-                startBodyHtml.substring(ampLoginInfoPo_s[currLang] + ampLoginInfo.length());
+            s = startBodyHtml_s[currLang].substring(0, ampLoginInfoPo_s[currLang]) +
+                getLoginHtml(loggedInAs, currLang) +
+                startBodyHtml_s[currLang].substring(ampLoginInfoPo_s[currLang] + ampLoginInfo.length());
         }
         //String2.log(">> EDStatic startBodyHtml=" + s);
-        return String2.replaceAll(s, "&erddapUrl;", erddapUrl(loggedInAs));
+        return String2.replaceAll(s, "&erddapUrl;", erddapUrl(loggedInAs, currLang));
     }
 
     /**
      * @param tErddapUrl  from EDStatic.erddapUrl(loggedInAs)  (erddapUrl, or erddapHttpsUrl if user is logged in)
+     * @param currLang the langauge choice of the method
      */
-    public static String endBodyHtml(String tErddapUrl) {
+    public static String endBodyHtml(String tErddapUrl, int currLang) {
         HtmlWidgets widget = new HtmlWidgets();
-        return String2.replaceAll(endBodyHtml, "&erddapUrl;", tErddapUrl)
+        return String2.replaceAll(endBodyHtml_s[currLang], "&erddapUrl;", tErddapUrl)
             .replace("&HTMLselect;",""
                 // Erddap supports the changing the language mode by changing the url
                 // changing it with a select needs additional configuration
@@ -5593,28 +4666,28 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
                 // + widget.endForm()
             );
     }
-    public static String legal(String tErddapUrl) {
-        StringBuilder tsb = new StringBuilder(legal);
-        String2.replaceAll(tsb, "[standardContact]",                   standardContact                   + "\n\n"); 
-        String2.replaceAll(tsb, "[standardDataLicenses]",              standardDataLicenses              + "\n\n"); 
-        String2.replaceAll(tsb, "[standardDisclaimerOfExternalLinks]", standardDisclaimerOfExternalLinks + "\n\n"); 
-        String2.replaceAll(tsb, "[standardDisclaimerOfEndorsement]",   standardDisclaimerOfEndorsement   + "\n\n"); 
-        String2.replaceAll(tsb, "[standardPrivacyPolicy]",             standardPrivacyPolicy             + "\n\n"); 
+    public static String legal(String tErddapUrl, int currLang) {
+        StringBuilder tsb = new StringBuilder(legal_s[currLang]);
+        String2.replaceAll(tsb, "[standardContact]",                   standardContact_s[currLang]                   + "\n\n"); 
+        String2.replaceAll(tsb, "[standardDataLicenses]",              standardDataLicenses_s[currLang]              + "\n\n"); 
+        String2.replaceAll(tsb, "[standardDisclaimerOfExternalLinks]", standardDisclaimerOfExternalLinks_s[currLang] + "\n\n"); 
+        String2.replaceAll(tsb, "[standardDisclaimerOfEndorsement]",   standardDisclaimerOfEndorsement_s[currLang]   + "\n\n"); 
+        String2.replaceAll(tsb, "[standardPrivacyPolicy]",             standardPrivacyPolicy_s[currLang]             + "\n\n"); 
         String2.replaceAll(tsb, "&erddapUrl;",                         tErddapUrl); 
         return tsb.toString();
     }
 
     /** @param addToTitle has not yet been encodeAsHTML(addToTitle). */
-    public static String startHeadHtml(          String tErddapUrl, String addToTitle) {
-        String ts = startHeadHtml;
+    public static String startHeadHtml(          String tErddapUrl, String addToTitle, int currLang) {
+        String ts = startHeadHtml_s[currLang];
         if (addToTitle.length() > 0)
             ts = String2.replaceAll(ts, "</title>", " - " + XML.encodeAsHTML(addToTitle) + "</title>"); 
         return String2.replaceAll(ts,    "&erddapUrl;", tErddapUrl); 
         }
-    public static String theLongDescriptionHtml(   String tErddapUrl) {return String2.replaceAll(theLongDescriptionHtml,  "&erddapUrl;", tErddapUrl); }
-    public static String theShortDescriptionHtml(  String tErddapUrl) {return String2.replaceAll(theShortDescriptionHtml, "&erddapUrl;", tErddapUrl); }
-    public static String erddapHref(               String tErddapUrl) {
-        return "<a title=\"" + clickERDDAP + "\" \n" +
+    public static String theLongDescriptionHtml(   String tErddapUrl, int currLang) {return String2.replaceAll(theLongDescriptionHtml_s[currLang],  "&erddapUrl;", tErddapUrl); }
+    public static String theShortDescriptionHtml(  String tErddapUrl, int currLang) {return String2.replaceAll(theShortDescriptionHtml_s[currLang], "&erddapUrl;", tErddapUrl); }
+    public static String erddapHref(               String tErddapUrl, int currLang) {
+        return "<a title=\"" + clickERDDAP_s[currLang] + "\" \n" +
             "rel=\"start\" " +
             "href=\"" + tErddapUrl + "/index.html\">" + ProgramName + "</a>"; 
     }
@@ -5651,11 +4724,11 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * since original outputstream and writer (which own/control the gzip stream) 
      * aren't available.
      */
-    public static String htmlForException(Throwable t) {
+    public static String htmlForException(Throwable t, int currLang) {
         String message = MustBe.throwableToShortString(t);
         return 
             "<p>&nbsp;<hr>\n" +
-            "<p><span class=\"warningColor\"><strong>" + errorOnWebPage + "</strong></span>\n" +
+            "<p><span class=\"warningColor\"><strong>" + errorOnWebPage_s[currLang] + "</strong></span>\n" +
             "<pre>" + XML.encodeAsPreHTML(message, 100) +
             "</pre><hr><p>&nbsp;<p>\n";
     }
@@ -6299,7 +5372,7 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      *   If the query has a syntax error, this returns "".
      *   If the !String2.isJsonpNameSafe(functionName), this throws a SimpleException.
      */
-    public static String passThroughJsonpQuery(HttpServletRequest request) {
+    public static String passThroughJsonpQuery(HttpServletRequest request, int currLang) {
         String jsonp = "";
         try {
             String parts[] = Table.getDapQueryParts(request.getQueryString()); //decoded.  Does some validity checking.
@@ -6308,7 +5381,7 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
                 return "";
             String functionName = jsonp.substring(7); //it will be because it starts with .jsonp=
             if (!String2.isJsonpNameSafe(functionName))
-                throw new SimpleException(errorJsonpFunctionName); 
+                throw new SimpleException(errorJsonpFunctionName_s[currLang]); 
             return ".jsonp=" + SSR.minimalPercentEncode(functionName) + "&";
         } catch (Throwable t) {
             String2.log(MustBe.throwableToString(t));
@@ -6391,13 +5464,13 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
     /** This returns the error String[2] if a search yielded no matches.
      *
      */
-    public static String[] noSearchMatch(String searchFor) {
+    public static String[] noSearchMatch(String searchFor, int currLang) {
         if (searchFor == null)
             searchFor = "";
         return new String[] {
             MustBe.THERE_IS_NO_DATA,
-            (searchFor.length()     >  0? searchSpelling + " " : "") +
-            (searchFor.indexOf(' ') >= 0? searchFewerWords : "")};
+            (searchFor.length()     >  0? searchSpelling_s[currLang] + " " : "") +
+            (searchFor.indexOf(' ') >= 0? searchFewerWords_s[currLang] : "")};
     }
 
     /** 
@@ -6407,10 +5480,10 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * @param lastPage
      * @return String[2] with the two Strings
      */
-    public static String[] noPage(int page, int lastPage) {
+    public static String[] noPage(int page, int lastPage, int currLang) {
         return new String[]{
-            MessageFormat.format(noPage1, "" + page, "" + lastPage),
-            MessageFormat.format(noPage2, "" + page, "" + lastPage)};
+            MessageFormat.format(noPage1_s[currLang], "" + page, "" + lastPage),
+            MessageFormat.format(noPage2_s[currLang], "" + page, "" + lastPage)};
     }
 
     /**
@@ -6425,16 +5498,16 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
      * @return string with HTML content
      */
     public static String nMatchingDatasetsHtml(int nMatches, int page, int lastPage,
-        boolean relevant, String urlWithQuery) {
+        boolean relevant, String urlWithQuery, int currLang) {
 
         if (nMatches == 1)
-            return nMatching1;
+            return nMatching1_s[currLang];
 
         StringBuilder results = new StringBuilder(
             MessageFormat.format(
                 relevant?
-                    nMatchingMostRelevant :
-                    nMatchingAlphabetical,
+                    nMatchingMostRelevant_s[currLang] :
+                    nMatchingAlphabetical_s[currLang],
                 "" + nMatches) + "\n");
 
         if (lastPage > 1) {
@@ -6470,7 +5543,7 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
                 "...\n");
             if (page >= 3)            sb.append(
                 url0 + (page>2? prev : bmrk) +           url1 + (page - 1) + url2 + (page - 1) + url3);
-            sb.append("&nbsp;" + page + "&nbsp;(" + EDStatic.nMatchingCurrent + ")&nbsp;\n"); //always show current page
+            sb.append("&nbsp;" + page + "&nbsp;(" + nMatchingCurrent_s[currLang] + ")&nbsp;\n"); //always show current page
             if (page <= lastPage - 2) sb.append(
                 url0 + (page<lastPage-1? next : bmrk) +  url1 + (page + 1) + url2 + (page + 1) + url3);
             if (page <= lastPage - 3) sb.append(
@@ -6480,7 +5553,7 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
 
             //append to results
             results.append("&nbsp;&nbsp;" +
-                MessageFormat.format(nMatchingPage, 
+                MessageFormat.format(nMatchingPage_s[currLang], 
                     "" + page, "" + lastPage, sb.toString()) + 
                 "\n");
         }
@@ -7055,968 +6128,5 @@ accessibleViaNC4 = ".nc4 is not yet supported.";
                     String2.pressEnterToContinue("");
             }
         }
-    }
-
-    /**
-     * Update the currLang variable and update all strings read from messages.xml
-     * @param input the user's choice of language
-     */
-    public static void updateLangChoice(int input){
-        if (input < 0 || input >= languageList.length) {
-            return;
-        } else {
-            currLang = input;
-        }
-        try {
-            
-        acceptEncodingHtml = acceptEncodingHtml_s[input];
-        filesDocumentation = filesDocumentation_s[input];
-
-        standardShortDescriptionHtml = standardShortDescriptionHtml_s[input];
-        DEFAULT_standardLicense = DEFAULT_standardLicense_s[input];
-        DEFAULT_standardContact = DEFAULT_standardContact_s[input];
-        DEFAULT_standardDataLicenses = DEFAULT_standardDataLicenses_s[input];
-        DEFAULT_standardDisclaimerOfEndorsement = DEFAULT_standardDisclaimerOfEndorsement_s[input];
-        DEFAULT_standardDisclaimerOfExternalLinks = DEFAULT_standardDisclaimerOfExternalLinks_s[input];
-        DEFAULT_standardGeneralDisclaimer = DEFAULT_standardGeneralDisclaimer_s[input];
-        DEFAULT_standardPrivacyPolicy = DEFAULT_standardPrivacyPolicy_s[input];
-        DEFAULT_startHeadHtml = DEFAULT_startHeadHtml_s[input];
-        DEFAULT_startBodyHtml = DEFAULT_startBodyHtml_s[input];
-        DEFAULT_theShortDescriptionHtml = DEFAULT_theShortDescriptionHtml_s[input];
-        DEFAULT_endBodyHtml = DEFAULT_endBodyHtml_s[input];
- 
-        standardLicense = standardLicense_s[input];
-        standardContact = standardContact_s[input];
-        standardDataLicenses = standardDataLicenses_s[input];
-        standardDisclaimerOfEndorsement = standardDisclaimerOfEndorsement_s[input];
-        standardDisclaimerOfExternalLinks = standardDisclaimerOfExternalLinks_s[input];
-        standardGeneralDisclaimer = standardGeneralDisclaimer_s[input];
-        standardPrivacyPolicy = standardPrivacyPolicy_s[input];
-        startHeadHtml = startHeadHtml_s[input];
-        startBodyHtml = startBodyHtml_s[input];
-        theShortDescriptionHtml = theShortDescriptionHtml_s[input];
-        endBodyHtml = endBodyHtml_s[input];
-
-        acronyms = acronyms_s[input];
-        accessRESTFUL = accessRESTFUL_s[input];
-        addConstraints = addConstraints_s[input];
-        addVarWhereAttName = addVarWhereAttName_s[input];
-        addVarWhereAttValue = addVarWhereAttValue_s[input];
-        addVarWhere = addVarWhere_s[input];
-        additionalLinks = additionalLinks_s[input];
-
-        admSummary = admSummary_s[input];
-        admTitle = admTitle_s[input];
-        advl_datasetID = advl_datasetID_s[input];
-        advc_accessible = advc_accessible_s[input];
-        advl_accessible = advl_accessible_s[input];
-        advl_institution = advl_institution_s[input];
-        advc_dataStructure = advc_dataStructure_s[input];
-        advl_dataStructure = advl_dataStructure_s[input];
-        
-        advl_cdm_data_type = advl_cdm_data_type_s[input];
-        
-        advl_class = advl_class_s[input];
-        
-        advl_title = advl_title_s[input];
-        advl_minLongitude = advl_minLongitude_s[input];
-        advl_maxLongitude = advl_maxLongitude_s[input];
-        advl_longitudeSpacing = advl_longitudeSpacing_s[input];
-        advl_minLatitude = advl_minLatitude_s[input];
-        advl_maxLatitude = advl_maxLatitude_s[input];
-        advl_latitudeSpacing = advl_latitudeSpacing_s[input];
-        advl_minAltitude = advl_minAltitude_s[input];
-        advl_maxAltitude = advl_maxAltitude_s[input];
-        advl_minTime = advl_minTime_s[input];
-        advc_maxTime = advc_maxTime_s[input];
-        advl_maxTime = advl_maxTime_s[input];
-        advl_timeSpacing = advl_timeSpacing_s[input];
-        advc_griddap = advc_griddap_s[input];
-        advl_griddap = advl_griddap_s[input];
-        advl_subset = advl_subset_s[input];
-        advc_tabledap = advc_tabledap_s[input];
-        advl_tabledap = advl_tabledap_s[input];
-        advl_MakeAGraph = advl_MakeAGraph_s[input];
-        advc_sos = advc_sos_s[input];
-        advl_sos = advl_sos_s[input];
-        advl_wcs = advl_wcs_s[input];
-        advl_wms = advl_wms_s[input];
-        advc_files = advc_files_s[input];
-        advl_files = advl_files_s[input];
-        advc_fgdc = advc_fgdc_s[input];
-        advl_fgdc = advl_fgdc_s[input];
-        advc_iso19115 = advc_iso19115_s[input];
-        advl_iso19115 = advl_iso19115_s[input];
-        advc_metadata = advc_metadata_s[input];
-        advl_metadata = advl_metadata_s[input];
-        advl_sourceUrl = advl_sourceUrl_s[input];
-        advl_infoUrl = advl_infoUrl_s[input];
-        advl_rss = advl_rss_s[input];
-        advc_email = advc_email_s[input];
-        advl_email = advl_email_s[input];
-        advl_summary = advl_summary_s[input];
-        advc_testOutOfDate = advc_testOutOfDate_s[input];
-        advl_testOutOfDate = advl_testOutOfDate_s[input];
-        advc_outOfDate = advc_outOfDate_s[input];
-        advl_outOfDate = advl_outOfDate_s[input];
-        advn_outOfDate = advn_outOfDate_s[input];
-        advancedSearch = advancedSearch_s[input];
-        advancedSearchResults = advancedSearchResults_s[input];
-        advancedSearchDirections = advancedSearchDirections_s[input];
-        advancedSearchTooltip = advancedSearchTooltip_s[input];
-        advancedSearchBounds = advancedSearchBounds_s[input];
-        advancedSearchMinLat = advancedSearchMinLat_s[input];
-        advancedSearchMaxLat = advancedSearchMaxLat_s[input];
-        advancedSearchMinLon = advancedSearchMinLon_s[input];
-        advancedSearchMaxLon = advancedSearchMaxLon_s[input];
-        advancedSearchMinMaxLon = advancedSearchMinMaxLon_s[input];
-        advancedSearchMinTime = advancedSearchMinTime_s[input];
-        advancedSearchMaxTime = advancedSearchMaxTime_s[input];
-        advancedSearchClear = advancedSearchClear_s[input];
-        advancedSearchClearHelp = advancedSearchClearHelp_s[input];
-        advancedSearchCategoryTooltip = advancedSearchCategoryTooltip_s[input];
-        advancedSearchRangeTooltip = advancedSearchRangeTooltip_s[input];
-        advancedSearchMapTooltip = advancedSearchMapTooltip_s[input];
-        advancedSearchLonTooltip = advancedSearchLonTooltip_s[input];
-        advancedSearchTimeTooltip = advancedSearchTimeTooltip_s[input];
-        advancedSearchWithCriteria = advancedSearchWithCriteria_s[input];
-        advancedSearchFewerCriteria = advancedSearchFewerCriteria_s[input];
-        advancedSearchNoCriteria = advancedSearchNoCriteria_s[input];
-        advancedSearchErrorHandling = advancedSearchErrorHandling_s[input];
-        autoRefresh = autoRefresh_s[input];
-
-        categoryTitleHtml = categoryTitleHtml_s[input];
-        categoryHtml = categoryHtml_s[input];
-        category3Html = category3Html_s[input];
-        categoryPickAttribute = categoryPickAttribute_s[input];
-        categorySearchHtml = categorySearchHtml_s[input];
-        categorySearchDifferentHtml = categorySearchDifferentHtml_s[input];
-        categoryClickHtml = categoryClickHtml_s[input];
-        categoryNotAnOption = categoryNotAnOption_s[input];
-        caughtInterrupted = caughtInterrupted_s[input];
-        cdmDataTypeHelp = cdmDataTypeHelp_s[input];
-        clickAccess = clickAccess_s[input];
-        clickBackgroundInfo = clickBackgroundInfo_s[input];
-        clickERDDAP = clickERDDAP_s[input];
-        clickInfo = clickInfo_s[input];
-        clickToSubmit = clickToSubmit_s[input];
-        converterWebService = converterWebService_s[input];
-        convertOceanicAtmosphericAcronyms = convertOceanicAtmosphericAcronyms_s[input];
-        convertOceanicAtmosphericAcronymsIntro = convertOceanicAtmosphericAcronymsIntro_s[input];
-        convertOceanicAtmosphericAcronymsNotes = convertOceanicAtmosphericAcronymsNotes_s[input];
-        convertOceanicAtmosphericAcronymsService = convertOceanicAtmosphericAcronymsService_s[input];
-        convertOceanicAtmosphericVariableNames = convertOceanicAtmosphericVariableNames_s[input];
-        convertOceanicAtmosphericVariableNamesIntro = convertOceanicAtmosphericVariableNamesIntro_s[input];
-        convertOceanicAtmosphericVariableNamesNotes = convertOceanicAtmosphericVariableNamesNotes_s[input];
-        convertOceanicAtmosphericVariableNamesService = convertOceanicAtmosphericVariableNamesService_s[input];
-        convertFipsCounty = convertFipsCounty_s[input];
-        convertFipsCountyIntro = convertFipsCountyIntro_s[input];
-        convertFipsCountyNotes = convertFipsCountyNotes_s[input];
-        convertFipsCountyService = convertFipsCountyService_s[input];
-        convertHtml = convertHtml_s[input];
-        convertInterpolate = convertInterpolate_s[input];
-        convertInterpolateIntro = convertInterpolateIntro_s[input];
-        convertInterpolateTLLTable = convertInterpolateTLLTable_s[input];
-        convertInterpolateTLLTableHelp = convertInterpolateTLLTableHelp_s[input];
-        convertInterpolateDatasetIDVariable = convertInterpolateDatasetIDVariable_s[input];
-        convertInterpolateDatasetIDVariableHelp = convertInterpolateDatasetIDVariableHelp_s[input];
-        convertInterpolateNotes = convertInterpolateNotes_s[input];
-        convertInterpolateService = convertInterpolateService_s[input];
-        convertKeywords = convertKeywords_s[input];
-        convertKeywordsCfTooltip = convertKeywordsCfTooltip_s[input];
-        convertKeywordsGcmdTooltip = convertKeywordsGcmdTooltip_s[input];
-        convertKeywordsIntro = convertKeywordsIntro_s[input];
-        convertKeywordsNotes = convertKeywordsNotes_s[input];
-        convertKeywordsService = convertKeywordsService_s[input];
-        convertTime = convertTime_s[input];
-        convertTimeBypass = convertTimeBypass_s[input];
-        convertTimeReference = convertTimeReference_s[input];
-        convertTimeIntro = convertTimeIntro_s[input];
-        convertTimeNotes = convertTimeNotes_s[input];
-        convertTimeService = convertTimeService_s[input];
-        convertTimeNumberTooltip = convertTimeNumberTooltip_s[input];
-        convertTimeStringTimeTooltip = convertTimeStringTimeTooltip_s[input];
-        convertTimeUnitsTooltip = convertTimeUnitsTooltip_s[input];
-        convertTimeUnitsHelp = convertTimeUnitsHelp_s[input];
-        convertTimeIsoFormatError = convertTimeIsoFormatError_s[input];
-        convertTimeNoSinceError = convertTimeNoSinceError_s[input];
-        convertTimeNumberError = convertTimeNumberError_s[input];
-        convertTimeNumericTimeError = convertTimeNumericTimeError_s[input];
-        convertTimeParametersError = convertTimeParametersError_s[input];
-        convertTimeStringFormatError = convertTimeStringFormatError_s[input];
-        convertTimeTwoTimeError = convertTimeTwoTimeError_s[input];
-        convertTimeUnitsError = convertTimeUnitsError_s[input];
-        convertUnits = convertUnits_s[input];
-        convertUnitsComparison = convertUnitsComparison_s[input];
-        convertUnitsFilter = convertUnitsFilter_s[input];
-        convertUnitsIntro = convertUnitsIntro_s[input];
-        convertUnitsNotes = convertUnitsNotes_s[input];
-        convertUnitsService = convertUnitsService_s[input];
-        convertURLs = convertURLs_s[input];
-        convertURLsIntro = convertURLsIntro_s[input];
-        convertURLsNotes = convertURLsNotes_s[input];
-        convertURLsService = convertURLsService_s[input];
-        cookiesHelp = cookiesHelp_s[input];
-        daf = daf_s[input];
-        dafGridBypassTooltip = dafGridBypassTooltip_s[input];
-        dafGridTooltip = dafGridTooltip_s[input];
-        dafTableBypassTooltip = dafTableBypassTooltip_s[input];
-        dafTableTooltip = dafTableTooltip_s[input];
-        dasTitle = dasTitle_s[input];
-        dataAccessNotAllowed = dataAccessNotAllowed_s[input];
-        databaseUnableToConnect = databaseUnableToConnect_s[input];
-        dataProviderFormSuccess = dataProviderFormSuccess_s[input];
-        dataProviderFormShortDescription = dataProviderFormShortDescription_s[input];
-        dataProviderFormLongDescriptionHTML = dataProviderFormLongDescriptionHTML_s[input];
-        dataProviderFormPart1 = dataProviderFormPart1_s[input];
-        dataProviderFormPart2Header = dataProviderFormPart2Header_s[input];
-        dataProviderFormPart2GlobalMetadata = dataProviderFormPart2GlobalMetadata_s[input];
-        dataProviderContactInfo = dataProviderContactInfo_s[input];
-        dataProviderData = dataProviderData_s[input];
-        dpf_submit = dpf_submit_s[input];
-        dpf_fixProblem = dpf_fixProblem_s[input];
-        dpf_yourName = dpf_yourName_s[input];
-        dpf_emailAddress = dpf_emailAddress_s[input];
-        dpf_Timestamp = dpf_Timestamp_s[input];
-        dpf_frequency = dpf_frequency_s[input];
-        dpf_title = dpf_title_s[input];
-        dpf_titleTooltip = dpf_titleTooltip_s[input];
-        dpf_summary = dpf_summary_s[input];
-        dpf_summaryTooltip = dpf_summaryTooltip_s[input];
-        dpf_creatorName = dpf_creatorName_s[input];
-        dpf_creatorNameTooltip = dpf_creatorNameTooltip_s[input];
-        dpf_creatorType = dpf_creatorType_s[input];
-        dpf_creatorTypeTooltip = dpf_creatorTypeTooltip_s[input];
-        dpf_creatorEmail = dpf_creatorEmail_s[input];
-        dpf_creatorEmailTooltip = dpf_creatorEmailTooltip_s[input];
-        dpf_institution = dpf_institution_s[input];
-        dpf_institutionTooltip = dpf_institutionTooltip_s[input];
-        dpf_infoUrl = dpf_infoUrl_s[input];
-        dpf_infoUrlTooltip = dpf_infoUrlTooltip_s[input];
-        dpf_license = dpf_license_s[input];
-        dpf_licenseTooltip = dpf_licenseTooltip_s[input];
-        dpf_howYouStoreData = dpf_howYouStoreData_s[input];
-        dpf_required = dpf_required_s[input];
-        dpf_optional = dpf_optional_s[input];
-        dpf_provideIfAvaliable = dpf_provideIfAvaliable_s[input];
-        dpf_acknowledgement = dpf_acknowledgement_s[input];
-        dpf_acknowledgementTooltip = dpf_acknowledgementTooltip_s[input];
-        dpf_history = dpf_history_s[input];
-        dpf_historyTooltip = dpf_historyTooltip_s[input];
-        dpf_idTooltip = dpf_idTooltip_s[input];
-        dpf_namingAuthority = dpf_namingAuthority_s[input];
-        dpf_namingAuthorityTooltip = dpf_namingAuthorityTooltip_s[input];
-        dpf_productVersion = dpf_productVersion_s[input];
-        dpf_productVersionTooltip = dpf_productVersionTooltip_s[input];
-        dpf_references = dpf_references_s[input];
-        dpf_referencesTooltip = dpf_referencesTooltip_s[input];
-        dpf_comment = dpf_comment_s[input];
-        dpf_commentTooltip = dpf_commentTooltip_s[input];
-        dpf_dataTypeHelp = dpf_dataTypeHelp_s[input];
-        dpf_ioosCategory = dpf_ioosCategory_s[input];
-        dpf_ioosCategoryHelp = dpf_ioosCategoryHelp_s[input];
-        dpf_part3Header = dpf_part3Header_s[input];
-        dpf_variableMetadata = dpf_variableMetadata_s[input];
-        dpf_sourceName = dpf_sourceName_s[input];
-        dpf_sourceNameTooltip = dpf_sourceNameTooltip_s[input];
-        dpf_destinationName = dpf_destinationName_s[input];
-        dpf_destinationNameTooltip = dpf_destinationNameTooltip_s[input];
-        dpf_longName = dpf_longName_s[input];
-        dpf_longNameTooltip = dpf_longNameTooltip_s[input];
-        dpf_standardName = dpf_standardName_s[input];
-        dpf_standardNameTooltip = dpf_standardNameTooltip_s[input];
-        dpf_dataType = dpf_dataType_s[input];
-        dpf_fillValue = dpf_fillValue_s[input];
-        dpf_fillValueTooltip = dpf_fillValueTooltip_s[input];
-        dpf_units = dpf_units_s[input];
-        dpf_unitsTooltip = dpf_unitsTooltip_s[input];
-        dpf_range = dpf_range_s[input];
-        dpf_rangeTooltip = dpf_rangeTooltip_s[input];
-        dpf_part4Header = dpf_part4Header_s[input];
-        dpf_otherComment = dpf_otherComment_s[input];
-        dpf_finishPart4 = dpf_finishPart4_s[input];
-        dpf_congratulation = dpf_congratulation_s[input];
-        disabled = disabled_s[input];
-        distinctValuesTooltip = distinctValuesTooltip_s[input];
-        doWithGraphs = doWithGraphs_s[input];
-        dtAccessible = dtAccessible_s[input];
-        dtAccessibleYes = dtAccessibleYes_s[input];
-        dtAccessibleGraphs = dtAccessibleGraphs_s[input];
-        dtAccessibleNo = dtAccessibleNo_s[input];
-        dtAccessibleLogIn = dtAccessibleLogIn_s[input];
-        dtLogIn = dtLogIn_s[input];
-        dtDAF = dtDAF_s[input];
-        dtFiles = dtFiles_s[input];
-        dtMAG = dtMAG_s[input];
-        dtSOS = dtSOS_s[input];
-        dtSubset = dtSubset_s[input];
-        dtWCS = dtWCS_s[input];
-        dtWMS = dtWMS_s[input];
-        EDDDatasetID = EDDDatasetID_s[input];
-        EDDFgdc = EDDFgdc_s[input];
-        EDDFgdcMetadata = EDDFgdcMetadata_s[input];
-        EDDFiles = EDDFiles_s[input];
-        EDDIso19115Metadata = EDDIso19115Metadata_s[input];
-        EDDMetadata = EDDMetadata_s[input];
-        EDDBackground = EDDBackground_s[input];
-        EDDClickOnSubmitHtml = EDDClickOnSubmitHtml_s[input];
-        EDDInstitution = EDDInstitution_s[input];
-        EDDInformation = EDDInformation_s[input];
-        EDDSummary = EDDSummary_s[input];
-        EDDDatasetTitle = EDDDatasetTitle_s[input];
-        EDDDownloadData = EDDDownloadData_s[input];
-        EDDMakeAGraph = EDDMakeAGraph_s[input];
-        EDDMakeAMap = EDDMakeAMap_s[input];
-        EDDFileType = EDDFileType_s[input];
-        EDDFileTypeInformation = EDDFileTypeInformation_s[input];
-        EDDSelectFileType = EDDSelectFileType_s[input];
-        EDDMinimum = EDDMinimum_s[input];
-        EDDMaximum = EDDMaximum_s[input];
-        EDDConstraint = EDDConstraint_s[input];
-        EDDChangedWasnt = EDDChangedWasnt_s[input];
-        EDDChangedDifferentNVar = EDDChangedDifferentNVar_s[input];
-        EDDChanged2Different = EDDChanged2Different_s[input];
-        EDDChanged1Different = EDDChanged1Different_s[input];
-        EDDChangedCGADifferent = EDDChangedCGADifferent_s[input];
-        EDDChangedAxesDifferentNVar = EDDChangedAxesDifferentNVar_s[input];
-        EDDChangedAxes2Different = EDDChangedAxes2Different_s[input];
-        EDDChangedAxes1Different = EDDChangedAxes1Different_s[input];
-        EDDChangedNoValue = EDDChangedNoValue_s[input];
-        EDDChangedTableToGrid = EDDChangedTableToGrid_s[input];
-        EDDSimilarDifferentNVar = EDDSimilarDifferentNVar_s[input];
-        EDDSimilarDifferent = EDDSimilarDifferent_s[input];
-        EDDGridDapDescription = EDDGridDapDescription_s[input];
-        EDDGridDapLongDescription = EDDGridDapLongDescription_s[input];
-        EDDGridDownloadDataTooltip = EDDGridDownloadDataTooltip_s[input];
-        EDDGridDimension = EDDGridDimension_s[input];
-        EDDGridDimensionRanges = EDDGridDimensionRanges_s[input];
-        EDDGridFirst = EDDGridFirst_s[input];
-        EDDGridLast = EDDGridLast_s[input];
-        EDDGridStart = EDDGridStart_s[input];
-        EDDGridStop = EDDGridStop_s[input];
-        EDDGridStartStopTooltip = EDDGridStartStopTooltip_s[input];
-        EDDGridStride = EDDGridStride_s[input];
-        EDDGridNValues = EDDGridNValues_s[input];
-        EDDGridNValuesHtml = EDDGridNValuesHtml_s[input];
-        EDDGridSpacing = EDDGridSpacing_s[input];
-        EDDGridJustOneValue = EDDGridJustOneValue_s[input];
-        EDDGridEven = EDDGridEven_s[input];
-        EDDGridUneven = EDDGridUneven_s[input];
-        EDDGridDimensionTooltip = EDDGridDimensionTooltip_s[input];
-        EDDGridDimensionFirstTooltip = EDDGridDimensionFirstTooltip_s[input];
-        EDDGridDimensionLastTooltip = EDDGridDimensionLastTooltip_s[input];
-        EDDGridVarHasDimTooltip = EDDGridVarHasDimTooltip_s[input];
-        EDDGridSSSTooltip = EDDGridSSSTooltip_s[input];
-        EDDGridStartTooltip = EDDGridStartTooltip_s[input];
-        EDDGridStopTooltip = EDDGridStopTooltip_s[input];
-        EDDGridStrideTooltip = EDDGridStrideTooltip_s[input];
-        EDDGridSpacingTooltip = EDDGridSpacingTooltip_s[input];
-        EDDGridDownloadTooltip = EDDGridDownloadTooltip_s[input];
-        EDDGridGridVariableHtml = EDDGridGridVariableHtml_s[input];
-        EDDTableConstraints = EDDTableConstraints_s[input];
-        EDDTableTabularDatasetTooltip = EDDTableTabularDatasetTooltip_s[input];
-        EDDTableVariable = EDDTableVariable_s[input];
-        EDDTableCheckAll = EDDTableCheckAll_s[input];
-        EDDTableCheckAllTooltip = EDDTableCheckAllTooltip_s[input];
-        EDDTableUncheckAll = EDDTableUncheckAll_s[input];
-        EDDTableUncheckAllTooltip = EDDTableUncheckAllTooltip_s[input];
-        EDDTableMinimumTooltip = EDDTableMinimumTooltip_s[input];
-        EDDTableMaximumTooltip = EDDTableMaximumTooltip_s[input];
-        EDDTableCheckTheVariables = EDDTableCheckTheVariables_s[input];
-        EDDTableSelectAnOperator = EDDTableSelectAnOperator_s[input];
-        EDDTableFromEDDGridSummary = EDDTableFromEDDGridSummary_s[input];
-        EDDTableOptConstraint1Html = EDDTableOptConstraint1Html_s[input];
-        EDDTableOptConstraint2Html = EDDTableOptConstraint2Html_s[input];
-        EDDTableOptConstraintVar = EDDTableOptConstraintVar_s[input];
-        EDDTableNumericConstraintTooltip = EDDTableNumericConstraintTooltip_s[input];
-        EDDTableStringConstraintTooltip = EDDTableStringConstraintTooltip_s[input];
-        EDDTableTimeConstraintTooltip = EDDTableTimeConstraintTooltip_s[input];
-        EDDTableConstraintTooltip = EDDTableConstraintTooltip_s[input];
-        EDDTableSelectConstraintTooltip = EDDTableSelectConstraintTooltip_s[input];
-        EDDTableDapDescription = EDDTableDapDescription_s[input];
-        EDDTableDapLongDescription = EDDTableDapLongDescription_s[input];
-        EDDTableDownloadDataTooltip = EDDTableDownloadDataTooltip_s[input];
-
-        EDDTableFromHttpGetDatasetDescription = EDDTableFromHttpGetDatasetDescription_s[input];
-        EDDTableFromHttpGetAuthorDescription = EDDTableFromHttpGetAuthorDescription_s[input];
-        EDDTableFromHttpGetTimestampDescription = EDDTableFromHttpGetTimestampDescription_s[input];
-
-        erddapVersionHTML = erddapVersionHTML_s[input];
-        errorTitle = errorTitle_s[input];
-        errorRequestUrl = errorRequestUrl_s[input];
-        errorRequestQuery = errorRequestQuery_s[input];
-        errorTheError = errorTheError_s[input];
-        errorCopyFrom = errorCopyFrom_s[input];
-        errorFileNotFound = errorFileNotFound_s[input];
-        errorFileNotFoundImage = errorFileNotFoundImage_s[input];
-        errorInternal = errorInternal_s[input];
-        errorJsonpFunctionName = errorJsonpFunctionName_s[input];
-        errorJsonpNotAllowed = errorJsonpNotAllowed_s[input];
-        errorMoreThan2GB = errorMoreThan2GB_s[input];
-        errorNotFound = errorNotFound_s[input];
-        errorNotFoundIn = errorNotFoundIn_s[input];
-        errorOdvLLTGrid = errorOdvLLTGrid_s[input];
-        errorOdvLLTTable = errorOdvLLTTable_s[input];
-        errorOnWebPage = errorOnWebPage_s[input];
-    
-        externalLink = externalLink_s[input];
-        externalWebSite = externalWebSite_s[input];
-        fileHelp_asc = fileHelp_asc_s[input];
-        fileHelp_csv = fileHelp_csv_s[input];
-        fileHelp_csvp = fileHelp_csvp_s[input];
-        fileHelp_csv0 = fileHelp_csv0_s[input];
-        fileHelp_dataTable = fileHelp_dataTable_s[input];
-        fileHelp_das = fileHelp_das_s[input];
-        fileHelp_dds = fileHelp_dds_s[input];
-        fileHelp_dods = fileHelp_dods_s[input];
-        fileHelpGrid_esriAscii = fileHelpGrid_esriAscii_s[input];
-        fileHelpTable_esriCsv = fileHelpTable_esriCsv_s[input];
-        fileHelp_fgdc = fileHelp_fgdc_s[input];
-        fileHelp_geoJson = fileHelp_geoJson_s[input];
-        fileHelp_graph = fileHelp_graph_s[input];
-        fileHelpGrid_help = fileHelpGrid_help_s[input];
-        fileHelpTable_help = fileHelpTable_help_s[input];
-        fileHelp_html = fileHelp_html_s[input];
-        fileHelp_htmlTable = fileHelp_htmlTable_s[input];
-        fileHelp_iso19115 = fileHelp_iso19115_s[input];
-        fileHelp_itxGrid = fileHelp_itxGrid_s[input];
-        fileHelp_itxTable = fileHelp_itxTable_s[input];
-        fileHelp_json = fileHelp_json_s[input];
-        fileHelp_jsonlCSV1 = fileHelp_jsonlCSV1_s[input];
-        fileHelp_jsonlCSV = fileHelp_jsonlCSV_s[input];
-        fileHelp_jsonlKVP = fileHelp_jsonlKVP_s[input];
-        fileHelp_mat = fileHelp_mat_s[input];
-        fileHelpGrid_nc3 = fileHelpGrid_nc3_s[input];
-        fileHelpGrid_nc4 = fileHelpGrid_nc4_s[input];
-        fileHelpTable_nc3 = fileHelpTable_nc3_s[input];
-        fileHelpTable_nc4 = fileHelpTable_nc4_s[input];
-        fileHelp_nc3Header = fileHelp_nc3Header_s[input];
-        fileHelp_nc4Header = fileHelp_nc4Header_s[input];
-        fileHelp_nccsv = fileHelp_nccsv_s[input];
-        fileHelp_nccsvMetadata = fileHelp_nccsvMetadata_s[input];
-        fileHelp_ncCF = fileHelp_ncCF_s[input];
-        fileHelp_ncCFHeader = fileHelp_ncCFHeader_s[input];
-        fileHelp_ncCFMA = fileHelp_ncCFMA_s[input];
-        fileHelp_ncCFMAHeader = fileHelp_ncCFMAHeader_s[input];
-        fileHelp_ncml = fileHelp_ncml_s[input];
-        fileHelp_ncoJson = fileHelp_ncoJson_s[input];
-        fileHelpGrid_odvTxt = fileHelpGrid_odvTxt_s[input];
-        fileHelpTable_odvTxt = fileHelpTable_odvTxt_s[input];
-        fileHelp_subset = fileHelp_subset_s[input];
-        fileHelp_timeGaps = fileHelp_timeGaps_s[input];
-        fileHelp_tsv = fileHelp_tsv_s[input];
-        fileHelp_tsvp = fileHelp_tsvp_s[input];
-        fileHelp_tsv0 = fileHelp_tsv0_s[input];
-        fileHelp_wav = fileHelp_wav_s[input];
-        fileHelp_xhtml = fileHelp_xhtml_s[input];
-        fileHelp_geotif = fileHelp_geotif_s[input];
-        fileHelpGrid_kml = fileHelpGrid_kml_s[input];
-        fileHelpTable_kml = fileHelpTable_kml_s[input];
-        fileHelp_smallPdf = fileHelp_smallPdf_s[input];
-        fileHelp_pdf = fileHelp_pdf_s[input];
-        fileHelp_largePdf = fileHelp_largePdf_s[input];
-        fileHelp_smallPng = fileHelp_smallPng_s[input];
-        fileHelp_png = fileHelp_png_s[input];
-        fileHelp_largePng = fileHelp_largePng_s[input];
-        fileHelp_transparentPng = fileHelp_transparentPng_s[input];
-        filesDescription = filesDescription_s[input];
-        filesSort = filesSort_s[input];
-        filesWarning = filesWarning_s[input];
-        findOutChange = findOutChange_s[input];
-        FIPSCountryCode = FIPSCountryCode_s[input];
-        forSOSUse = forSOSUse_s[input];
-        forWCSUse = forWCSUse_s[input];
-        forWMSUse = forWMSUse_s[input];
-        functions = functions_s[input];
-        functionTooltip = functionTooltip_s[input];
-        functionDistinctCheck = functionDistinctCheck_s[input];
-        functionDistinctTooltip = functionDistinctTooltip_s[input];
-        functionOrderByExtra = functionOrderByExtra_s[input];
-        functionOrderByTooltip = functionOrderByTooltip_s[input];
-        functionOrderBySort = functionOrderBySort_s[input];
-        functionOrderBySort1 = functionOrderBySort1_s[input];
-        functionOrderBySort2 = functionOrderBySort2_s[input];
-        functionOrderBySort3 = functionOrderBySort3_s[input];
-        functionOrderBySort4 = functionOrderBySort4_s[input];
-        functionOrderBySortLeast = functionOrderBySortLeast_s[input];
-        functionOrderBySortRowMax = functionOrderBySortRowMax_s[input];
-        generatedAt = generatedAt_s[input];
-        geoServicesDescription = geoServicesDescription_s[input];
-        getStartedHtml = getStartedHtml_s[input];
-        htmlTableMaxMessage = htmlTableMaxMessage_s[input];
-        hpn_information = hpn_information_s[input];
-        hpn_legalNotices = hpn_legalNotices_s[input];
-        hpn_dataProviderForm = hpn_dataProviderForm_s[input];
-        hpn_dataProviderFormP1 = hpn_dataProviderFormP1_s[input];
-        hpn_dataProviderFormP2 = hpn_dataProviderFormP2_s[input];
-        hpn_dataProviderFormP3 = hpn_dataProviderFormP3_s[input];
-        hpn_dataProviderFormP4 = hpn_dataProviderFormP4_s[input];
-        hpn_dataProviderFormDone = hpn_dataProviderFormDone_s[input];
-        hpn_status = hpn_status_s[input];
-        hpn_restfulWebService = hpn_restfulWebService_s[input];
-        hpn_documentation = hpn_documentation_s[input];
-        hpn_help = hpn_help_s[input];
-        hpn_files = hpn_files_s[input];
-        hpn_SOS = hpn_SOS_s[input];
-        hpn_WCS = hpn_WCS_s[input];
-        hpn_slideSorter = hpn_slideSorter_s[input];
-        hpn_add = hpn_add_s[input];
-        hpn_list = hpn_list_s[input];
-        hpn_validate = hpn_validate_s[input];
-        hpn_remove = hpn_remove_s[input];
-        hpn_convert = hpn_convert_s[input];
-        hpn_fipsCounty = hpn_fipsCounty_s[input];
-        hpn_OAAcronyms = hpn_OAAcronyms_s[input];
-        hpn_OAVariableNames = hpn_OAVariableNames_s[input];
-        hpn_keywords = hpn_keywords_s[input];
-        hpn_time = hpn_time_s[input];
-        hpn_units = hpn_units_s[input];
-        imageDataCourtesyOf = imageDataCourtesyOf_s[input];
-        indexViewAll = indexViewAll_s[input];
-        indexSearchWith = indexSearchWith_s[input];
-        indexDevelopersSearch = indexDevelopersSearch_s[input];
-        indexProtocol = indexProtocol_s[input];
-        indexDescription = indexDescription_s[input];
-        indexDatasets = indexDatasets_s[input];
-        indexDocumentation = indexDocumentation_s[input];
-        indexRESTfulSearch = indexRESTfulSearch_s[input];
-        indexAllDatasetsSearch = indexAllDatasetsSearch_s[input];
-        indexOpenSearch = indexOpenSearch_s[input];
-        indexServices = indexServices_s[input];
-        indexDescribeServices = indexDescribeServices_s[input];
-        indexMetadata = indexMetadata_s[input];
-        indexWAF1 = indexWAF1_s[input];
-        indexWAF2 = indexWAF2_s[input];
-        indexConverters = indexConverters_s[input];
-        indexDescribeConverters = indexDescribeConverters_s[input];
-        infoAboutFrom = infoAboutFrom_s[input];
-        infoTableTitleHtml = infoTableTitleHtml_s[input];
-        infoRequestForm = infoRequestForm_s[input];
-        inotifyFix = inotifyFix_s[input];
-        interpolate = interpolate_s[input];
-        javaProgramsHTML = javaProgramsHTML_s[input];
-        justGenerateAndView = justGenerateAndView_s[input];
-        justGenerateAndViewTooltip = justGenerateAndViewTooltip_s[input];
-        justGenerateAndViewUrl = justGenerateAndViewUrl_s[input];
-        justGenerateAndViewGraphUrlTooltip = justGenerateAndViewGraphUrlTooltip_s[input];
-        keywords_word = keywords_word_s[input];
-        langCode = langCode_s[input];
-        legal = legal_s[input];
-        legalNotices = legalNotices_s[input];
-        license = license_s[input];
-        listAll = listAll_s[input];
-        listOfDatasets = listOfDatasets_s[input];
-        LogIn = LogIn_s[input];
-        login = login_s[input];
-        loginHTML = loginHTML_s[input];
-        loginAttemptBlocked = loginAttemptBlocked_s[input];
-        loginDescribeCustom = loginDescribeCustom_s[input];
-        loginDescribeEmail = loginDescribeEmail_s[input];
-        loginDescribeGoogle = loginDescribeGoogle_s[input];
-        loginDescribeOrcid = loginDescribeOrcid_s[input];
-        loginDescribeOauth2 = loginDescribeOauth2_s[input];
-        loginErddap = loginErddap_s[input];
-        loginCanNot = loginCanNot_s[input];
-        loginAreNot = loginAreNot_s[input];
-        loginToLogIn = loginToLogIn_s[input];
-        loginEmailAddress = loginEmailAddress_s[input];
-        loginYourEmailAddress = loginYourEmailAddress_s[input];
-        loginUserName = loginUserName_s[input];
-        loginPassword = loginPassword_s[input];
-        loginUserNameAndPassword = loginUserNameAndPassword_s[input];
-        loginGoogleSignIn = loginGoogleSignIn_s[input];
-        loginGoogleSignIn2 = loginGoogleSignIn2_s[input];
-        loginOrcidSignIn = loginOrcidSignIn_s[input];
-        loginOpenID = loginOpenID_s[input];
-        loginOpenIDOr = loginOpenIDOr_s[input];
-        loginOpenIDCreate = loginOpenIDCreate_s[input];
-        loginOpenIDFree = loginOpenIDFree_s[input];
-        loginOpenIDSame = loginOpenIDSame_s[input];
-        loginAs = loginAs_s[input];
-        loginPartwayAs = loginPartwayAs_s[input];
-        loginFailed = loginFailed_s[input];
-        loginSucceeded = loginSucceeded_s[input];
-        loginInvalid = loginInvalid_s[input];
-        loginNot = loginNot_s[input];
-        loginBack = loginBack_s[input];
-        loginProblemExact = loginProblemExact_s[input];
-        loginProblemExpire = loginProblemExpire_s[input];
-        loginProblemGoogleAgain = loginProblemGoogleAgain_s[input];
-        loginProblemOrcidAgain = loginProblemOrcidAgain_s[input];
-        loginProblemOauth2Again = loginProblemOauth2Again_s[input];
-        loginProblemSameBrowser = loginProblemSameBrowser_s[input];
-        loginProblem3Times = loginProblem3Times_s[input];
-        loginProblems = loginProblems_s[input];
-        loginProblemsAfter = loginProblemsAfter_s[input];
-        loginPublicAccess = loginPublicAccess_s[input];
-        LogOut = LogOut_s[input];
-        logout = logout_s[input];
-        logoutOpenID = logoutOpenID_s[input];
-        logoutSuccess = logoutSuccess_s[input];
-        mag = mag_s[input];
-        magAxisX = magAxisX_s[input];
-        magAxisY = magAxisY_s[input];
-        magAxisColor = magAxisColor_s[input];
-        magAxisStickX = magAxisStickX_s[input];
-        magAxisStickY = magAxisStickY_s[input];
-        magAxisVectorX = magAxisVectorX_s[input];
-        magAxisVectorY = magAxisVectorY_s[input];
-        magAxisHelpGraphX = magAxisHelpGraphX_s[input];
-        magAxisHelpGraphY = magAxisHelpGraphY_s[input];
-        magAxisHelpMarkerColor = magAxisHelpMarkerColor_s[input];
-        magAxisHelpSurfaceColor = magAxisHelpSurfaceColor_s[input];
-        magAxisHelpStickX = magAxisHelpStickX_s[input];
-        magAxisHelpStickY = magAxisHelpStickY_s[input];
-        magAxisHelpMapX = magAxisHelpMapX_s[input];
-        magAxisHelpMapY = magAxisHelpMapY_s[input];
-        magAxisHelpVectorX = magAxisHelpVectorX_s[input];
-        magAxisHelpVectorY = magAxisHelpVectorY_s[input];
-        magAxisVarHelp = magAxisVarHelp_s[input];
-        magAxisVarHelpGrid = magAxisVarHelpGrid_s[input];
-        magConstraintHelp = magConstraintHelp_s[input];
-        magDocumentation = magDocumentation_s[input];
-        magDownload = magDownload_s[input];
-        magDownloadTooltip = magDownloadTooltip_s[input];
-        magFileType = magFileType_s[input];
-        magGraphType = magGraphType_s[input];
-        magGraphTypeTooltipGrid = magGraphTypeTooltipGrid_s[input];
-        magGraphTypeTooltipTable = magGraphTypeTooltipTable_s[input];
-        magGS = magGS_s[input];
-        magGSMarkerType = magGSMarkerType_s[input];
-        magGSSize = magGSSize_s[input];
-        magGSColor = magGSColor_s[input];
-        magGSColorBar = magGSColorBar_s[input];
-        magGSColorBarTooltip = magGSColorBarTooltip_s[input];
-        magGSContinuity = magGSContinuity_s[input];
-        magGSContinuityTooltip = magGSContinuityTooltip_s[input];
-        magGSScale = magGSScale_s[input];
-        magGSScaleTooltip = magGSScaleTooltip_s[input];
-        magGSMin = magGSMin_s[input];
-        magGSMinTooltip = magGSMinTooltip_s[input];
-        magGSMax = magGSMax_s[input];
-        magGSMaxTooltip = magGSMaxTooltip_s[input];
-        magGSNSections = magGSNSections_s[input];
-        magGSNSectionsTooltip = magGSNSectionsTooltip_s[input];
-        magGSLandMask = magGSLandMask_s[input];
-        magGSLandMaskTooltipGrid = magGSLandMaskTooltipGrid_s[input];
-        magGSLandMaskTooltipTable = magGSLandMaskTooltipTable_s[input];
-        magGSVectorStandard = magGSVectorStandard_s[input];
-        magGSVectorStandardTooltip = magGSVectorStandardTooltip_s[input];
-        magGSYAscendingTooltip = magGSYAscendingTooltip_s[input];
-        magGSYAxisMin = magGSYAxisMin_s[input];
-        magGSYAxisMax = magGSYAxisMax_s[input];
-        magGSYRangeMinTooltip = magGSYRangeMinTooltip_s[input];
-        magGSYRangeMaxTooltip = magGSYRangeMaxTooltip_s[input];
-        magGSYRangeTooltip = magGSYRangeTooltip_s[input];
-        magGSYScaleTooltip = magGSYScaleTooltip_s[input];
-        magItemFirst = magItemFirst_s[input];
-        magItemPrevious = magItemPrevious_s[input];
-        magItemNext = magItemNext_s[input];
-        magItemLast = magItemLast_s[input];
-        magJust1Value = magJust1Value_s[input];
-        magRange = magRange_s[input];
-        magRangeTo = magRangeTo_s[input];
-        magRedraw = magRedraw_s[input];
-        magRedrawTooltip = magRedrawTooltip_s[input];
-        magTimeRange = magTimeRange_s[input];
-        magTimeRangeFirst = magTimeRangeFirst_s[input];
-        magTimeRangeBack = magTimeRangeBack_s[input];
-        magTimeRangeForward = magTimeRangeForward_s[input];
-        magTimeRangeLast = magTimeRangeLast_s[input];
-        magTimeRangeTooltip = magTimeRangeTooltip_s[input];
-        magTimeRangeTooltip2 = magTimeRangeTooltip2_s[input];
-        magTimesVary = magTimesVary_s[input];
-        magViewUrl = magViewUrl_s[input];
-        magZoom = magZoom_s[input];
-        magZoomCenter = magZoomCenter_s[input];
-        magZoomCenterTooltip = magZoomCenterTooltip_s[input];
-        magZoomIn = magZoomIn_s[input];
-        magZoomInTooltip = magZoomInTooltip_s[input];
-        magZoomOut = magZoomOut_s[input];
-        magZoomOutTooltip = magZoomOutTooltip_s[input];
-        magZoomALittle = magZoomALittle_s[input];
-        magZoomData = magZoomData_s[input];
-        magZoomOutData = magZoomOutData_s[input];
-        magGridTooltip = magGridTooltip_s[input];
-        magTableTooltip = magTableTooltip_s[input];
-        metadataDownload = metadataDownload_s[input];
-        moreInformation = moreInformation_s[input];
-        nMatching1 = nMatching1_s[input];
-        nMatching = nMatching_s[input];
-        nMatchingAlphabetical = nMatchingAlphabetical_s[input];
-        nMatchingMostRelevant = nMatchingMostRelevant_s[input];
-        nMatchingPage = nMatchingPage_s[input];
-        nMatchingCurrent = nMatchingCurrent_s[input];
-        noDataFixedValue = noDataFixedValue_s[input];
-        noDataNoLL = noDataNoLL_s[input];
-        noDatasetWith = noDatasetWith_s[input];
-        noPage1 = noPage1_s[input];
-        noPage2 = noPage2_s[input];
-        notAllowed = notAllowed_s[input];
-        notAuthorized = notAuthorized_s[input];
-        notAuthorizedForData = notAuthorizedForData_s[input];
-        notAvailable = notAvailable_s[input];
-        note = note_s[input];
-        noXxx = noXxx_s[input];
-        noXxxBecause = noXxxBecause_s[input];
-        noXxxBecause2 = noXxxBecause2_s[input];
-        noXxxNotActive = noXxxNotActive_s[input];
-        noXxxNoAxis1 = noXxxNoAxis1_s[input];
-        noXxxNoColorBar = noXxxNoColorBar_s[input];
-        noXxxNoCdmDataType = noXxxNoCdmDataType_s[input];
-        noXxxNoLL = noXxxNoLL_s[input];
-        noXxxNoLLEvenlySpaced = noXxxNoLLEvenlySpaced_s[input];
-        noXxxNoLLGt1 = noXxxNoLLGt1_s[input];
-        noXxxNoLLT = noXxxNoLLT_s[input];
-        noXxxNoLonIn180 = noXxxNoLonIn180_s[input];
-        noXxxNoNonString = noXxxNoNonString_s[input];
-        noXxxNo2NonString = noXxxNo2NonString_s[input];
-        noXxxNoStation = noXxxNoStation_s[input];
-        noXxxNoStationID = noXxxNoStationID_s[input];
-        noXxxNoSubsetVariables = noXxxNoSubsetVariables_s[input];
-        noXxxNoOLLSubsetVariables = noXxxNoOLLSubsetVariables_s[input];
-        noXxxNoMinMax = noXxxNoMinMax_s[input];
-        noXxxItsGridded = noXxxItsGridded_s[input];
-        noXxxItsTabular = noXxxItsTabular_s[input];
-        oneRequestAtATime = oneRequestAtATime_s[input];
-        openSearchDescription = openSearchDescription_s[input];
-        optional = optional_s[input];
-        options = options_s[input];
-        orRefineSearchWith = orRefineSearchWith_s[input];
-        orSearchWith = orSearchWith_s[input];
-        orComma = orComma_s[input];
-        outOfDateKeepTrack = outOfDateKeepTrack_s[input];
-        outOfDateHtml = outOfDateHtml_s[input];
-
-        patientData = patientData_s[input];
-        patientYourGraph = patientYourGraph_s[input];
-        percentEncode = percentEncode_s[input];
-        pickADataset = pickADataset_s[input];
-        protocolSearchHtml = protocolSearchHtml_s[input];
-        protocolSearch2Html = protocolSearch2Html_s[input];
-        protocolClick = protocolClick_s[input];
-        
-        queryError180 = queryError180_s[input];
-        queryError1Value = queryError1Value_s[input];
-        queryError1Var = queryError1Var_s[input];
-        queryError2Var = queryError2Var_s[input];
-        queryErrorActualRange = queryErrorActualRange_s[input];
-        queryErrorAdjusted = queryErrorAdjusted_s[input];
-        queryErrorAscending = queryErrorAscending_s[input];
-        queryErrorConstraintNaN = queryErrorConstraintNaN_s[input];
-        queryErrorEqualSpacing = queryErrorEqualSpacing_s[input];
-        queryErrorExpectedAt = queryErrorExpectedAt_s[input];
-        queryErrorFileType = queryErrorFileType_s[input];
-        queryErrorInvalid = queryErrorInvalid_s[input];
-        queryErrorLL = queryErrorLL_s[input];
-        queryErrorLLGt1 = queryErrorLLGt1_s[input];
-        queryErrorLLT = queryErrorLLT_s[input];
-        queryErrorNeverTrue = queryErrorNeverTrue_s[input];
-        queryErrorNeverBothTrue = queryErrorNeverBothTrue_s[input];
-        queryErrorNotAxis = queryErrorNotAxis_s[input];
-        queryErrorNotExpectedAt = queryErrorNotExpectedAt_s[input];
-        queryErrorNotFoundAfter = queryErrorNotFoundAfter_s[input];
-        queryErrorOccursTwice = queryErrorOccursTwice_s[input];
-        queryErrorOrderByVariable = queryErrorOrderByVariable_s[input];
-        queryErrorUnknownVariable = queryErrorUnknownVariable_s[input];
-        queryErrorGrid1Axis = queryErrorGrid1Axis_s[input];
-        queryErrorGridAmp = queryErrorGridAmp_s[input];
-
-        queryErrorGridDiagnostic = queryErrorGridDiagnostic_s[input];
-        queryErrorGridBetween = queryErrorGridBetween_s[input];
-        queryErrorGridLessMin = queryErrorGridLessMin_s[input];
-        queryErrorGridGreaterMax = queryErrorGridGreaterMax_s[input];
-        queryErrorGridMissing = queryErrorGridMissing_s[input];
-        queryErrorGridNoAxisVar = queryErrorGridNoAxisVar_s[input];
-        queryErrorGridNoDataVar = queryErrorGridNoDataVar_s[input];
-        queryErrorGridNotIdentical = queryErrorGridNotIdentical_s[input];
-        queryErrorGridSLessS = queryErrorGridSLessS_s[input];
-        queryErrorLastEndP = queryErrorLastEndP_s[input];
-        queryErrorLastExpected = queryErrorLastExpected_s[input];
-        queryErrorLastUnexpected = queryErrorLastUnexpected_s[input];
-        queryErrorLastPMInvalid = queryErrorLastPMInvalid_s[input];
-        queryErrorLastPMInteger = queryErrorLastPMInteger_s[input];
-        rangesFromTo = rangesFromTo_s[input];
-        resetTheForm = resetTheForm_s[input];
-        resetTheFormWas = resetTheFormWas_s[input];
-    
-        restfulWebServices = restfulWebServices_s[input];
-        restfulHTML = restfulHTML_s[input];
-        restfulHTMLContinued = restfulHTMLContinued_s[input];
-        restfulGetAllDataset = restfulGetAllDataset_s[input];
-        restfulProtocols = restfulProtocols_s[input];
-        SOSDocumentation = SOSDocumentation_s[input];
-        WCSDocumentation = WCSDocumentation_s[input];
-        WMSDocumentation = WMSDocumentation_s[input];
-        requestFormatExamplesHtml = requestFormatExamplesHtml_s[input];
-        resultsFormatExamplesHtml = resultsFormatExamplesHtml_s[input];
-        resultsOfSearchFor = resultsOfSearchFor_s[input];
-        restfulInformationFormats = restfulInformationFormats_s[input];
-        restfulViaService = restfulViaService_s[input];
-        rows = rows_s[input];
-        rssNo = rssNo_s[input];
-        searchTitle = searchTitle_s[input];
-        searchDoFullTextHtml = searchDoFullTextHtml_s[input];
-        searchFullTextHtml = searchFullTextHtml_s[input];
-        searchHintsLuceneTooltip = searchHintsLuceneTooltip_s[input];
-        searchHintsOriginalTooltip = searchHintsOriginalTooltip_s[input];
-        searchHintsTooltip = searchHintsTooltip_s[input];
-        searchButton = searchButton_s[input];
-        searchClickTip = searchClickTip_s[input];
-        searchMultipleERDDAPs = searchMultipleERDDAPs_s[input];
-        searchMultipleERDDAPsDescription = searchMultipleERDDAPsDescription_s[input];
-        searchNotAvailable = searchNotAvailable_s[input];
-        searchTip = searchTip_s[input];
-        searchSpelling = searchSpelling_s[input];
-        searchFewerWords = searchFewerWords_s[input];
-        searchWithQuery = searchWithQuery_s[input];
-        seeProtocolDocumentation = seeProtocolDocumentation_s[input];
-        selectNext = selectNext_s[input];
-        selectPrevious = selectPrevious_s[input];
-        shiftXAllTheWayLeft = shiftXAllTheWayLeft_s[input];
-        shiftXLeft = shiftXLeft_s[input];
-        shiftXRight = shiftXRight_s[input];
-        shiftXAllTheWayRight = shiftXAllTheWayRight_s[input];
-        sosDescriptionHtml = sosDescriptionHtml_s[input];
-        sosLongDescriptionHtml = sosLongDescriptionHtml_s[input];
-        sosOverview1 = sosOverview1_s[input];
-        sosOverview2 = sosOverview2_s[input];
-        //sparqlP01toP02pre = //sparqlP01toP02pre_s[input];
-        //sparqlP01toP02post = //sparqlP01toP02post_s[input];
-        ssUse = ssUse_s[input];
-        ssUsePlain = ssUsePlain_s[input];
-        ssBePatient = ssBePatient_s[input];
-        ssInstructionsHtml = ssInstructionsHtml_s[input];
-        statusHtml = statusHtml_s[input];
-        submit = submit_s[input];
-        submitTooltip = submitTooltip_s[input];
-        subscriptionRSSHTML = subscriptionRSSHTML_s[input];
-        subscriptionURLHTML = subscriptionURLHTML_s[input];
-        subscriptionsTitle = subscriptionsTitle_s[input];
-        subscriptionAdd = subscriptionAdd_s[input];
-        subscriptionAddHtml = subscriptionAddHtml_s[input];
-        subscriptionValidate = subscriptionValidate_s[input];
-        subscriptionValidateHtml = subscriptionValidateHtml_s[input];
-        subscriptionList = subscriptionList_s[input];
-        subscriptionListHtml = subscriptionListHtml_s[input];
-        subscriptionRemove = subscriptionRemove_s[input];
-        subscriptionRemoveHtml = subscriptionRemoveHtml_s[input];
-        subscriptionAbuse = subscriptionAbuse_s[input];
-        subscriptionAddError = subscriptionAddError_s[input];
-        subscriptionAdd2 = subscriptionAdd2_s[input];
-        subscriptionAddSuccess = subscriptionAddSuccess_s[input];
-        subscriptionEmail = subscriptionEmail_s[input];
-        subscriptionEmailOnBlacklist = subscriptionEmailOnBlacklist_s[input];
-        subscriptionEmailInvalid = subscriptionEmailInvalid_s[input];
-        subscriptionEmailTooLong = subscriptionEmailTooLong_s[input];
-        subscriptionEmailUnspecified = subscriptionEmailUnspecified_s[input];
-        subscription0Html = subscription0Html_s[input];
-        subscription1Html = subscription1Html_s[input];
-        subscription2Html = subscription2Html_s[input];
-        subscriptionIDInvalid = subscriptionIDInvalid_s[input];
-        subscriptionIDTooLong = subscriptionIDTooLong_s[input];
-        subscriptionIDUnspecified = subscriptionIDUnspecified_s[input];
-        subscriptionKeyInvalid = subscriptionKeyInvalid_s[input];
-        subscriptionKeyUnspecified = subscriptionKeyUnspecified_s[input];
-        subscriptionListError = subscriptionListError_s[input];
-        subscriptionListSuccess = subscriptionListSuccess_s[input];
-        subscriptionRemoveError = subscriptionRemoveError_s[input];
-        subscriptionRemove2 = subscriptionRemove2_s[input];
-        subscriptionRemoveSuccess = subscriptionRemoveSuccess_s[input];
-        subscriptionRSS = subscriptionRSS_s[input];
-        subscriptionsNotAvailable = subscriptionsNotAvailable_s[input];
-        subscriptionUrlHtml = subscriptionUrlHtml_s[input];
-        subscriptionUrlInvalid = subscriptionUrlInvalid_s[input];
-        subscriptionUrlTooLong = subscriptionUrlTooLong_s[input];
-        subscriptionValidateError = subscriptionValidateError_s[input];
-        subscriptionValidateSuccess = subscriptionValidateSuccess_s[input];
-        subset = subset_s[input];
-        subsetSelect = subsetSelect_s[input];
-        subsetNMatching = subsetNMatching_s[input];
-        subsetInstructions = subsetInstructions_s[input];
-        subsetOption = subsetOption_s[input];
-        subsetOptions = subsetOptions_s[input];
-        subsetRefineMapDownload = subsetRefineMapDownload_s[input];
-        subsetRefineSubsetDownload = subsetRefineSubsetDownload_s[input];
-        subsetClickResetClosest = subsetClickResetClosest_s[input];
-        subsetClickResetLL = subsetClickResetLL_s[input];
-        subsetMetadata = subsetMetadata_s[input];
-        subsetCount = subsetCount_s[input];
-        subsetPercent = subsetPercent_s[input];
-        subsetViewSelect = subsetViewSelect_s[input];
-        subsetViewSelectDistinctCombos = subsetViewSelectDistinctCombos_s[input];
-        subsetViewSelectRelatedCounts = subsetViewSelectRelatedCounts_s[input];
-        subsetWhen = subsetWhen_s[input];
-        subsetWhenNoConstraints = subsetWhenNoConstraints_s[input];
-        subsetWhenCounts = subsetWhenCounts_s[input];
-        subsetComboClickSelect = subsetComboClickSelect_s[input];
-        subsetNVariableCombos = subsetNVariableCombos_s[input];
-        subsetShowingAllRows = subsetShowingAllRows_s[input];
-        subsetShowingNRows = subsetShowingNRows_s[input];
-        subsetChangeShowing = subsetChangeShowing_s[input];
-        subsetNRowsRelatedData = subsetNRowsRelatedData_s[input];
-        subsetViewRelatedChange = subsetViewRelatedChange_s[input];
-        subsetTotalCount = subsetTotalCount_s[input];
-        subsetView = subsetView_s[input];
-        subsetViewCheck = subsetViewCheck_s[input];
-        subsetViewCheck1 = subsetViewCheck1_s[input];
-        subsetViewDistinctMap = subsetViewDistinctMap_s[input];
-        subsetViewRelatedMap = subsetViewRelatedMap_s[input];
-        subsetViewDistinctDataCounts = subsetViewDistinctDataCounts_s[input];
-        subsetViewDistinctData = subsetViewDistinctData_s[input];
-        subsetViewRelatedDataCounts = subsetViewRelatedDataCounts_s[input];
-        subsetViewRelatedData = subsetViewRelatedData_s[input];
-        subsetViewDistinctMapTooltip = subsetViewDistinctMapTooltip_s[input];
-        subsetViewRelatedMapTooltip = subsetViewRelatedMapTooltip_s[input];
-        subsetViewDistinctDataCountsTooltip = subsetViewDistinctDataCountsTooltip_s[input];
-        subsetViewDistinctDataTooltip = subsetViewDistinctDataTooltip_s[input];
-        subsetViewRelatedDataCountsTooltip = subsetViewRelatedDataCountsTooltip_s[input];
-        subsetViewRelatedDataTooltip = subsetViewRelatedDataTooltip_s[input];
-        subsetWarn = subsetWarn_s[input];
-        subsetWarn10000 = subsetWarn10000_s[input];
-        subsetTooltip = subsetTooltip_s[input];
-        subsetNotSetUp = subsetNotSetUp_s[input];
-        subsetLongNotShown = subsetLongNotShown_s[input];
-
-        tabledapVideoIntro = tabledapVideoIntro_s[input];
-        theLongDescriptionHtml = theLongDescriptionHtml_s[input];
-        Then = Then_s[input];
-        time = time_s[input];
-        timeoutOtherRequests = timeoutOtherRequests_s[input];
-        units = units_s[input];
-        unknownDatasetID = unknownDatasetID_s[input];
-        unknownProtocol = unknownProtocol_s[input];
-        unsupportedFileType = unsupportedFileType_s[input];
-
-        variableNames = variableNames_s[input];
-        viewAllDatasetsHtml = viewAllDatasetsHtml_s[input];
-    
-        warning = warning_s[input];
-
-        wcsDescriptionHtml = wcsDescriptionHtml_s[input];
-        wcsLongDescriptionHtml = wcsLongDescriptionHtml_s[input];
-        wcsOverview1 = wcsOverview1_s[input];
-        wcsOverview2 = wcsOverview2_s[input];
-
-        wmsDescriptionHtml = wmsDescriptionHtml_s[input];
-        WMSDocumentation1 = WMSDocumentation1_s[input];
-        WMSGetCapabilities = WMSGetCapabilities_s[input];
-        WMSGetMap = WMSGetMap_s[input];
-        WMSNotes = WMSNotes_s[input];
-        wmsInstructions = wmsInstructions_s[input];
-        wmsLongDescriptionHtml = wmsLongDescriptionHtml_s[input];
-        wmsManyDatasets = wmsManyDatasets_s[input];
-        
-        zoomIn = zoomIn_s[input];
-        zoomOut = zoomOut_s[input];
-
-
-        ampLoginInfoPo = ampLoginInfoPo_s[input];
-        acceptEncodingHtml = acceptEncodingHtml_s[input];
-        filesDocumentation = filesDocumentation_s[input];
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
     }
 }

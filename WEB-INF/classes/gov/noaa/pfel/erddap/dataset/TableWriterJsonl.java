@@ -70,7 +70,7 @@ public class TableWriterJsonl extends TableWriter {
         writeKVP = tWriteKVP;
         jsonp = tJsonp;
         if (jsonp != null && !String2.isJsonpNameSafe(jsonp))
-            throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName);
+            throw new SimpleException(EDStatic.queryError + EDStatic.errorJsonpFunctionName_s[0]);
     }
 
 

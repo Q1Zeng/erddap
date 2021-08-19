@@ -432,7 +432,7 @@ public class EDDTableFromOBIS extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null) {
             tLicense = String2.replaceAll(tLicense, "[standard]", 
-                EDStatic.standardLicense + "\n\n" + 
+                EDStatic.standardLicense_s[0] + "\n\n" + 
                 String2.replaceAll(OBIS_LICENSE, "&sourceUrl;", tLocalSourceUrl));
             tLicense = String2.replaceAll(tLicense, "&creator_email;", tCreator_email);
             combinedGlobalAttributes.set("license", tLicense);

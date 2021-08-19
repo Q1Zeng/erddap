@@ -534,7 +534,7 @@ public class EDDTableFromSOS extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\""); 
 
         //get all dv sourceObservedProperties
@@ -1067,6 +1067,20 @@ public class EDDTableFromSOS extends EDDTable{
 
     }
 
+    /** 
+     * This gets the data (chunk by chunk) from this EDDTable for the 
+     * OPeNDAP DAP-style query and writes it to the TableWriter. 
+     * See the EDDTable method documentation.
+     * if currLang is not specified, default to 0
+     *
+     * @param loggedInAs the user's login name if logged in (or null if not logged in).
+     * @param userDapQuery the part after the '?', still percentEncoded, may be null.
+     * @throws Throwable if trouble (notably, WaitThenTryAgainException)
+     */
+    public void getDataForDapQuery(String loggedInAs, String requestUrl, 
+        String userDapQuery, TableWriter tableWriter) throws Throwable {
+        getDataForDapQuery(loggedInAs,  requestUrl, userDapQuery,  tableWriter, 0);
+    }
 
     /** 
      * This gets the data (chunk by chunk) from this EDDTable for the 
@@ -1078,7 +1092,7 @@ public class EDDTableFromSOS extends EDDTable{
      * @throws Throwable if trouble (notably, WaitThenTryAgainException)
      */
     public void getDataForDapQuery(String loggedInAs, String requestUrl, 
-        String userDapQuery, TableWriter tableWriter) throws Throwable {
+        String userDapQuery, TableWriter tableWriter, int currLang) throws Throwable {
         long getTime = System.currentTimeMillis();
 
         //get the sourceDapQuery (a query that the source can handle)
@@ -1269,7 +1283,7 @@ public class EDDTableFromSOS extends EDDTable{
         for (int station = 0; station < nStations; station++) {
             if (Thread.currentThread().isInterrupted())
                 throw new SimpleException("EDDTableFromSOS.getDataForDapQuery" +
-                    EDStatic.caughtInterrupted);
+                    EDStatic.caughtInterrupted_s[currLang]);
 
             String tStationLonString = "", tStationLatString = "", tStationAltString = "", 
                 tStationID = "";

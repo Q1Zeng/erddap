@@ -391,7 +391,7 @@ public class EDDTableFromFileNames extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
 
         //useCachedInfo?
@@ -962,7 +962,7 @@ public class EDDTableFromFileNames extends EDDTable{
         Table table = FileVisitorDNLS.oneStepDoubleWithUrlsNotDirs(
             fileDir, fileNameRegex, recursive, 
             pathRegex,
-            EDStatic.erddapUrl(loggedInAs) + "/files/" + datasetID + "/");
+            EDStatic.erddapUrl(loggedInAs, 0) + "/files/" + datasetID + "/");
         int nRows = table.nRows();
         if (nRows == 0)
             throw new SimpleException(MustBe.THERE_IS_NO_DATA + 
@@ -1083,7 +1083,7 @@ public class EDDTableFromFileNames extends EDDTable{
                 BitSet keep = new BitSet(tnRows);  //initially all false
                 StringArray dirSA = (StringArray)table.getColumn(0);
                 int ffrdLength = fileDir.length();
-                String tTo = EDStatic.erddapUrl(loggedInAs) + "/files/" + datasetID + "/";
+                String tTo = EDStatic.erddapUrl(loggedInAs, 0) + "/files/" + datasetID + "/";
                 for (int row = 0; row < tnRows; row++) {
                     String dir = dirSA.get(row);
                     if (dir.startsWith(fileDir)) {
@@ -1101,7 +1101,7 @@ public class EDDTableFromFileNames extends EDDTable{
                 table = FileVisitorDNLS.oneStepDoubleWithUrlsNotDirs(
                     FileVisitorDNLS.oneStepDouble(getCachedDNLSTable()), 
                     fileDir, 
-                    EDStatic.erddapUrl(loggedInAs) + "/files/" + datasetID + "/");
+                    EDStatic.erddapUrl(loggedInAs, 0) + "/files/" + datasetID + "/");
 
             } else { //from == fromLocalFiles
                 table = getBasicTable(fileDir, fileNameRegex, 

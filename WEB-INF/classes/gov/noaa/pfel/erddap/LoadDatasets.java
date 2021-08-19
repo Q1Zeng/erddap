@@ -673,88 +673,117 @@ public class LoadDatasets extends Thread {
 
                 } else if (tags.equals("<erddapDatasets><standardLicense>")) {
                 } else if (tags.equals("<erddapDatasets></standardLicense>")) {
+                    //if there is something in the dataset.xml, apply it to all langauges
                     String ts = xmlReader.content();
-                    EDStatic.standardLicense = String2.isSomething(ts)? ts : 
-                        EDStatic.DEFAULT_standardLicense;
+                    // EDStatic.standardLicense = String2.isSomething(ts)? ts : 
+                    // EDStatic.DEFAULT_standardLicense;
+                    for (int i = 0; i < EDStatic.standardLicense_s.length; i++) {
+                        EDStatic.standardLicense_s[i] = String2.isSomething(ts)? ts : 
+                            EDStatic.DEFAULT_standardLicense_s[i];
+                    }
                     String2.log("standardLicense was set.");
 
                 } else if (tags.equals("<erddapDatasets><standardContact>")) {
                 } else if (tags.equals("<erddapDatasets></standardContact>")) {
-                    String ts = xmlReader.content();
-                    ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_standardContact;
-                    ts = String2.replaceAll(ts, "&adminEmail;", SSR.getSafeEmailAddress(EDStatic.adminEmail));
-                    EDStatic.standardContact = ts; //swap into place
+                    // ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_standardContact;
+                    // ts = String2.replaceAll(ts, "&adminEmail;", SSR.getSafeEmailAddress(EDStatic.adminEmail));
+                    // EDStatic.standardContact = ts; //swap into place
+                    for (int i = 0; i < EDStatic.DEFAULT_standardContact_s.length; i++) {
+                        String ts = xmlReader.content();
+                        ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_standardContact_s[i];
+                        ts = String2.replaceAll(ts, "&adminEmail;", SSR.getSafeEmailAddress(EDStatic.adminEmail));
+                        EDStatic.standardContact_s[i] = ts; //swap into place
+                    }
                     String2.log("standardContact was set.");
 
                 } else if (tags.equals("<erddapDatasets><standardDataLicenses>")) {
                 } else if (tags.equals("<erddapDatasets></standardDataLicenses>")) {
                     String ts = xmlReader.content();
-                    EDStatic.standardDataLicenses = String2.isSomething(ts)? ts : 
-                        EDStatic.DEFAULT_standardDataLicenses;
+                    for (int i = 0; i < EDStatic.standardDataLicenses_s.length; i++) {
+                        EDStatic.standardDataLicenses_s[i] = String2.isSomething(ts)? ts : 
+                            EDStatic.DEFAULT_standardDataLicenses_s[i];
+                    }
                     String2.log("standardDataLicenses was set.");
 
                 } else if (tags.equals("<erddapDatasets><standardDisclaimerOfEndorsement>")) {
                 } else if (tags.equals("<erddapDatasets></standardDisclaimerOfEndorsement>")) {
                     String ts = xmlReader.content();
-                    EDStatic.standardDisclaimerOfEndorsement = String2.isSomething(ts)? ts : 
-                        EDStatic.DEFAULT_standardDisclaimerOfEndorsement;
+                    for (int i = 0; i < EDStatic.DEFAULT_standardDisclaimerOfEndorsement_s.length; i++) {
+                        EDStatic.standardDisclaimerOfEndorsement_s[i] = String2.isSomething(ts)? ts : 
+                            EDStatic.DEFAULT_standardDisclaimerOfEndorsement_s[i];
+                        }
                     String2.log("standardDisclaimerOfEndorsement was set.");
 
                 } else if (tags.equals("<erddapDatasets><standardDisclaimerOfExternalLinks>")) {
                 } else if (tags.equals("<erddapDatasets></standardDisclaimerOfExternalLinks>")) {
                     String ts = xmlReader.content();
-                    EDStatic.standardDisclaimerOfExternalLinks = String2.isSomething(ts)? ts : 
-                        EDStatic.DEFAULT_standardDisclaimerOfExternalLinks;
+                    for (int i = 0; i < EDStatic.DEFAULT_standardDisclaimerOfExternalLinks_s.length; i++) {
+                        EDStatic.standardDisclaimerOfExternalLinks_s[i] = String2.isSomething(ts)? ts : 
+                            EDStatic.DEFAULT_standardDisclaimerOfExternalLinks_s[i];
+                    }
                     String2.log("standardDisclaimerOfExternalLinks was set.");
 
                 } else if (tags.equals("<erddapDatasets><standardGeneralDisclaimer>")) {
                 } else if (tags.equals("<erddapDatasets></standardGeneralDisclaimer>")) {
                     String ts = xmlReader.content();
-                    EDStatic.standardGeneralDisclaimer = String2.isSomething(ts)? ts : 
-                        EDStatic.DEFAULT_standardGeneralDisclaimer;
+                    for (int i = 0; i < EDStatic.DEFAULT_standardGeneralDisclaimer_s.length; i++) {
+                        EDStatic.standardGeneralDisclaimer_s[i] = String2.isSomething(ts)? ts : 
+                        EDStatic.DEFAULT_standardGeneralDisclaimer_s[i];
+                    }
                     String2.log("standardGeneralDisclaimer was set.");
 
                 } else if (tags.equals("<erddapDatasets><standardPrivacyPolicy>")) {
                 } else if (tags.equals("<erddapDatasets></standardPrivacyPolicy>")) {
                     String ts = xmlReader.content();
-                    EDStatic.standardPrivacyPolicy = String2.isSomething(ts)? ts : 
-                        EDStatic.DEFAULT_standardPrivacyPolicy;
+                    for (int i = 0; i < EDStatic.DEFAULT_standardPrivacyPolicy_s.length; i++) {
+                        EDStatic.standardPrivacyPolicy_s[i] = String2.isSomething(ts)? ts : 
+                            EDStatic.DEFAULT_standardPrivacyPolicy_s[i];
+                    }
                     String2.log("standardPrivacyPolicy was set.");
 
                 } else if (tags.equals("<erddapDatasets><startHeadHtml5>")) {
                 } else if (tags.equals("<erddapDatasets></startHeadHtml5>")) {
-                    String ts = xmlReader.content();
-                    ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_startHeadHtml;
-                    if (!ts.startsWith("<!DOCTYPE html>")) {
-                        String2.log(String2.ERROR + " in datasets.xml: <startHeadHtml> must start with \"<!DOCTYPE html>\". Using default <startHeadHtml> instead.");
-                        ts = EDStatic.DEFAULT_startHeadHtml;
+                    for (int i = 0; i < EDStatic.DEFAULT_startHeadHtml_s.length; i++) {
+                        String ts = xmlReader.content();
+                        ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_startHeadHtml_s[i];
+                        if (!ts.startsWith("<!DOCTYPE html>")) {
+                            String2.log(String2.ERROR + " in datasets.xml: <startHeadHtml> must start with \"<!DOCTYPE html>\". Using default <startHeadHtml> instead.");
+                            ts = EDStatic.DEFAULT_startHeadHtml_s[i];
+                        }
+                    EDStatic.startHeadHtml_s[i] = ts; //swap into place
                     }
-                    EDStatic.startHeadHtml = ts; //swap into place
                     String2.log("startHeadHtml5 was set.");
 
                 } else if (tags.equals("<erddapDatasets><startBodyHtml5>")) {
                 } else if (tags.equals("<erddapDatasets></startBodyHtml5>")) {
-                    String ts = xmlReader.content();
-                    ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_startBodyHtml;
-                    EDStatic.ampLoginInfoPo = ts.indexOf(EDStatic.ampLoginInfo); //may be -1
-                    EDStatic.startBodyHtml = ts; //swap into place
+                    for (int i = 0; i < EDStatic.startBodyHtml_s.length; i++) {
+                        String ts = xmlReader.content();
+                        ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_startBodyHtml_s[i];
+                        EDStatic.ampLoginInfoPo_s[i] = ts.indexOf(EDStatic.ampLoginInfo); //may be -1
+                        EDStatic.startBodyHtml_s[i] = ts; //swap into place
+                    }
                     String2.log("startBodyHtml5 was set.");
 
                 } else if (tags.equals("<erddapDatasets><theShortDescriptionHtml>")) {
                 } else if (tags.equals("<erddapDatasets></theShortDescriptionHtml>")) {
-                    String ts = xmlReader.content();
-                    ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_theShortDescriptionHtml;
-                    ts = String2.replaceAll(ts, "[standardShortDescriptionHtml]", EDStatic.standardShortDescriptionHtml);
-                    ts = String2.replaceAll(ts, "&resultsFormatExamplesHtml;",    EDStatic.resultsFormatExamplesHtml);
-                    EDStatic.theShortDescriptionHtml = ts; //swap into place
+                    for (int i = 0; i < EDStatic.theShortDescriptionHtml_s.length; i++) {
+                        String ts = xmlReader.content();
+                        ts = String2.isSomething(ts)? ts : EDStatic.DEFAULT_theShortDescriptionHtml_s[i];
+                        ts = String2.replaceAll(ts, "[standardShortDescriptionHtml]", EDStatic.standardShortDescriptionHtml_s[i]);
+                        ts = String2.replaceAll(ts, "&resultsFormatExamplesHtml;",    EDStatic.resultsFormatExamplesHtml_s[i]);
+                        EDStatic.theShortDescriptionHtml_s[i] = ts; //swap into place
+
+                    }
                     String2.log("theShortDescriptionHtml was set.");
 
                 } else if (tags.equals("<erddapDatasets><endBodyHtml5>")) {
                 } else if (tags.equals("<erddapDatasets></endBodyHtml5>")) {
                     String ts = xmlReader.content();
-                    EDStatic.endBodyHtml = String2.replaceAll(
-                        String2.isSomething(ts)? ts : EDStatic.DEFAULT_endBodyHtml,
-                        "&erddapVersion;", EDStatic.erddapVersion);
+                    for (int i = 0; i < EDStatic.DEFAULT_endBodyHtml_s.length; i++) {
+                        EDStatic.endBodyHtml_s[i] = String2.replaceAll(
+                            String2.isSomething(ts)? ts : EDStatic.DEFAULT_endBodyHtml_s[i],
+                            "&erddapVersion;", EDStatic.erddapVersion);
+                    }
                     String2.log("endBodyHtml5 was set.");
 
                 } else if (tags.equals("<erddapDatasets><convertInterpolateRequestCSVExample>")) {

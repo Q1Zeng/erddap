@@ -93,7 +93,7 @@ public class FishBase  {
 "\n" +
 "DISCLAIMER: We cannot guarantee the accuracy or completeness of the information in FishBase. Neither ICLARM nor any of its collaborators will be liable for any direct or indirect damage arising out of the use of FishBase.\n" +
 "\n" +
-EDStatic.standardLicense);
+EDStatic.standardLicense_s[0]);
             gatts.set("sourceUrl", "(local files)");
             gatts.set("standard_name_vocabulary", "CF Standard Name Table v55");
             String startReference = "To give due credit to the original authors, please cite:\n" +

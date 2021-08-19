@@ -252,7 +252,7 @@ public class EDDTableFromEDDGrid extends EDDTable{
         String tLicense = combinedGlobalAttributes.getString("license");
         if (tLicense != null)
             combinedGlobalAttributes.set("license", 
-                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense));
+                String2.replaceAll(tLicense, "[standard]", EDStatic.standardLicense_s[0]));
         combinedGlobalAttributes.removeValue("\"null\"");
         
         maxAxis0 = combinedGlobalAttributes.getInt("maxAxis0");
@@ -371,7 +371,22 @@ public class EDDTableFromEDDGrid extends EDDTable{
         //update the internal childDataset
         return tChildDataset.lowUpdate(msg, startUpdateMillis);
     }
-
+    /** 
+     * This gets the data (chunk by chunk) from this EDDTable for the 
+     * OPeNDAP DAP-style query and writes it to the TableWriter. 
+     * See the EDDTable method documentation.
+     * currLang not specified, default as 0
+     *
+     * @param loggedInAs the user's login name if logged in (or null if not logged in).
+     * @param requestUrl the part of the user's request, after EDStatic.baseUrl, before '?'.
+     * @param userDapQuery the part of the user's request after the '?', still percentEncoded, may be null.
+     * @param tableWriter
+     * @throws Throwable if trouble (notably, WaitThenTryAgainException)
+     */
+    public void getDataForDapQuery(String loggedInAs, String requestUrl, 
+    String userDapQuery, TableWriter tableWriter) throws Throwable {
+        getDataForDapQuery(loggedInAs, requestUrl, userDapQuery, tableWriter, 0);
+    }
    /** 
      * This gets the data (chunk by chunk) from this EDDTable for the 
      * OPeNDAP DAP-style query and writes it to the TableWriter. 
@@ -384,7 +399,7 @@ public class EDDTableFromEDDGrid extends EDDTable{
      * @throws Throwable if trouble (notably, WaitThenTryAgainException)
      */
     public void getDataForDapQuery(String loggedInAs, String requestUrl, 
-        String userDapQuery, TableWriter tableWriter) throws Throwable {
+        String userDapQuery, TableWriter tableWriter, int currLang) throws Throwable {
 
         //Get childDataset or localChildDataset. Work with stable local reference.
         EDDGrid tChildDataset = getChildDataset();
@@ -459,7 +474,7 @@ public class EDDTableFromEDDGrid extends EDDTable{
                 }
                 if (!passed) 
                     throw new SimpleException(MustBe.THERE_IS_NO_DATA + " (" + 
-                        MessageFormat.format(EDStatic.queryErrorNeverTrue, 
+                        MessageFormat.format(EDStatic.queryErrorNeverTrue_s[0], 
                             conVar + conOp + conValD) + 
                         ")");
 
@@ -476,7 +491,7 @@ public class EDDTableFromEDDGrid extends EDDTable{
             //are the constraints impossible?
             if (avMin[av] > avMax[av])
                 throw new SimpleException(MustBe.THERE_IS_NO_DATA + " " + 
-                    MessageFormat.format(EDStatic.queryErrorNeverTrue, 
+                    MessageFormat.format(EDStatic.queryErrorNeverTrue_s[0], 
                         edvga.destinationName() + ">=" + avMin[av] + " and " +
                         edvga.destinationName() + "<=" + avMax[av]));            
             if (edvga.isAscending())
@@ -566,7 +581,7 @@ public class EDDTableFromEDDGrid extends EDDTable{
                     if (debugMode) String2.log(tTable.dataToString(5));
                     if (Thread.currentThread().isInterrupted())
                         throw new SimpleException("EDDTableFromEDDGrid.getDataForDapQuery" + 
-                            EDStatic.caughtInterrupted);      
+                            EDStatic.caughtInterrupted_s[currLang]);      
 
                     standardizeResultsTable(requestUrl, //applies all constraints
                         userDapQuery, tTable); 
@@ -656,7 +671,7 @@ public class EDDTableFromEDDGrid extends EDDTable{
                 if (++cumNRows >= chunkNRows) {
                     if (Thread.currentThread().isInterrupted())
                         throw new SimpleException("EDDTableFromDatabase.getDataForDapQuery" + 
-                            EDStatic.caughtInterrupted);
+                            EDStatic.caughtInterrupted_s[currLang]);
         
                     standardizeResultsTable(requestUrl, //applies all constraints
                         modifiedUserDapQuery.toString(), tTable); 
@@ -1906,7 +1921,18 @@ expected2 =
         debugMode = oDebugMode;
     }
 
-
+    /** 
+     * This runs generateDatasetsXmlFromErddapCatalog.
+     * currLang not specified, default to 0
+     * 
+     * @param oPublicSourceUrl  A complete URL of an ERDDAP (ending with "/erddap/"). 
+     * @param datasetIDRegex  E.g., ".*" for all dataset Names.
+     * @return a String with the results
+     */
+    public static String generateDatasetsXml( 
+        String oPublicSourceUrl, String datasetIDRegex, int tMaxAxis0) throws Throwable {
+            return generateDatasetsXml(oPublicSourceUrl, datasetIDRegex, tMaxAxis0, 0);
+        }
 
     /** 
      * This runs generateDatasetsXmlFromErddapCatalog.
@@ -1916,7 +1942,7 @@ expected2 =
      * @return a String with the results
      */
     public static String generateDatasetsXml( 
-        String oPublicSourceUrl, String datasetIDRegex, int tMaxAxis0) throws Throwable {
+        String oPublicSourceUrl, String datasetIDRegex, int tMaxAxis0, int currLang) throws Throwable {
 
         String2.log("*** EDDTableFromEDDGrid.generateDatasetsXmlFromErddapCatalog(" +
             oPublicSourceUrl + ")");
@@ -1954,13 +1980,13 @@ expected2 =
         PrimitiveArray griddapPA   = table.findColumn("griddap");
         StringBuilder sb = new StringBuilder();
         int nRows = table.nRows();
-        boolean sIsSomething = String2.isSomething(EDStatic.EDDTableFromEDDGridSummary);
+        boolean sIsSomething = String2.isSomething(EDStatic.EDDTableFromEDDGridSummary_s[currLang]);
         for (int row = 0; row < nRows; row++) {
             String tDatasetID = datasetIDPA.getString(row);
             String tTitle   = titlePA.getString(row) + ", (As A Table)";
             String tSummary = 
                 (sIsSomething && tMaxAxis0 > 0?
-                    MessageFormat.format(EDStatic.EDDTableFromEDDGridSummary, tDatasetID, tMaxAxis0) + "\n" : 
+                    MessageFormat.format(EDStatic.EDDTableFromEDDGridSummary_s[currLang], tDatasetID, tMaxAxis0) + "\n" : 
                     "") +
                 summaryPA.getString(row);
             if (sIsSomething)
